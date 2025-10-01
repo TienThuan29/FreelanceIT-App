@@ -1,0 +1,63 @@
+.container {
+  min-height: 100vh;
+  background: #f5f5f5;
+  color: #222;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.header {
+  text-align: center;
+  margin-top: 60px;
+  margin-bottom: 40px;
+}
+
+.slogan {
+  font-size: 1.25rem;
+  margin: 16px 0 32px 0;
+  color: #555;
+}
+
+.ctaButton {
+  display: inline-block;
+  background: #646cff;
+  color: #fff;
+  padding: 12px 32px;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.ctaButton:hover {
+  background: #535bf2;
+}
+
+.features {
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  margin-bottom: 60px;
+  flex-wrap: wrap;
+}
+
+.feature {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  padding: 24px;
+  min-width: 220px;
+  max-width: 300px;
+  text-align: center;
+}
+
+.footer {
+  margin-top: auto;
+  padding: 24px 0;
+  color: #888;
+  font-size: 0.95em;
+}

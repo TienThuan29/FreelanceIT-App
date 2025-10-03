@@ -1,21 +1,26 @@
-export enum Role {
-  DEVELOPER = "DEVELOPER",
-  CUSTOMER = "CUSTOMER",
-  ADMIN = "ADMIN",
-  SYSTEM = "SYSTEM"
-}
-
 export type BaseTimestamps = {
   createdDate?: Date;
   updatedDate?: Date;
 };
 
-export type NotificationType = "System" | "Project" | "Message" | "Application";
-export type DeveloperLevel = "Junior" | "Mid" | "Senior" | "Lead";
-export type SkillProficiency = "Beginner" | "Intermediate" | "Advanced" | "Expert";
-export type ProjectType = "FixedPrice" | "Hourly" | "Milestone";
-export type BudgetType = "Fixed" | "Range" | "Hourly";
-export type ProjectStatus = "Draft" | "Open" | "InProgress" | "Completed" | "Cancelled";
-export type ApplicationStatus = "Submitted" | "Reviewed" | "Shortlisted" | "Rejected" | "Accepted";
-export type InvitationStatus = "Pending" | "Accepted" | "Declined";
+export enum ProjectStatus {
+  DRAFT = "DRAFT",
+  OPEN_APPLYING = "OPEN_APPLYING",
+  CLOSED_APPLYING = "CLOSED_APPLYING",
+  IN_PROGRESS = "IN_PROGRESS",
+  COMPLETED = "COMPLETED",
+  CANCELLED = "CANCELLED"
+}
+
+export enum ApplicationStatus {
+  PENDING = "PENDING",
+  REJECTED = "REJECTED",
+  ACCEPTED = "ACCEPTED"
+}
+
+export enum NotificationType {
+  SYSTEM = "SYSTEM",
+  PROJECT = "PROJECT",
+  APPLICATION = "APPLICATION"
+}
 

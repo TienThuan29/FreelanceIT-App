@@ -301,3 +301,10 @@ export interface ChangelogEntry {
   changes: string[]
   type: 'major' | 'minor' | 'patch'
 }
+
+// Export all types from individual files
+export * from './user.type';
+export * from './project.type';
+export * from './shared.type';
+export * from './message.type';
+export * from './notification.type';

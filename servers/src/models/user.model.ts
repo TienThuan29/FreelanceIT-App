@@ -1,3 +1,4 @@
+import { Commune, Province } from "./address.model";
 
 export type User = {
     id: string;
@@ -10,8 +11,66 @@ export type User = {
     role: Role;
     isEnable: boolean;
     lastLoginDate?: Date;
+    commune: Commune;
+    province: Province;
     createdDate?: Date;
     updatedDate?: Date;
+}
+
+export type DeveloperProfile = {
+    userId: string;
+    title?: string;
+    bio?: string;
+    hourlyRate?: number;
+    experienceYears?: number;
+    developerLevel?: DeveloperLevel;
+    githubUrl?: string;
+    linkedinUrl?: string;
+    isAvailable?: boolean;
+    rating?: number;
+    skills?: Skill[];
+    totalProjects?: number;
+    languages?: string[];   
+    timezone?: string;
+    cvUrl?: string;
+};
+
+export type CustomerProfile = {
+    userId: string;
+    companyName?: string;
+    companyWebsite?: string;
+    industry?: string;
+    companySize?: string;
+    taxId?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    countryName?: string;
+    rating?: number;
+    totalProjectsPosted?: number;
+};
+
+export type Skill = {
+    id: string;
+    name: string;
+    proficiency: SkillProficiency;
+    yearsOfExperience: number;
+    createdDate?: Date;
+    updatedDate?: Date;
+};
+
+export enum SkillProficiency {
+    BEGINNER = "Beginner",
+    INTERMEDIATE = "Intermediate",
+    ADVANCED = "Advanced",
+    EXPERT = "Expert"
+}
+
+export enum DeveloperLevel {
+    JUNIOR = 'JUNIOR',
+    MID = 'MID',
+    SENIOR = 'SENIOR',
+    LEAD = 'LEAD',
 }
 
 export enum Role {

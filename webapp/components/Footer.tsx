@@ -1,158 +1,157 @@
 import * as React from 'react';
+import Image from 'next/image';
+import SmartImage from './SmartImage';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="text-gray-600 body-font bg-white">
-      <div className="container px-5 py-24 mx-auto">
-        <div className="flex flex-wrap md:text-left text-center -mb-10 -mx-4">
-          <div className="lg:w-1/6 md:w-1/2 w-full px-4">
-            <h2 className="title-font font-medium text-gray-900 tracking-widest text-sm mb-3">CATEGORIES</h2>
-            <nav className="list-none mb-10">
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-800">First Link</a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-800">Second Link</a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-800">Third Link</a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-800">Fourth Link</a>
-              </li>
-            </nav>
-          </div>
-          <div className="lg:w-1/6 md:w-1/2 w-full px-4">
-            <h2 className="title-font font-medium text-gray-900 tracking-widest text-sm mb-3">CATEGORIES</h2>
-            <nav className="list-none mb-10">
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-800">First Link</a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-800">Second Link</a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-800">Third Link</a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-800">Fourth Link</a>
-              </li>
-            </nav>
-          </div>
-          <div className="lg:w-1/6 md:w-1/2 w-full px-4">
-            <h2 className="title-font font-medium text-gray-900 tracking-widest text-sm mb-3">CATEGORIES</h2>
-            <nav className="list-none mb-10">
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-800">First Link</a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-800">Second Link</a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-800">Third Link</a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-800">Fourth Link</a>
-              </li>
-            </nav>
-          </div>
-          <div className="lg:w-1/6 md:w-1/2 w-full px-4">
-            <h2 className="title-font font-medium text-gray-900 tracking-widest text-sm mb-3">CATEGORIES</h2>
-            <nav className="list-none mb-10">
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-800">First Link</a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-800">Second Link</a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-800">Third Link</a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-800">Fourth Link</a>
-              </li>
-            </nav>
-          </div>
-          <div className="lg:w-1/6 md:w-1/2 w-full px-4">
-            <h2 className="title-font font-medium text-gray-900 tracking-widest text-sm mb-3">CATEGORIES</h2>
-            <nav className="list-none mb-10">
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-800">First Link</a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-800">Second Link</a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-800">Third Link</a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-800">Fourth Link</a>
-              </li>
-            </nav>
-          </div>
-          <div className="lg:w-1/6 md:w-1/2 w-full px-4">
-            <h2 className="title-font font-medium text-gray-900 tracking-widest text-sm mb-3">CATEGORIES</h2>
-            <nav className="list-none mb-10">
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-800">First Link</a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-800">Second Link</a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-800">Third Link</a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-800">Fourth Link</a>
-              </li>
-            </nav>
-          </div>
-        </div>
-      </div>
-      <div className="border-t border-gray-200 bg-white">
-        <div className="container px-5 py-8 flex flex-wrap mx-auto items-center">
-          <div className="flex md:flex-nowrap flex-wrap justify-center items-end md:justify-start">
-            <div className="relative sm:w-64 w-40 sm:mr-4 mr-2">
-              <label htmlFor="footer-field" className="leading-7 text-sm text-gray-600">Placeholder</label>
-              <input type="text" id="footer-field" name="footer-field" className="w-full bg-white bg-opacity-50 rounded border border-gray-300 focus:ring-2 focus:bg-transparent focus:ring-indigo-200 focus:border-indigo-500 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out" />
+    <footer className="bg-gradient-to-br from-gray-50 to-blue-50 border-t border-blue-100">
+      {/* Main Footer Content */}
+      <div className="container mx-auto px-4 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {/* Logo & Description */}
+          <div className="lg:col-span-1">
+            <div className="flex items-center mb-6">
+              <a href="/" className="flex items-center">
+                <SmartImage
+                  src={'/assets/fulllogo_lightArtboard_1.png'}
+                  alt="FreeLanceIT Logo"
+                  className="h-12 w-auto"
+                  type="logo"
+                  fallbackName="FreeLanceIT"
+                />
+              </a>
             </div>
-            <button className="inline-flex text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded">Button</button>
-            <p className="text-gray-500 text-sm md:ml-6 md:mt-0 mt-2 sm:text-left text-center">Bitters chicharrones fanny pack
-              <br className="lg:block hidden" />waistcoat green juice
+            <p className="text-gray-600 text-sm leading-relaxed mb-6">
+              Nền tảng mua bán phần mềm giá rẻ - Giải pháp cho tình trạng layoff trong ngành IT. 
+              Kết nối ITers với cơ hội việc làm và dự án phần mềm.
             </p>
+            <div className="flex space-x-4">
+              <a href="#" className="text-gray-400 hover:text-blue-600 transition-colors duration-300">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
+                </svg>
+              </a>
+              <a href="#" className="text-gray-400 hover:text-blue-600 transition-colors duration-300">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z"/>
+                </svg>
+              </a>
+              <a href="#" className="text-gray-400 hover:text-blue-600 transition-colors duration-300">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                </svg>
+              </a>
+              <a href="#" className="text-gray-400 hover:text-blue-600 transition-colors duration-300">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.174-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.402.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.357-.629-2.746-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24.009 12.017 24.009c6.624 0 11.99-5.367 11.99-11.988C24.007 5.367 18.641.001.012.001z"/>
+                </svg>
+              </a>
+            </div>
           </div>
-          <span className="inline-flex lg:ml-auto lg:mt-0 mt-6 w-full justify-center md:justify-start md:w-auto">
-            <a href="#" className="text-gray-500">
-              <svg fill="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className="w-5 h-5" viewBox="0 0 24 24">
-                <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"></path>
-              </svg>
-            </a>
-            <a href="#" className="ml-3 text-gray-500">
-              <svg fill="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className="w-5 h-5" viewBox="0 0 24 24">
-                <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"></path>
-              </svg>
-            </a>
-            <a href="#" className="ml-3 text-gray-500">
-              <svg fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className="w-5 h-5" viewBox="0 0 24 24">
-                <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
-                <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37zm1.5-4.87h.01"></path>
-              </svg>
-            </a>
-            <a href="#" className="ml-3 text-gray-500">
-              <svg fill="currentColor" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="0" className="w-5 h-5" viewBox="0 0 24 24">
-                <path stroke="none" d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"></path>
-                <circle cx="4" cy="4" r="2" stroke="none"></circle>
-              </svg>
-            </a>
-          </span>
+
+          {/* Sản phẩm & Dịch vụ */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Sản phẩm & Dịch vụ</h3>
+            <ul className="space-y-3">
+              <li>
+                <a href="/products-dev" className="text-gray-600 hover:text-blue-600 transition-colors duration-300 text-sm">
+                  Sản phẩm phần mềm
+                </a>
+              </li>
+              <li>
+                <a href="/post" className="text-gray-600 hover:text-blue-600 transition-colors duration-300 text-sm">
+                  Tuyển dụng IT
+                </a>
+              </li>
+              <li>
+                <a href="/chatbot" className="text-gray-600 hover:text-blue-600 transition-colors duration-300 text-sm">
+                  Chatbot AI
+                </a>
+              </li>
+              <li>
+                <a href="/chatbox" className="text-gray-600 hover:text-blue-600 transition-colors duration-300 text-sm">
+                  Tin nhắn
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Hỗ trợ */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Hỗ trợ</h3>
+            <ul className="space-y-3">
+              <li>
+                <a href="/about" className="text-gray-600 hover:text-blue-600 transition-colors duration-300 text-sm">
+                  Về chúng tôi
+                </a>
+              </li>
+              <li>
+                <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors duration-300 text-sm">
+                  Hướng dẫn sử dụng
+                </a>
+              </li>
+              <li>
+                <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors duration-300 text-sm">
+                  Câu hỏi thường gặp
+                </a>
+              </li>
+              <li>
+                <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors duration-300 text-sm">
+                  Liên hệ hỗ trợ
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Liên hệ */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Liên hệ</h3>
+            <div className="space-y-3">
+              <div className="flex items-center text-sm text-gray-600">
+                <svg className="w-4 h-4 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span>contact@freelanceit.com</span>
+              </div>
+              <div className="flex items-center text-sm text-gray-600">
+                <svg className="w-4 h-4 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+                <span>+84 123 456 789</span>
+              </div>
+              <div className="flex items-start text-sm text-gray-600">
+                <svg className="w-4 h-4 mr-3 mt-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span>123 Đường ABC, Quận 1<br />TP. Hồ Chí Minh, Việt Nam</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div className="bg-white">
-        <div className="container mx-auto py-4 px-5 flex flex-wrap flex-col sm:flex-row">
-          <p className="text-gray-500 text-sm text-center sm:text-left">© 2020 Tailblocks —
-            <a href="https://twitter.com/knyttneve" className="text-gray-600 ml-1" target="_blank" rel="noopener noreferrer">@knyttneve</a>
-          </p>
-          <span className="sm:ml-auto sm:mt-0 mt-2 sm:w-auto w-full sm:text-left text-center text-gray-500 text-sm">Enamel pin tousled raclette tacos irony</span>
+
+      {/* Bottom Footer */}
+      <div className="border-t border-blue-100 bg-white/50 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="flex items-center mb-4 md:mb-0">
+              <p className="text-gray-600 text-sm">
+                © 2024 FreeLanceIT. Tất cả quyền được bảo lưu.
+              </p>
+            </div>
+            <div className="flex space-x-6 text-sm">
+              <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                Điều khoản sử dụng
+              </a>
+              <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                Chính sách bảo mật
+              </a>
+              <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                Cookie Policy
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </footer>

@@ -6,7 +6,6 @@ import { useRouter, useParams } from "next/navigation";
 import { ProtectedRoute, useAuth } from '@/contexts/AuthContext';
 import { Role } from "@/types/user.type";
 import type { Project } from '@/types'
-import { mockProjects } from '@/data/mockProjects'
 
 interface ApplicationData {
   coverLetter: string

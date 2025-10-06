@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter, useSearchParams } from 'next/navigation'
 import type { Project } from '@/types'
-import { mockProjects } from '@/data/mockProjects'
 
 export default function ManagePostPage() {
   const { user } = useAuth()

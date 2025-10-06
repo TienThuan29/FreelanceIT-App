@@ -7,7 +7,6 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import { mockProjects } from '@/data/mockProjects'
 import type { EmployerProfile } from '@/data/mockEmployerProfiles'
 import { getEmployerProfileByEmail } from '@/data/mockEmployerProfiles'
 

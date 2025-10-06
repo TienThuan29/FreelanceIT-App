@@ -5,7 +5,6 @@
 // import { ProtectedRoute } from '@/contexts/AuthContext';
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { mockProjects } from '@/data/mockProjects'
 import type { Project } from '@/types'
 import { useRouter } from 'next/navigation'
 import { Role } from '@/types/user.type'

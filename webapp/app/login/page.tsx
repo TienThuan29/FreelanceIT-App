@@ -10,7 +10,7 @@ interface LoginFormData {
 }
 
 const Login: React.FC = () => {
-  const { login, isAuthenticated } = useAuth()
+  const { login, loginWithGoogle, isAuthenticated } = useAuth()
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
     password: ''
@@ -133,11 +133,9 @@ const Login: React.FC = () => {
         <div className="mt-6">
           <button
             type="button"
-            onClick={() => {
-              // TODO: Implement Google OAuth login
-              console.log('Google login clicked')
-            }}
-            className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+            onClick={loginWithGoogle}
+            disabled={isLoading}
+            className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg
               className="w-5 h-5"
@@ -161,7 +159,7 @@ const Login: React.FC = () => {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            Đăng nhập với Google
+            {isLoading ? 'Đang xử lý...' : 'Đăng nhập với Google'}
           </button>
         </div>
 

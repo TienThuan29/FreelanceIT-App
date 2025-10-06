@@ -4,7 +4,6 @@ import React from "react";
 // import ChatBot from '@/components/chatbot';
 import { useState, useRef, useEffect } from 'react'
 import { mockProducts } from '@/data/mockProducts'
-import { mockProjects } from '@/data/mockProjects'
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleValidator } from "@/hooks/useRoleValidator";
 

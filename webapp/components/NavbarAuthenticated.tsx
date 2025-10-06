@@ -68,9 +68,9 @@ const NavbarAuthenticated: React.FC = () => {
                 <a href="/profile-dev" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Hồ sơ
                 </a>
-                <a href="/manage-developer-projects" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                {/* <a href="/manage-developer-projects" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Quản lý dự án
-                </a>
+                </a> */}
                 {/* <a href="/nda-contracts" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Hợp đồng NDA
                 </a>

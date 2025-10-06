@@ -5,6 +5,7 @@ export type User = {
     email: string;
     password: string;
     avatarUrl?: string;
+    avatar?: string;
     fullname: string;
     phone?: string;
     dateOfBirth?: Date;
@@ -13,6 +14,7 @@ export type User = {
     lastLoginDate?: Date;
     commune: Commune;
     province: Province;
+    googleId?: string;
     createdDate?: Date;
     updatedDate?: Date;
 }

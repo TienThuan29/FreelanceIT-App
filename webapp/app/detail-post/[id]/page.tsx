@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import type { Project } from '@/types'
-import { mockProjects } from '@/data/mockProjects'
 import { generateAvatar } from '@/utils/imageUtils'
 import { useAuth } from '@/contexts/AuthContext';
 

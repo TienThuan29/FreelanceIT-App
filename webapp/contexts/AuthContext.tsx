@@ -12,6 +12,7 @@ interface AuthContextType {
   user: UserProfile | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
+  loginWithGoogle: () => Promise<void>;
   logout: () => void;
   isLoading: boolean;
   accessToken: string | null;
@@ -105,6 +106,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
 
+  const loginWithGoogle = async (): Promise<void> => {
+    try {
+      setIsLoading(true);
+      
+      // Get Google OAuth2 URL from backend
+      const response = await axios.get(Api.BASE_API + Api.Auth.GOOGLE_LOGIN);
+      
+      if (response.data.success && response.data.dataResponse.authUrl) {
+        // Redirect to Google OAuth2 page
+        window.location.href = response.data.dataResponse.authUrl;
+      } else {
+        toast.error('Không thể khởi tạo đăng nhập Google');
+      }
+    } catch (error) {
+      console.error('Google login error:', error);
+      toast.error('Lỗi khi đăng nhập với Google');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
@@ -178,6 +201,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       user,
       isAuthenticated,
       login,
+      loginWithGoogle,
       logout,
       isLoading,
       accessToken,

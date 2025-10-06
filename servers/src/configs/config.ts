@@ -55,4 +55,8 @@ export const config = {
     EMAIL_FROM: process.env.EMAIL_FROM || '',
     EMAIL_FROM_NAME: process.env.EMAIL_FROM_NAME || 'FreelanceIT',
 
+    // google client oauth2
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '',
+    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || '',
+
 } as const;

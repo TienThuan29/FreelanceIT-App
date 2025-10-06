@@ -8,6 +8,9 @@ export const Api = {
         VERIFY_CODE: '/api/v1/auth/verify-code',
         REFRESH_TOKEN: '/api/v1/auth/refresh-token',
         GET_PROFILE: '/api/v1/auth/profile',
+        GOOGLE_LOGIN: '/api/v1/auth/google/login',
+        GOOGLE_CALLBACK: '/api/v1/auth/google/callback',
+        GOOGLE_PROFILE: '/api/v1/auth/google/profile',
     },
 
     Project: {

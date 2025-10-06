@@ -10,6 +10,7 @@ export class DeveloperApi {
     constructor() {
         this.developerService = new DeveloperService();
         this.getDeveloperProfile = this.getDeveloperProfile.bind(this);
+        this.getDevelopersByPage = this.getDevelopersByPage.bind(this);
         this.updateDeveloperProfile = this.updateDeveloperProfile.bind(this);
         this.updateUserProfile = this.updateUserProfile.bind(this);
         this.updateUserAvatar = this.updateUserAvatar.bind(this);
@@ -27,6 +28,39 @@ export class DeveloperApi {
             return;
         }
         ResponseUtil.success(response, developerProfile, 'Lấy developer profile thành công', 200);
+    }
+
+    public async getDevelopersByPage(request: Request, response: Response): Promise<void> {
+        try {
+            const page = parseInt(request.query.page as string) || 1;
+            const pageSize = parseInt(request.query.pageSize as string) || 10;
+
+            // Validate pagination parameters
+            if (page < 1) {
+                ResponseUtil.error(response, 'Page number must be greater than 0', 400);
+                return;
+            }
+
+            if (pageSize < 1 || pageSize > 100) {
+                ResponseUtil.error(response, 'Page size must be between 1 and 100', 400);
+                return;
+            }
+
+            const result = await this.developerService.getDevelopersByPage(page, pageSize);
+            
+            ResponseUtil.success(response, {
+                developers: result.developers,
+                pagination: {
+                    page,
+                    pageSize,
+                    totalReturned: result.developers.length,
+                    totalAvailable: result.totalAvailable
+                }
+            }, 'Lấy danh sách developers thành công', 200);
+        } catch (error) {
+            console.error('Error in getDevelopersByPage API:', error);
+            ResponseUtil.error(response, 'Lỗi khi lấy danh sách developers', 500);
+        }
     }
     
     public async updateUserProfile(request: Request, response: Response): Promise<void> {

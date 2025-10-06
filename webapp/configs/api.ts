@@ -37,6 +37,7 @@ export const Api = {
 
     Developer: {
         GET_PROFILE: '/api/v1/developers/profile/get',
+        GET_LIST: '/api/v1/developers/list',
         UPDATE_PROFILE: '/api/v1/developers/profile/update',
         UPDATE_USER: '/api/v1/developers/user/update',
         UPDATE_AVATAR: '/api/v1/developers/avatar/update',

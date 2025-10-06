@@ -38,9 +38,9 @@ const NavbarAuthenticated: React.FC = () => {
           {/* Logo */}
           <div className="flex items-center">
             <a href="/" className="flex items-center space-x-2">
-              <SmartImage 
-                src={'/assets/icon.png'} 
-                alt="FreeLanceIT Icon" 
+              <SmartImage
+                src={'/assets/icon.png'}
+                alt="FreeLanceIT Icon"
                 className="w-10 h-auto"
                 type="logo"
                 fallbackName="FreeLanceIT"
@@ -52,21 +52,17 @@ const NavbarAuthenticated: React.FC = () => {
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
             {/* Navigation Links */}
-            <a href="/products-dev" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
-              Sản phẩm
-            </a>
-            <a href="/post" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
-              Tuyển dụng
-            </a>
             <a href="/chatbot" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
               Chatbot AI
             </a>
-            
             {/* Role-specific links */}
             {isDeveloper && (
               <>
                 <a href="/profile-dev" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Hồ sơ
+                </a>
+                <a href="/post" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                  Tuyển dụng
                 </a>
                 {/* <a href="/manage-developer-projects" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Quản lý dự án
@@ -79,9 +75,15 @@ const NavbarAuthenticated: React.FC = () => {
                 </a> */}
               </>
             )}
-            
+
             {isCustomer && (
               <>
+                <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                  Sản phẩm
+                </a>
+                <a href={PageUrl.Customer.POSTS_DEV_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                  Tuyển dụng lập trình viên
+                </a>
                 <a href="/profile-employer" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Hồ sơ
                 </a>
@@ -91,12 +93,12 @@ const NavbarAuthenticated: React.FC = () => {
                 <a href="/purchase-history" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Lịch sử mua hàng
                 </a> */}
-                <a href={PageUrl.Customer.PROJECTS_PAGE}className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                <a href={PageUrl.Customer.PROJECTS_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Dự án
                 </a>
               </>
             )}
-            
+
             {isAdmin && (
               <a href="/admin" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                 Quản trị
@@ -105,8 +107,8 @@ const NavbarAuthenticated: React.FC = () => {
 
             {/* Chat Notification */}
             <div className="relative">
-              <a 
-                href="/chatbox" 
+              <a
+                href="/chatbox"
                 className="text-gray-600 hover:text-blue-600 transition-colors duration-300 relative"
                 title="Tin nhắn"
               >
@@ -154,7 +156,7 @@ const NavbarAuthenticated: React.FC = () => {
                     <div className="text-xs">{user?.email}</div>
                     <div className="text-xs text-blue-600 capitalize">{user?.role}</div>
                   </div>
-                  
+
                   {isDeveloper && (
                     <a
                       href="/profile-dev"
@@ -163,7 +165,7 @@ const NavbarAuthenticated: React.FC = () => {
                       Hồ sơ của tôi
                     </a>
                   )}
-                  
+
                   {isCustomer && (
                     <a
                       href="/profile-employer"
@@ -172,14 +174,14 @@ const NavbarAuthenticated: React.FC = () => {
                       Hồ sơ công ty
                     </a>
                   )}
-                  
+
                   <a
                     href="/settings"
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     Cài đặt
                   </a>
-                  
+
                   <div className="border-t">
                     <button
                       onClick={handleLogout}
@@ -237,7 +239,7 @@ const NavbarAuthenticated: React.FC = () => {
               >
                 Tuyển dụng
               </a>
-              
+
               {/* Chat Link */}
               <a
                 href="/chatbox"
@@ -255,7 +257,7 @@ const NavbarAuthenticated: React.FC = () => {
                   )}
                 </div>
               </a>
-              
+
               {/* Role-specific links */}
               {isDeveloper && (
                 <>
@@ -273,7 +275,7 @@ const NavbarAuthenticated: React.FC = () => {
                   </a>
                 </>
               )}
-              
+
               {isCustomer && (
                 <>
                   <a
@@ -290,7 +292,7 @@ const NavbarAuthenticated: React.FC = () => {
                   </a>
                 </>
               )}
-              
+
               {isAdmin && (
                 <a
                   href="/admin"
@@ -299,7 +301,7 @@ const NavbarAuthenticated: React.FC = () => {
                   Quản trị
                 </a>
               )}
-              
+
               <a
                 href="/settings"
                 className="block px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors duration-300"

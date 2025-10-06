@@ -8,6 +8,7 @@ export const PageUrl = {
 
     Customer: {
         PROJECTS_PAGE: '/projects',
+        POSTS_DEV_PAGE: '/posts-dev',
     }
 
 }

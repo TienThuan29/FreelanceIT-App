@@ -1,44 +1,37 @@
 "use client";
 
-// import ProfileDev from '@/components/profile-dev';
-// import { ProtectedRoute } from '@/contexts/AuthContext';
 import React, { useState, useEffect } from 'react'
-import type { DeveloperProfile, Skill, User } from '@/types/user.type'
+import type { DeveloperProfile} from '@/types/user.type'
 import { DeveloperLevel, SkillProficiency } from '@/types/user.type'
 import type { Product } from '@/types/product.type'
 import Avatar from '@/components/Avatar'
-import SmartImage from '@/components/SmartImage'
 import NavbarAuthenticated from '@/components/NavbarAuthenticated'
 import { useRouter } from 'next/navigation'
 import { useDeveloperProfile, type UserProfileResponse } from '@/hooks/useDeveloperProfile'
 import { useAuth } from '@/contexts/AuthContext'
-import { 
-  HiChartBar, 
-  HiCog, 
-  HiShoppingBag, 
+import { formatCurrency, formatDate } from '@/utils'
+import {
+  HiChartBar,
+  HiCog,
+  HiShoppingBag,
   HiWrenchScrewdriver,
   HiPlus,
   HiPencil,
   HiCheck,
-  HiXMark,
   HiChartPie,
   HiCheckCircle,
   HiStar,
   HiCube,
-  HiUser,
   HiEnvelope,
   HiPhone,
   HiMapPin,
   HiClock,
-  HiDocumentText,
   HiCodeBracket,
   HiBriefcase,
   HiDocument,
-  HiInformationCircle,
   HiEye,
   HiArrowDown,
-  HiHeart,
-  HiExclamationTriangle
+  HiHeart
 } from 'react-icons/hi2'
 import { toast } from 'sonner';
 
@@ -50,16 +43,12 @@ export default function ProfileDevPage() {
     developerProfile,
     isLoading,
     isUpdating,
-    error,
-    updateError,
-    isUpdated,
     getDeveloperProfile,
     updateDeveloperProfile,
     updateUserProfile,
     updateUserAvatar,
     clearErrors,
     resetUpdateState,
-    isProfileComplete,
     hasProfile
   } = useDeveloperProfile()
 
@@ -70,9 +59,6 @@ export default function ProfileDevPage() {
   const [userFormData, setUserFormData] = useState<Partial<UserProfileResponse>>({})
   const [products, setProducts] = useState<Product[]>([])
 
-  /**
-   * Load profile data when component mounts
-   */
   useEffect(() => {
     const loadProfile = async (): Promise<void> => {
       if (user?.id) {
@@ -83,9 +69,7 @@ export default function ProfileDevPage() {
     loadProfile()
   }, [user?.id, getDeveloperProfile])
 
-  /**
-   * Update form data when profile changes
-   */
+
   useEffect(() => {
     if (developerProfile) {
       setFormData(developerProfile)
@@ -95,28 +79,22 @@ export default function ProfileDevPage() {
     }
   }, [developerProfile, userProfile])
 
-  /**
-   * Reset update state when editing starts
-   */
+
   useEffect(() => {
     if (isEditing) {
       resetUpdateState()
     }
   }, [isEditing, resetUpdateState])
 
-  /**
-   * Handle avatar upload
-   */
+
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     const file = event.target.files?.[0]
     if (!file || !user?.id) return
-
     // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error('Vui lòng chọn file hình ảnh')
       return
     }
-
     // Validate file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
       toast.error('Kích thước file không được vượt quá 5MB')
@@ -141,21 +119,21 @@ export default function ProfileDevPage() {
    */
   const hasUserFormChanges = (): boolean => {
     if (!userProfile || !userFormData) return false
-    
+
     // Check each field for changes
     const fieldsToCheck: (keyof UserProfileResponse)[] = ['fullname', 'email', 'phone', 'dateOfBirth']
-    
+
     return fieldsToCheck.some(field => {
       const originalValue = userProfile[field]
       const newValue = userFormData[field]
-      
+
       // Handle date comparison
       if (field === 'dateOfBirth') {
         const originalDate = originalValue && typeof originalValue !== 'boolean' ? new Date(originalValue).getTime() : null
         const newDate = newValue && typeof newValue !== 'boolean' ? new Date(newValue).getTime() : null
         return originalDate !== newDate
       }
-      
+
       return originalValue !== newValue
     })
   }
@@ -165,14 +143,12 @@ export default function ProfileDevPage() {
    */
   const hasDeveloperFormChanges = (): boolean => {
     if (!formData) return false
-    
     // If no developer profile exists yet, check if any fields have values (creating new profile)
     if (!developerProfile) {
       const fieldsToCheck: (keyof DeveloperProfile)[] = [
         'title', 'bio', 'hourlyRate', 'experienceYears', 'developerLevel',
         'githubUrl', 'linkedinUrl', 'cvUrl', 'timezone', 'isAvailable'
       ]
-      
       const hasChanges = fieldsToCheck.some(field => {
         const newValue = formData[field]
         // Check if field has a meaningful value (not empty string, null, undefined, or 0 for numbers)
@@ -183,40 +159,32 @@ export default function ProfileDevPage() {
           return newValue > 0
         }
         if (typeof newValue === 'boolean') {
-          return true // boolean values are always meaningful
+          return true
         }
         // Skip array fields (skills, languages) and other complex types
         return false
       })
-      
-      console.log('Creating new profile - hasChanges:', hasChanges, 'formData:', formData)
+      // console.log('Creating new profile - hasChanges:', hasChanges, 'formData:', formData)
       return hasChanges
     }
-    
     // If developer profile exists, check for changes
     const fieldsToCheck: (keyof DeveloperProfile)[] = [
       'title', 'bio', 'hourlyRate', 'experienceYears', 'developerLevel',
       'githubUrl', 'linkedinUrl', 'cvUrl', 'timezone', 'isAvailable'
     ]
-    
     const hasChanges = fieldsToCheck.some(field => {
       const originalValue = developerProfile[field]
       const newValue = formData[field]
-      
       // Handle number comparison
       if (typeof originalValue === 'number' && typeof newValue === 'number') {
         return originalValue !== newValue
       }
-      
       // Handle boolean comparison
       if (typeof originalValue === 'boolean' && typeof newValue === 'boolean') {
         return originalValue !== newValue
       }
-      
       return originalValue !== newValue
     })
-    
-    console.log('Updating existing profile - hasChanges:', hasChanges, 'formData:', formData)
     return hasChanges
   }
 
@@ -232,7 +200,7 @@ export default function ProfileDevPage() {
         return
       }
 
-      console.log('Updating user profile with changes:', userFormData)
+      // console.log('Updating user profile with changes:', userFormData)
       const success = await updateUserProfile(user.id, userFormData)
 
       if (success) {
@@ -257,8 +225,6 @@ export default function ProfileDevPage() {
         toast.info('Không có thay đổi nào trong cài đặt developer profile')
         return
       }
-
-      console.log('Updating developer profile with changes:', formData)
       const success = await updateDeveloperProfile(user.id, formData)
 
       if (success) {
@@ -272,35 +238,27 @@ export default function ProfileDevPage() {
     }
   }
 
-  /**
-   * Handle saving all profile data (legacy function for backward compatibility)
-   */
+
   const handleSave = async (): Promise<void> => {
     if (!user?.id) return
 
     try {
       let userSuccess = true
       let developerSuccess = true
-
-      // Update user profile if there are changes
       if (hasUserFormChanges()) {
-        console.log('Updating user profile with changes:', userFormData)
         userSuccess = await updateUserProfile(user.id, userFormData)
       }
-
       // Update developer profile if there are changes and profile exists
       if (hasProfile && hasDeveloperFormChanges()) {
-        console.log('Updating developer profile with changes:', formData)
+        // console.log('Updating developer profile with changes:', formData)
         developerSuccess = await updateDeveloperProfile(user.id, formData)
       }
-
       // If no changes were made, show a message
       if (!hasUserFormChanges() && (!hasProfile || !hasDeveloperFormChanges())) {
         toast.info('Không có thay đổi nào để lưu')
         setIsEditing(false)
         return
       }
-
       if (userSuccess && developerSuccess) {
         setIsEditing(false)
         toast.success('Cập nhật thông tin thành công!')
@@ -313,9 +271,6 @@ export default function ProfileDevPage() {
     }
   }
 
-  /**
-   * Cancel editing and reset form data
-   */
   const handleCancel = (): void => {
     setFormData(developerProfile || {})
     setUserFormData(userProfile || {})
@@ -323,41 +278,15 @@ export default function ProfileDevPage() {
     clearErrors()
   }
 
-  /**
-   * Format số tiền theo định dạng VND
-   * @param amount - Số tiền cần format
-   * @returns Chuỗi đã format
-   */
-  const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(amount)
-  }
 
-  /**
-   * Lấy màu sắc cho trạng thái availability
-   * @param isAvailable - Trạng thái availability
-   * @returns CSS class cho màu sắc
-   */
   const getAvailabilityColor = (isAvailable: boolean): string => {
     return isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
   }
 
-  /**
-   * Lấy text hiển thị cho trạng thái availability
-   * @param isAvailable - Trạng thái availability
-   * @returns Text tiếng Việt
-   */
   const getAvailabilityText = (isAvailable: boolean): string => {
     return isAvailable ? 'Sẵn sàng nhận việc' : 'Chưa sẵn sàng'
   }
 
-  /**
-   * Lấy màu sắc cho skill proficiency
-   * @param proficiency - Mức độ thành thạo
-   * @returns CSS class cho màu sắc
-   */
   const getProficiencyColor = (proficiency: SkillProficiency): string => {
     const proficiencyColors: Record<SkillProficiency, string> = {
       [SkillProficiency.BEGINNER]: 'bg-gray-100 text-gray-800',
@@ -368,11 +297,6 @@ export default function ProfileDevPage() {
     return proficiencyColors[proficiency] || 'bg-gray-100 text-gray-800'
   }
 
-  /**
-   * Lấy text hiển thị cho skill proficiency
-   * @param proficiency - Mức độ thành thạo
-   * @returns Text tiếng Việt
-   */
   const getProficiencyText = (proficiency: SkillProficiency): string => {
     const proficiencyTexts: Record<SkillProficiency, string> = {
       [SkillProficiency.BEGINNER]: 'Cơ bản',
@@ -383,50 +307,25 @@ export default function ProfileDevPage() {
     return proficiencyTexts[proficiency] || 'Chưa xác định'
   }
 
-  /**
-   * Điều hướng đến trang quản lý sản phẩm
-   */
   const handleManageProducts = (): void => {
-    router.push('/manage-products')
+    
   }
 
-  /**
-   * Điều hướng đến trang tạo sản phẩm mới
-   */
   const handleCreateProduct = (): void => {
-    router.push('/create-product')
+    
   }
 
-  /**
-   * Xử lý thay đổi input trong form
-   * @param field - Tên field cần update
-   * @param value - Giá trị mới
-   */
+
   const handleInputChange = (field: keyof DeveloperProfile, value: any): void => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  /**
-   * Xử lý thay đổi thông tin user profile
-   * @param field - Tên field cần update
-   * @param value - Giá trị mới
-   */
+
   const handleUserInputChange = (field: string, value: any): void => {
     setUserFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  /**
-   * Format ngày tháng theo định dạng Việt Nam
-   * @param date - Date object cần format
-   * @returns Chuỗi ngày đã format
-   */
-  const formatDate = (date: Date): string => {
-    return new Intl.DateTimeFormat('vi-VN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    }).format(date)
-  }
+
 
   // Loading state
   if (isLoading) {
@@ -472,7 +371,7 @@ export default function ProfileDevPage() {
                       <HiCheck className="w-3 h-3" />
                     </span>
                   </div>
-                  
+
                   {/* Avatar Upload Overlay */}
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 rounded-full transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
                     <label className="cursor-pointer">
@@ -488,7 +387,7 @@ export default function ProfileDevPage() {
                       </div>
                     </label>
                   </div>
-                  
+
                   {/* Loading Overlay */}
                   {isUpdating && (
                     <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
@@ -614,8 +513,8 @@ export default function ProfileDevPage() {
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as typeof activeTab)}
                     className={`py-4 text-sm font-medium border-b-2 flex items-center ${activeTab === tab.id
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
                       }`}
                     type="button"
                     role="tab"
@@ -832,7 +731,7 @@ export default function ProfileDevPage() {
 
                 <div className="bg-white rounded-lg shadow-sm p-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Thông tin bổ sung</h3>
-                  
+
                   {hasProfile ? (
                     <>
                       <div className="space-y-4">
@@ -840,7 +739,7 @@ export default function ProfileDevPage() {
                           <span className="text-gray-500 text-sm">Cấp độ:</span>
                           <span className="ml-2 text-gray-900 capitalize">{developerProfile?.developerLevel?.toLowerCase() || 'Chưa cập nhật'}</span>
                         </div>
-                        
+
                         <div>
                           <span className="text-gray-500 text-sm">Ngôn ngữ:</span>
                           <div className="mt-1">
@@ -930,7 +829,7 @@ export default function ProfileDevPage() {
                           {getProficiencyText(skill.proficiency)}
                         </span>
                       </div>
-                      
+
                       <div className="flex items-center justify-between">
                         <div className="flex space-x-4 text-sm text-gray-500">
                           <span>ID: {skill.id}</span>
@@ -956,22 +855,22 @@ export default function ProfileDevPage() {
                       </div>
                     </div>
                   )) || (
-                    <div className="text-center py-12">
-                      <HiWrenchScrewdriver className="text-gray-400 text-6xl mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        Chưa có kỹ năng nào
-                      </h3>
-                      <p className="text-gray-500 mb-4">
-                        Hãy thêm kỹ năng của bạn để khách hàng có thể tìm thấy bạn dễ dàng hơn
-                      </p>
-                      <button
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                        type="button"
-                      >
-                        Thêm kỹ năng đầu tiên
-                      </button>
-                    </div>
-                  )}
+                      <div className="text-center py-12">
+                        <HiWrenchScrewdriver className="text-gray-400 text-6xl mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          Chưa có kỹ năng nào
+                        </h3>
+                        <p className="text-gray-500 mb-4">
+                          Hãy thêm kỹ năng của bạn để khách hàng có thể tìm thấy bạn dễ dàng hơn
+                        </p>
+                        <button
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                          type="button"
+                        >
+                          Thêm kỹ năng đầu tiên
+                        </button>
+                      </div>
+                    )}
                 </div>
               ) : (
                 <div className="text-center py-12">
@@ -1026,9 +925,8 @@ export default function ProfileDevPage() {
                         <div className="p-4">
                           <div className="flex justify-between items-start mb-2">
                             <h4 className="font-medium text-gray-900">{product.title}</h4>
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              product.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                            }`}>
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${product.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                              }`}>
                               {product.status === 'ACTIVE' ? 'Đang bán' : 'Ngừng bán'}
                             </span>
                           </div>
@@ -1087,10 +985,10 @@ export default function ProfileDevPage() {
                       </div>
                     ))}
                   </div>
-                  
+
                   {products.length === 0 && (
                     <div className="text-center py-12">
-                      <HiShoppingBag className="text-gray-400 text-6xl mb-4" />
+                      {/* <HiShoppingBag className="text-gray-400 text-6xl mb-4" /> */}
                       <h3 className="text-lg font-medium text-gray-900 mb-2">
                         Chưa có sản phẩm nào
                       </h3>
@@ -1215,9 +1113,8 @@ export default function ProfileDevPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Trạng thái tài khoản
                     </label>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      userProfile?.isEnable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${userProfile?.isEnable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
                       {userProfile?.isEnable ? 'Hoạt động' : 'Bị khóa'}
                     </span>
                   </div>
@@ -1398,7 +1295,7 @@ export default function ProfileDevPage() {
                     {isEditing ? (
                       <input
                         type="text"
-                        
+
                         value={formData.timezone || 'Asia/Ho_Chi_Minh_City'}
                         onChange={(e) => handleInputChange('timezone', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1429,7 +1326,7 @@ export default function ProfileDevPage() {
 
                 <div className="mt-6">
                   <label className="flex items-center">
-                    <input  
+                    <input
                       type="checkbox"
                       checked={formData.isAvailable || false}
                       onChange={(e) => handleInputChange('isAvailable', e.target.checked)}

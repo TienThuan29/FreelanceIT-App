@@ -1,4 +1,4 @@
-import { DeveloperProfile, User } from "@/models/user.model";
+import { DeveloperProfile, User, Role } from "@/models/user.model";
 import { DeveloperRepository } from "@/repositories/developer.repo";
 import { UserRepository } from "@/repositories/user.repo";
 import { DeveloperProfileResponse } from "@/types/res/user.res";
@@ -16,6 +16,74 @@ export class DeveloperService {
         this.developerRepository = new DeveloperRepository();
         this.userRepository = new UserRepository();
         this.s3Repository = new S3Repository();
+    }
+
+    public async getDevelopersByPage(page: number, pageSize: number): Promise<{ developers: DeveloperProfileResponse[], totalAvailable: number }> {
+        try {
+            console.log(`Getting developers - page: ${page}, pageSize: ${pageSize}`);
+            
+            // Get all users first
+            const allUsers = await this.userRepository.findAll();
+            
+            // Filter users with DEVELOPER role
+            const developerUsers = allUsers.filter(user => user.role === Role.DEVELOPER);
+            console.log(`Found ${developerUsers.length} developers total`);
+            
+            // First, get all available developer profiles
+            const allAvailableDevelopers: DeveloperProfileResponse[] = [];
+            
+            for (const user of developerUsers) {
+                try {
+                    const developerProfile = await this.developerRepository.findByUserId(user.id);
+                    
+                    // Only include developers who are available
+                    if (!developerProfile || developerProfile.isAvailable !== true) {
+                        continue;
+                    }
+                    
+                    const userProfile: UserProfileResponse = await mapUserToUserProfileResponse(user);
+                    
+                    // Generate signed URL for avatar if it exists
+                    if ((userProfile as any).avatarUrl) {
+                        try {
+                            const signedUrl = await this.s3Repository.generateSignedUrl((userProfile as any).avatarUrl);
+                            (userProfile as any).avatarUrl = signedUrl;
+                        } catch (error) {
+                            console.error(`Error generating signed URL for avatar ${(userProfile as any).avatarUrl}:`, error);
+                        }
+                    }
+                    
+                    allAvailableDevelopers.push({
+                        userProfile: userProfile,
+                        developerProfile: developerProfile,
+                    } as DeveloperProfileResponse);
+                } catch (error) {
+                    console.error(`Error processing developer ${user.id}:`, error);
+                    // Continue with other developers even if one fails
+                }
+            }
+            
+            console.log(`Found ${allAvailableDevelopers.length} available developers total`);
+            
+            // Now apply pagination to the filtered available developers
+            const startIndex = (page - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const paginatedDevelopers = allAvailableDevelopers.slice(startIndex, endIndex);
+            
+            console.log(`Returning ${paginatedDevelopers.length} developers for page ${page} (showing ${startIndex + 1}-${Math.min(endIndex, allAvailableDevelopers.length)} of ${allAvailableDevelopers.length})`);
+            
+            return {
+                developers: paginatedDevelopers,
+                totalAvailable: allAvailableDevelopers.length
+            };
+            
+        } catch (error) {
+            console.error('Error in getDevelopersByPage:', error);
+            return {
+                developers: [],
+                totalAvailable: 0
+            };
+        }
     }
 
     public async getDeveloperProfile(userId: string): Promise<DeveloperProfileResponse | null> {

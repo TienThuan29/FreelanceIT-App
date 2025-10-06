@@ -1,8 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import useAxios from './useAxios';
 import { Api } from '@/configs/api';
-import { DeveloperProfile, User } from '@/types/user.type';
-import { DeveloperLevel, SkillProficiency } from '@/types/user.type';
+import { DeveloperProfile } from '@/types/user.type';
+import cacheService, { CacheKeys } from '@/utils/cache';
 
 // Types for API responses
 export interface UserProfileResponse {
@@ -29,29 +29,39 @@ export interface UseDeveloperProfileState {
     // Data
     userProfile: UserProfileResponse | null;
     developerProfile: DeveloperProfile | null;
+    developersList: DeveloperProfileResponse[];
+    totalAvailable: number;
     
     // Loading states
     isLoading: boolean;
     isUpdating: boolean;
+    isLoadingList: boolean;
     
     // Error states
     error: string | null;
     updateError: string | null;
+    listError: string | null;
     
     // Success states
     isUpdated: boolean;
+    
+    // Cache states
+    isFromCache: boolean;
 }
 
 // Hook return interface
 export interface UseDeveloperProfileReturn extends UseDeveloperProfileState {
     // Actions
-    getDeveloperProfile: (userId: string) => Promise<void>;
+    getDeveloperProfile: (userId: string, forceRefresh?: boolean) => Promise<void>;
+    getDevelopersByPage: (page: number, pageSize: number, forceRefresh?: boolean) => Promise<void>;
     updateDeveloperProfile: (userId: string, profileData: Partial<DeveloperProfile>) => Promise<boolean>;
     updateUserProfile: (userId: string, userData: Partial<UserProfileResponse>) => Promise<boolean>;
     updateUserAvatar: (userId: string, avatarFile: File) => Promise<boolean>;
     refreshProfile: () => Promise<void>;
     clearErrors: () => void;
     resetUpdateState: () => void;
+    clearCache: () => void;
+    refreshDevelopersList: () => Promise<void>;
     
     // Computed values
     isProfileComplete: boolean;
@@ -62,11 +72,16 @@ export interface UseDeveloperProfileReturn extends UseDeveloperProfileState {
 const defaultState: UseDeveloperProfileState = {
     userProfile: null,
     developerProfile: null,
+    developersList: [],
+    totalAvailable: 0,
     isLoading: false,
     isUpdating: false,
+    isLoadingList: false,
     error: null,
     updateError: null,
+    listError: null,
     isUpdated: false,
+    isFromCache: false,
 };
 
 export const useDeveloperProfile = (): UseDeveloperProfileReturn => {
@@ -81,6 +96,7 @@ export const useDeveloperProfile = (): UseDeveloperProfileReturn => {
             ...prev,
             error: null,
             updateError: null,
+            listError: null,
         }));
     }, []);
 
@@ -98,7 +114,7 @@ export const useDeveloperProfile = (): UseDeveloperProfileReturn => {
     /**
      * Get developer profile by userId
      */
-    const getDeveloperProfile = useCallback(async (userId: string): Promise<void> => {
+    const getDeveloperProfile = useCallback(async (userId: string, forceRefresh: boolean = false): Promise<void> => {
         if (!userId) {
             setState(prev => ({
                 ...prev,
@@ -106,6 +122,24 @@ export const useDeveloperProfile = (): UseDeveloperProfileReturn => {
                 isLoading: false,
             }));
             return;
+        }
+
+        const cacheKey = CacheKeys.DEVELOPER_PROFILE(userId);
+
+        // Check cache first (unless force refresh)
+        if (!forceRefresh && cacheService.has(cacheKey)) {
+            const cachedData = cacheService.get<DeveloperProfileResponse>(cacheKey);
+            if (cachedData) {
+                console.log('Loading developer profile from cache:', userId);
+                setState(prev => ({
+                    ...prev,
+                    userProfile: cachedData.userProfile,
+                    developerProfile: cachedData.developerProfile,
+                    isLoading: false,
+                    error: null,
+                }));
+                return;
+            }
         }
 
         setState(prev => ({
@@ -122,6 +156,10 @@ export const useDeveloperProfile = (): UseDeveloperProfileReturn => {
             if (response.data.success) {
                 const profileData: DeveloperProfileResponse = response.data.dataResponse;
                 console.log('profileData', response.data.dataResponse);
+                
+                // Cache the profile for 10 minutes
+                cacheService.set(cacheKey, profileData, 10 * 60 * 1000);
+                
                 setState(prev => ({
                     ...prev,
                     userProfile: profileData.userProfile,
@@ -144,6 +182,104 @@ export const useDeveloperProfile = (): UseDeveloperProfileReturn => {
                 error: error.response?.data?.message || 
                        error.message || 
                        'Failed to fetch developer profile',
+            }));
+        }
+    }, [axiosInstance]);
+
+    /**
+     * Get developers by page (requires CUSTOMER role authentication)
+     */
+    const getDevelopersByPage = useCallback(async (page: number, pageSize: number, forceRefresh: boolean = false): Promise<void> => {
+        if (page < 1) {
+            setState(prev => ({
+                ...prev,
+                listError: 'Page number must be greater than 0',
+                isLoadingList: false,
+            }));
+            return;
+        }
+
+        if (pageSize < 1 || pageSize > 100) {
+            setState(prev => ({
+                ...prev,
+                listError: 'Page size must be between 1 and 100',
+                isLoadingList: false,
+            }));
+            return;
+        }
+
+        const cacheKey = CacheKeys.DEVELOPERS_LIST(page, pageSize);
+
+        // Check cache first (unless force refresh)
+        if (!forceRefresh && cacheService.has(cacheKey)) {
+            const cachedData = cacheService.get<{developers: DeveloperProfileResponse[], totalAvailable: number}>(cacheKey);
+            if (cachedData) {
+                console.log('Loading developers from cache:', { page, pageSize });
+                setState(prev => ({
+                    ...prev,
+                    developersList: cachedData.developers,
+                    totalAvailable: cachedData.totalAvailable,
+                    isLoadingList: false,
+                    listError: null,
+                    isFromCache: true,
+                }));
+                return;
+            }
+        }
+
+        setState(prev => ({
+            ...prev,
+            isLoadingList: true,
+            listError: null,
+            isFromCache: false,
+        }));
+
+        try {
+            // Use authenticated axios instance (requires CUSTOMER role)
+            const response = await axiosInstance.get(Api.Developer.GET_LIST, {
+                params: {
+                    page,
+                    pageSize,
+                }
+            });
+
+            if (response.data.success) {
+                const { developers, pagination } = response.data.dataResponse;
+                const responseData = {
+                    developers,
+                    totalAvailable: pagination.totalAvailable || 0,
+                };
+
+                console.log('Developers list loaded from API:', response.data.dataResponse);
+                
+                // Cache the response for 5 minutes
+                cacheService.set(cacheKey, responseData, 5 * 60 * 1000);
+
+                setState(prev => ({
+                    ...prev,
+                    developersList: developers,
+                    totalAvailable: pagination.totalAvailable || 0,
+                    isLoadingList: false,
+                    listError: null,
+                    isFromCache: false,
+                }));
+            } else {
+                setState(prev => ({
+                    ...prev,
+                    isLoadingList: false,
+                    listError: response.data.message || 'Failed to fetch developers list',
+                    isFromCache: false,
+                }));
+            }
+        } catch (error: any) {
+            console.error('Error fetching developers list:', error);
+            setState(prev => ({
+                ...prev,
+                isLoadingList: false,
+                listError: error.response?.data?.message || 
+                           error.message || 
+                           'Failed to fetch developers list',
+                isFromCache: false,
             }));
         }
     }, [axiosInstance]);
@@ -349,6 +485,27 @@ export const useDeveloperProfile = (): UseDeveloperProfileReturn => {
     }, [state.userProfile?.id, getDeveloperProfile]);
 
     /**
+     * Clear all cache
+     */
+    const clearCache = useCallback((): void => {
+        cacheService.clear();
+        console.log('Cache cleared');
+    }, []);
+
+    /**
+     * Refresh developers list (force refresh from API)
+     */
+    const refreshDevelopersList = useCallback(async (): Promise<void> => {
+        // Clear cache for current page
+        const currentPageSize = 12; // Default page size, you might want to track this in state
+        const cacheKey = CacheKeys.DEVELOPERS_LIST(1, currentPageSize);
+        cacheService.delete(cacheKey);
+        
+        // Force refresh
+        await getDevelopersByPage(1, currentPageSize, true);
+    }, [getDevelopersByPage]);
+
+    /**
      * Check if profile is complete
      */
     const isProfileComplete = useCallback((): boolean => {
@@ -379,12 +536,15 @@ export const useDeveloperProfile = (): UseDeveloperProfileReturn => {
         
         // Actions
         getDeveloperProfile,
+        getDevelopersByPage,
         updateDeveloperProfile,
         updateUserProfile,
         updateUserAvatar,
         refreshProfile,
         clearErrors,
         resetUpdateState,
+        clearCache,
+        refreshDevelopersList,
         
         // Computed values
         isProfileComplete: isProfileComplete(),

@@ -29,6 +29,8 @@ export interface Project {
   language?: string
   workType?: string
   commitment?: string
+  // Add the featured property
+  featured?: boolean; // Using optional property (?) so it works with existing data
 }
 
 export interface Proposal {

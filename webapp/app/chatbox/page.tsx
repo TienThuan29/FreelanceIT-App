@@ -7,6 +7,7 @@ import { useChatNotifications } from "@/hooks/useChatNotifications";
 import { useState } from "react";
 import { mockProjects } from "@/data/mockProjects";
 import { Role } from "@/types/user.type";
+import Link from "next/link";
 
 interface Message {
   id: number;
@@ -223,40 +224,105 @@ export default function Page() {
   const chatPartner = currentConversation?.partner;
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-4">
+    <div className="flex flex-col min-h-screen bg-gray-50">
+      {/* Main Application Header/Navbar */}
+      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-6">
+              {/* Logo */}
+              <Link href="/" className="flex items-center space-x-2">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+                  <span className="text-xl font-bold text-white">F</span>
+                </div>
+                <span className="text-xl font-bold text-gray-900">FreelanceIT</span>
+              </Link>
+              
+              {/* Navigation Links */}
+              <nav className="hidden md:flex items-center space-x-6">
+                <Link href="/post" className="text-gray-600 hover:text-blue-600 font-medium">Dự án</Link>
+                <Link href="/freelancers" className="text-gray-600 hover:text-blue-600 font-medium">Freelancers</Link>
+                <Link href="/chatbox" className="text-blue-600 font-medium border-b-2 border-blue-600 pb-1">Tin nhắn</Link>
+                <Link href="/help" className="text-gray-600 hover:text-blue-600 font-medium">Trợ giúp</Link>
+              </nav>
+            </div>
+
+            {/* User Profile */}
+            <div className="flex items-center space-x-3">
+              <div className="hidden md:flex items-center">
+                <button className="text-gray-600 hover:text-gray-800 mr-5">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                </button>
+              </div>
+              <div className="flex items-center space-x-2 border-l pl-3 border-gray-200">
+                <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                  <span className="text-sm font-medium text-gray-600">
+                    {currentUser.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div className="hidden md:block">
+                  <p className="text-sm font-medium text-gray-800">{currentUser.name}</p>
+                  <p className="text-xs text-gray-500">
+                    {currentUser.role === Role.DEVELOPER ? "Developer" : "Nhà tuyển dụng"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Project Context Banner */}
+      {contextProject && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200">
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-medium text-blue-900">{contextProject.title}</h3>
+                  <p className="text-sm text-blue-600">
+                    {new Intl.NumberFormat("vi-VN", {style: "currency", currency: "VND"}).format(contextProject.budget)}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => router.push(`/post-detail/${projectId}`)}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1"
+              >
+                Xem dự án
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Chat Header - Subheader */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <button
-                onClick={() =>
-                  router.push(projectId ? `/post-detail/${projectId}` : "/post")
-                }
-                className="text-blue-600 hover:text-blue-800"
+                onClick={() => router.push(projectId ? `/post-detail/${projectId}` : "/post")}
+                className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-50"
               >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
               <div>
-                <h1 className="text-xl font-semibold text-gray-800">
-                  Tin nhắn
-                </h1>
+                <h1 className="text-lg font-semibold text-gray-800">Tin nhắn</h1>
                 {contextProject && (
-                  <p className="text-sm text-gray-500">
-                    Về dự án: {contextProject.title}
-                  </p>
+                  <p className="text-sm text-gray-500">Về dự án: {contextProject.title}</p>
                 )}
               </div>
             </div>
@@ -268,18 +334,19 @@ export default function Page() {
         </div>
       </div>
 
-      <div className="container mx-auto h-[calc(100vh-80px)] flex">
-        {/* Sidebar - Conversations List */}
-        <div className="w-1/3 bg-white border-r border-gray-200 flex flex-col">
+      {/* Chat Container */}
+      <div className="container mx-auto flex-1 flex flex-col md:flex-row shadow-lg bg-white rounded-lg my-4 overflow-hidden">
+        {/* Conversations List */}
+        <div className="w-full md:w-1/3 lg:w-1/4 bg-white border-r border-gray-200 flex flex-col">
           <div className="p-4 border-b border-gray-200">
             <div className="relative">
               <input
                 type="text"
                 placeholder="Tìm kiếm cuộc trò chuyện..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               <svg
-                className="absolute right-3 top-2.5 w-5 h-5 text-gray-400"
+                className="absolute left-3 top-2.5 w-5 h-5 text-gray-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -306,12 +373,12 @@ export default function Page() {
                 }`}
               >
                 <div className="relative">
-                  <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-gray-300 to-gray-400 rounded-full flex items-center justify-center">
                     {conversation.partner.avatar ? (
                       <img
                         src={conversation.partner.avatar}
                         alt={conversation.partner.name}
-                        className="w-12 h-12 rounded-full"
+                        className="w-12 h-12 rounded-full object-cover"
                       />
                     ) : (
                       <span className="text-sm font-medium text-gray-600">
@@ -349,18 +416,18 @@ export default function Page() {
         </div>
 
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col bg-white">
-          {/* Chat Header */}
-          <div className="p-4 border-b border-gray-200 bg-white">
+        <div className="flex-1 flex flex-col">
+          {/* Chat Partner Header */}
+          <div className="p-4 border-b border-gray-200 bg-white sticky top-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="relative">
-                  <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-gray-300 to-gray-400 rounded-full flex items-center justify-center">
                     {chatPartner?.avatar ? (
                       <img
                         src={chatPartner.avatar}
                         alt={chatPartner.name}
-                        className="w-10 h-10 rounded-full"
+                        className="w-10 h-10 rounded-full object-cover"
                       />
                     ) : (
                       <span className="text-sm font-medium text-gray-600">
@@ -385,35 +452,20 @@ export default function Page() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1">
                 <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                    />
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
                 </button>
                 <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                    />
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </button>
+                <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                   </svg>
                 </button>
               </div>
@@ -425,6 +477,14 @@ export default function Page() {
             className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 relative"
             onScroll={handleScroll}
           >
+            {/* Chat date separator */}
+            <div className="flex items-center justify-center my-4">
+              <div className="bg-gray-200 text-gray-500 text-xs px-3 py-1 rounded-full">
+                Hôm nay
+              </div>
+            </div>
+            
+            {/* Existing messages code */}
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -446,7 +506,7 @@ export default function Page() {
                       msg.sender === currentUser.role ? "ml-2" : "mr-2"
                     }`}
                   >
-                    <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 bg-gradient-to-br from-gray-300 to-gray-400 rounded-full flex items-center justify-center">
                       <span className="text-xs font-medium text-gray-600">
                         {msg.sender === currentUser.role
                           ? currentUser.name.charAt(0).toUpperCase()
@@ -498,7 +558,7 @@ export default function Page() {
               <div className="flex justify-start">
                 <div className="flex">
                   <div className="flex-shrink-0 mr-2">
-                    <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 bg-gradient-to-br from-gray-300 to-gray-400 rounded-full flex items-center justify-center">
                       <span className="text-xs font-medium text-gray-600">
                         {chatPartner?.name?.charAt(0)?.toUpperCase() || "U"}
                       </span>
@@ -523,7 +583,7 @@ export default function Page() {
 
             <div ref={messagesEndRef} />
 
-            {/* Scroll to bottom button - luôn hiển thị */}
+            {/* Scroll to bottom button */}
             <div className="absolute bottom-4 right-4">
               <button
                 onClick={() => {
@@ -561,36 +621,57 @@ export default function Page() {
                 onChange={handleFileUpload}
                 accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
               />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              <div className="flex space-x-1">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                  title="Đính kèm file"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                  />
-                </svg>
-              </button>
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                    />
+                  </svg>
+                </button>
+                <button
+                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                  title="Thêm emoji"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </button>
+              </div>
               <input
                 type="text"
                 placeholder="Nhập tin nhắn..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleInputKeyDown}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim()}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 <svg
                   className="w-5 h-5"
@@ -610,50 +691,6 @@ export default function Page() {
           </div>
         </div>
       </div>
-
-      {/* Project Context Banner */}
-      {contextProject && (
-        <div className="bg-blue-50 border-b border-blue-200 p-4">
-          <div className="container mx-auto">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <svg
-                    className="w-5 h-5 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="font-medium text-blue-900">
-                    {contextProject.title}
-                  </h3>
-                  <p className="text-sm text-blue-600">
-                    {new Intl.NumberFormat("vi-VN", {
-                      style: "currency",
-                      currency: "VND",
-                    }).format(contextProject.budget)}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => router.push(`/post-detail/${projectId}`)}
-                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-              >
-                Xem dự án →
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

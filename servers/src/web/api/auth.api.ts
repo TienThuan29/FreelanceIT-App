@@ -6,7 +6,7 @@ import { ResponseUtil } from '@/libs/response';
 import { Request, Response, NextFunction } from 'express';
 import logger from '@/libs/logger';
 import { Role } from '@/models/user.model';
-import { RegisterRequest, VerifyCodeRequest } from '@/types/req/user.req';
+import { RegisterRequest, VerifyCodeRequest, ForgotPasswordRequest, ResetPasswordRequest } from '@/types/req/user.req';
 
 export class AuthApi {
 
@@ -22,6 +22,8 @@ export class AuthApi {
         this.updateUser = this.updateUser.bind(this);
         this.deleteUser = this.deleteUser.bind(this);
         this.updateUserStatus = this.updateUserStatus.bind(this);
+        this.forgotPassword = this.forgotPassword.bind(this);
+        this.resetPassword = this.resetPassword.bind(this);
     }
 
 
@@ -345,6 +347,35 @@ export class AuthApi {
             else {
                 next(error);
             }
+        }
+    }
+
+    public async forgotPassword(request: Request, response: Response): Promise<void> {
+        try {
+            const forgotPasswordData: ForgotPasswordRequest = request.body;
+            const result = await this.authService.forgotPassword(forgotPasswordData);
+            ResponseUtil.success(response, result, result.message, 200);
+        }
+        catch (error: any) {
+            logger.error('Forgot password API error:', error);
+            ResponseUtil.error(response, error.message || 'Có lỗi xảy ra khi xử lý yêu cầu đặt lại mật khẩu', 400);
+        }
+    }
+
+    public async resetPassword(request: Request, response: Response): Promise<void> {
+        try {
+            const resetPasswordData: ResetPasswordRequest = request.body;
+            const result = await this.authService.resetPassword(resetPasswordData);
+            
+            if (result.success) {
+                ResponseUtil.success(response, result, result.message, 200);
+            } else {
+                ResponseUtil.error(response, result.message, 400);
+            }
+        }
+        catch (error: any) {
+            logger.error('Reset password API error:', error);
+            ResponseUtil.error(response, error.message || 'Có lỗi xảy ra khi đặt lại mật khẩu', 400);
         }
     }
 

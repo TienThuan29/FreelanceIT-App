@@ -11,6 +11,8 @@ export const Api = {
         GOOGLE_LOGIN: '/api/v1/auth/google/login',
         GOOGLE_CALLBACK: '/api/v1/auth/google/callback',
         GOOGLE_PROFILE: '/api/v1/auth/google/profile',
+        FORGOT_PASSWORD: '/api/v1/auth/forgot-password',
+        RESET_PASSWORD: '/api/v1/auth/reset-password',
     },
 
     Project: {
@@ -31,6 +33,13 @@ export const Api = {
         // Project team endpoints
         ADD_USER_TO_PROJECT: '/api/v1/projects/team/add-user-to-project',
         REMOVE_USER_FROM_PROJECT: '/api/v1/projects/team/remove-user-from-project',
+    },
+
+    Developer: {
+        GET_PROFILE: '/api/v1/developers/profile/get',
+        UPDATE_PROFILE: '/api/v1/developers/profile/update',
+        UPDATE_USER: '/api/v1/developers/user/update',
+        UPDATE_AVATAR: '/api/v1/developers/avatar/update',
     },
 
     

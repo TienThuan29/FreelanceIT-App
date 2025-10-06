@@ -115,8 +115,9 @@ export class S3Repository {
             await this.s3Client.send(command);
             logger.info(`File uploaded successfully: ${fullPath}`);
             
-            // Return the fullPath (key) that can be used with generateSignedUrl()
-            return fullPath;
+            // Return the full public URL path
+            const publicUrl = `https://${this.bucketName}.s3.${config.AWS_REGION}.amazonaws.com/${fullPath}`;
+            return publicUrl;
         } 
         catch (error) {
             logger.error('Error uploading file:', error);

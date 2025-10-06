@@ -6,6 +6,7 @@ export type UserProfileResponse = {
     fullname: string;
     phone?: string;
     dateOfBirth?: Date;
+    avatarUrl?: string;
     role: string; // plain text role
     isEnable: boolean;
     lastLoginDate?: Date;
@@ -15,5 +16,5 @@ export type UserProfileResponse = {
 
 export type DeveloperProfileResponse = {
     userProfile: UserProfileResponse;
-    developerProfile: DeveloperProfile;
+    developerProfile: DeveloperProfile | null;
 }

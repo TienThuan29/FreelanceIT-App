@@ -1,3 +1,4 @@
+import { DeveloperProfile } from "@/models/user.model";
 
 export type UserProfileResponse = {
     id?: string;
@@ -10,4 +11,9 @@ export type UserProfileResponse = {
     lastLoginDate?: Date;
     createdDate?: Date;
     updatedDate?: Date;
+}
+
+export type DeveloperProfileResponse = {
+    userProfile: UserProfileResponse;
+    developerProfile: DeveloperProfile;
 }

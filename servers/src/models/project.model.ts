@@ -2,6 +2,7 @@ export type Project = {
     id: string;
     customerId: string;
     title: string;
+    imageUrl?: string;
     description?: string;
     category?: string;
     requiredSkills?: string[];
@@ -24,6 +25,7 @@ export type Project = {
 export type ProjectType = {
     id: string;
     name: string;
+    createdBy: string; // user id
     isDeleted: boolean;
     createdDate?: Date;
     updatedDate?: Date;

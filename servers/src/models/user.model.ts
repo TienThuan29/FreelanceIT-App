@@ -18,7 +18,7 @@ export type User = {
 }
 
 export type DeveloperProfile = {
-    userId: string;
+    userId: string; // this is id of developer profile
     title?: string;
     bio?: string;
     hourlyRate?: number;

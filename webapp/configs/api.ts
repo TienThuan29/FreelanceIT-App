@@ -10,5 +10,25 @@ export const Api = {
         GET_PROFILE: '/api/v1/auth/profile',
     },
 
+    Project: {
+        // ProjectType endpoints
+        CREATE_PROJECT_TYPE: '/api/v1/projects/types/create-project-type',
+        GET_PROJECT_TYPES_BY_USER: '/api/v1/projects/types/get-by-user-id',
+        GET_PROJECT_TYPE_BY_ID: '/api/v1/projects/types',
+        UPDATE_PROJECT_TYPE: '/api/v1/projects/types/update',
+        DELETE_PROJECT_TYPE: '/api/v1/projects/types/delete',
+        
+        // Project endpoints
+        CREATE_PROJECT: '/api/v1/projects/create-project',
+        GET_PROJECTS_BY_USER: '/api/v1/projects/get-by-user-id',
+        GET_PROJECT_BY_ID: '/api/v1/projects/get-by-id',
+        UPDATE_PROJECT: '/api/v1/projects/update',
+        DELETE_PROJECT: '/api/v1/projects/delete',
+        
+        // Project team endpoints
+        ADD_USER_TO_PROJECT: '/api/v1/projects/team/add-user-to-project',
+        REMOVE_USER_FROM_PROJECT: '/api/v1/projects/team/remove-user-from-project',
+    },
+
     
 }

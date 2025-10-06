@@ -8,28 +8,7 @@ export interface User {
   updatedAt: Date;
 }
 
-export interface Project {
-  id: string
-  title: string
-  description: string
-  budget: number
-  deadline: Date
-  status: 'open' | 'in_progress' | 'completed' | 'cancelled'
-  clientId: string
-  freelancerId?: string
-  skills: string[]
-  createdAt: Date
-  updatedAt: Date
-  // Thêm các thuộc tính mới
-  type?: string
-  duration?: string
-  location?: string
-  level?: string
-  experience?: string
-  language?: string
-  workType?: string
-  commitment?: string
-}
+// Project interface is now defined in project.type.ts
 
 export interface Proposal {
   id: string;

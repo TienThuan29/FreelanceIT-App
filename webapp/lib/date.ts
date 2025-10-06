@@ -1,12 +1,30 @@
-export const formatDate = (dateString: string) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+// export const formatDate = (dateString: string) => {
+//     if (!dateString) return '';
+//     const date = new Date(dateString);
+//     const now = new Date();
+//     const diffTime = Math.abs(now.getTime() - date.getTime());
+//     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 1) return 'Today';
-    if (diffDays === 2) return 'Yesterday';
-    if (diffDays <= 7) return `${diffDays} days ago`;
-    return date.toLocaleDateString('en-US', { month: 'long' }).toUpperCase();
-};
+//     if (diffDays === 1) return 'Today';
+//     if (diffDays === 2) return 'Yesterday';
+//     if (diffDays <= 7) return `${diffDays} days ago`;
+//     return date.toLocaleDateString('en-US', { month: 'long' }).toUpperCase();
+// };
+
+
+export const formatDate = (date: Date | string) => {
+    if (!date) return '-'
+    
+    const dateObj = typeof date === 'string' ? new Date(date) : date
+    
+    // Check if the date is valid
+    if (isNaN(dateObj.getTime())) {
+        return '-'
+    }
+    
+    return new Intl.DateTimeFormat('vi-VN', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    }).format(dateObj) 
+}

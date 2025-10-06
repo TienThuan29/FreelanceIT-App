@@ -162,7 +162,6 @@ export default function DetailPostPage({ params }: DetailPostPageProps) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-gray-400 text-6xl mb-4">📋</div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             Không tìm thấy dự án
           </h3>
@@ -440,7 +439,7 @@ export default function DetailPostPage({ params }: DetailPostPageProps) {
                     onClick={() => router.push(`/nda-contracts?projectId=${id}&type=project&partnerId=${project.clientId}`)}
                     className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
                   >
-                    📋 Tạo hợp đồng NDA
+                    Tạo hợp đồng NDA
                   </button>
                 </div>
               )}

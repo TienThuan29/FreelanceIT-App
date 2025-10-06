@@ -188,10 +188,10 @@ export default function ChatBotPage() {
       let response = 'Tôi tìm thấy một số dự án tuyển dụng phù hợp với kỹ năng của bạn:\n\n'
       suggestions.forEach((project, index) => {
         response += `${index + 1}. **${project.title}**\n`
-        response += `💰 Ngân sách: ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(project.budget)}\n`
-        response += `⏰ Thời hạn: ${project.deadline.toLocaleDateString('vi-VN')}\n`
-        response += `🔧 Kỹ năng: ${project.skills.slice(0, 3).join(', ')}\n`
-        response += `📋 Xem chi tiết: http://localhost:5173/post-detail/${project.id}\n\n`
+        response += `Ngân sách: ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(project.budget)}\n`
+        response += `Thời hạn: ${project.deadline.toLocaleDateString('vi-VN')}\n`
+        response += `Kỹ năng: ${project.skills.slice(0, 3).join(', ')}\n`
+        response += `Xem chi tiết: http://localhost:5173/post-detail/${project.id}\n\n`
       })
       response += 'Bạn có muốn xem thêm dự án khác không?'
       return response
@@ -554,7 +554,7 @@ export default function ChatBotPage() {
                           <p>"Job fullstack với MongoDB"</p>
                         </div>
                         <div>
-                          <p className="font-medium text-blue-600 mb-1">📋 Kỹ năng & Hồ sơ:</p>
+                          <p className="font-medium text-blue-600 mb-1">Kỹ năng & Hồ sơ:</p>
                           <p>"Định giá dịch vụ như thế nào?"</p>
                           <p>"Tạo hồ sơ thu hút khách hàng"</p>
                           <p>"Viết proposal hiệu quả"</p>

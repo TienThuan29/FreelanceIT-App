@@ -24,7 +24,7 @@ export const config = {
     AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY || '',
     DYNAMODB_TABLE_PREFIX: process.env.DYNAMODB_TABLE_PREFIX || '',
     S3_BUCKET_NAME: process.env.S3_BUCKET_NAME || '',
-    S3_PUBLIC_BUCKET_NAME: process.env.S3_PUBLIC_BUCKET_NAME || '',
+    // S3_PUBLIC_BUCKET_NAME: process.env.S3_PUBLIC_BUCKET_NAME || '',
 
     // log
     LOG_LEVEL: process.env.LOG_LEVEL || 'debug',
@@ -33,7 +33,9 @@ export const config = {
 
     // tables
     USER_TABLE: process.env.USER_TABLE || '',
+    DEVELOPER_PROFILE_TABLE: process.env.DEVELOPER_PROFILE_TABLE || '',
     PROJECT_TABLE: process.env.PROJECT_TABLE || '',
+    PROJECT_TYPE_TABLE: process.env.PROJECT_TYPE_TABLE || '',
     FILE_TABLE: process.env.FILE_TABLE || '',
     USERS_PROJECTS_TABLE: process.env.USERS_PROJECTS_TABLE || '',
     LOG_TABLE: process.env.LOG_TABLE || '',

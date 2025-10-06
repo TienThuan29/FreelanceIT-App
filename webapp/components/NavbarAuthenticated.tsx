@@ -4,6 +4,7 @@ import { useChatNotifications } from '../hooks/useChatNotifications'
 import Avatar from './Avatar'
 import SmartImage from './SmartImage'
 import { useRoleValidator } from '@/hooks/useRoleValidator'
+import { PageUrl } from '@/configs/page.url'
 
 const NavbarAuthenticated: React.FC = () => {
 
@@ -31,7 +32,7 @@ const NavbarAuthenticated: React.FC = () => {
   const avatar = user?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=3B82F6&color=fff`
 
   return (
-    <nav className="bg-white shadow-lg sticky top-0 z-50">
+    <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -90,9 +91,9 @@ const NavbarAuthenticated: React.FC = () => {
                 <a href="/purchase-history" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Lịch sử mua hàng
                 </a> */}
-                {/* <a href="/post-project" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
-                  Đăng dự án
-                </a> */}
+                <a href={PageUrl.Customer.PROJECTS_PAGE}className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                  Dự án
+                </a>
               </>
             )}
             

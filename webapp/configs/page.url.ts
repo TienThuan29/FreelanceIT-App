@@ -6,4 +6,8 @@ export const PageUrl = {
 
     SYSTEM_DASHBOARD_PAGE: '/system',
 
+    Customer: {
+        PROJECTS_PAGE: '/projects',
+    }
+
 }

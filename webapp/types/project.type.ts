@@ -8,6 +8,7 @@ export type Project = BaseTimestamps & {
   id: string;
   customerId: string;
   title: string;
+  imageUrl?: string;
   description?: string;
   category?: string;
   requiredSkills?: string[];

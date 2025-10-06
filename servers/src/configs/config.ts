@@ -24,7 +24,6 @@ export const config = {
     AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY || '',
     DYNAMODB_TABLE_PREFIX: process.env.DYNAMODB_TABLE_PREFIX || '',
     S3_BUCKET_NAME: process.env.S3_BUCKET_NAME || '',
-    S3_PUBLIC_BUCKET_NAME: process.env.S3_PUBLIC_BUCKET_NAME || '',
 
     // log
     LOG_LEVEL: process.env.LOG_LEVEL || 'debug',
@@ -33,7 +32,9 @@ export const config = {
 
     // tables
     USER_TABLE: process.env.USER_TABLE || '',
+    DEVELOPER_PROFILE_TABLE: process.env.DEVELOPER_PROFILE_TABLE || '',
     PROJECT_TABLE: process.env.PROJECT_TABLE || '',
+    PROJECT_TYPE_TABLE: process.env.PROJECT_TYPE_TABLE || '',
     FILE_TABLE: process.env.FILE_TABLE || '',
     USERS_PROJECTS_TABLE: process.env.USERS_PROJECTS_TABLE || '',
     LOG_TABLE: process.env.LOG_TABLE || '',
@@ -52,5 +53,9 @@ export const config = {
     SMTP_PASSWORD: process.env.SMTP_PASSWORD || '',
     EMAIL_FROM: process.env.EMAIL_FROM || '',
     EMAIL_FROM_NAME: process.env.EMAIL_FROM_NAME || 'FreelanceIT',
+
+    // google client oauth2
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '',
+    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || '',
 
 } as const;

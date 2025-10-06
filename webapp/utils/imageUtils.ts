@@ -18,7 +18,7 @@ export const generateAvatar = (name: string, backgroundColor?: string, textColor
     return realWorldImages.developers[name as keyof typeof realWorldImages.developers]
   }
 
-  const bg = backgroundColor || generateRandomColor()
+  const bg = backgroundColor || generateDeterministicColor(name)
   const color = textColor || 'ffffff'
   const initials = name
     .split(' ')
@@ -51,6 +51,38 @@ export const generateRandomColor = (): string => {
 }
 
 /**
+ * Tạo màu deterministic dựa trên tên để tránh hydration mismatch
+ */
+export const generateDeterministicColor = (name: string): string => {
+  const colors = [
+    '3B82F6', // Blue
+    '059669', // Green
+    'F59E0B', // Yellow
+    'DC2626', // Red
+    '7C3AED', // Purple
+    'EC4899', // Pink
+    '06B6D4', // Cyan
+    '84CC16', // Lime
+    'F97316', // Orange
+    '8B5CF6', // Violet
+    '10B981', // Emerald
+    'EF4444', // Red
+  ]
+  
+  // Tạo hash từ tên để có màu consistent
+  let hash = 0
+  for (let i = 0; i < name.length; i++) {
+    const char = name.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash = hash & hash // Convert to 32bit integer
+  }
+  
+  // Đảm bảo hash là số dương và lấy modulo với số lượng màu
+  const index = Math.abs(hash) % colors.length
+  return colors[index]
+}
+
+/**
  * Tạo hình ảnh sản phẩm với text và màu sắc
  */
 export const generateProductImage = (
@@ -64,7 +96,7 @@ export const generateProductImage = (
     return realWorldImages.productScreenshots[text as keyof typeof realWorldImages.productScreenshots]
   }
 
-  const bg = backgroundColor || generateRandomColor()
+  const bg = backgroundColor || generateDeterministicColor(text)
   return `https://via.placeholder.com/${width}x${height}/${bg}/ffffff?text=${encodeURIComponent(text)}`
 }
 
@@ -77,7 +109,7 @@ export const generateCompanyLogo = (companyName: string, backgroundColor?: strin
     return realWorldImages.companies[companyName as keyof typeof realWorldImages.companies]
   }
 
-  const bg = backgroundColor || generateRandomColor()
+  const bg = backgroundColor || generateDeterministicColor(companyName)
   const initials = companyName
     .split(' ')
     .map(word => word.charAt(0).toUpperCase())
@@ -197,6 +229,8 @@ export default {
   generateAvatar,
   generateProductImage,
   generateCompanyLogo,
+  generateRandomColor,
+  generateDeterministicColor,
   productImages,
   defaultImages,
   assets,

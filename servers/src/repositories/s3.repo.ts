@@ -7,11 +7,17 @@ export class S3Repository {
 
     private s3Client: S3Client;
     private bucketName: string;
-    private publicBucketName: string;
+    // private publicBucketName: string;
 
     constructor() {
         this.bucketName = config.S3_BUCKET_NAME;
-        this.publicBucketName = config.S3_PUBLIC_BUCKET_NAME;
+        // this.publicBucketName = config.S3_PUBLIC_BUCKET_NAME;
+        
+        // Validate AWS configuration
+        if (!config.AWS_REGION || !config.AWS_ACCESS_KEY_ID || !config.AWS_SECRET_ACCESS_KEY) {
+            logger.warn('AWS credentials not properly configured. S3 operations will fail.');
+        }
+        
         this.s3Client = new S3Client({
             region: config.AWS_REGION,
             credentials: {
@@ -89,46 +95,77 @@ export class S3Repository {
         }
     }
 
-    public async uploadFile(fileBuffer: Buffer, fileName: string, contentType: string): Promise<string> {
+    public async uploadFile(fileBuffer: Buffer, folder: string, contentType: string): Promise<string> {
         try {
+            // Generate unique filename with timestamp and random string
+            const timestamp = Date.now();
+            const randomString = Math.random().toString(36).substring(2, 15);
+            const fileExtension = this.getFileExtension(contentType);
+            const uniqueFileName = `${timestamp}_${randomString}${fileExtension}`;
+            const fullPath = `${folder}/${uniqueFileName}`;
+
             const command = new PutObjectCommand({
                 Bucket: this.bucketName,
-                Key: fileName,
+                Key: fullPath,
                 Body: fileBuffer,
                 ContentType: contentType,
                 // Note: ACL removed - bucket policy should handle access control
             });
 
             await this.s3Client.send(command);
-            logger.info(`File uploaded successfully: ${fileName}`);
+            logger.info(`File uploaded successfully: ${fullPath}`);
             
-            // Return the fileName (key) that can be used with generateSignedUrl()
-            return fileName;
+            // Return the full public URL path
+            const publicUrl = `https://${this.bucketName}.s3.${config.AWS_REGION}.amazonaws.com/${fullPath}`;
+            return publicUrl;
         } 
         catch (error) {
             logger.error('Error uploading file:', error);
+            if (error instanceof Error) {
+                if (error.message.includes('Bucket')) {
+                    throw new Error(`S3 Bucket configuration error: ${error.message}. Please check your AWS credentials and bucket name.`);
+                } else if (error.message.includes('credentials')) {
+                    throw new Error(`AWS credentials error: ${error.message}. Please check your AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.`);
+                }
+            }
             throw error;
         }
     }
 
-    public async uploadPublicFile(file: Buffer, fileName: string, contentType: string): Promise<string> {
-        try {
-            const command = new PutObjectCommand({
-                Bucket: this.publicBucketName,
-                Key: fileName,
-                Body: file,
-                ContentType: contentType,
-                // Note: ACL removed - bucket should be configured for public access via bucket policy
-            });
-
-            await this.s3Client.send(command);
-            return `https://${this.publicBucketName}.s3.${config.AWS_REGION}.amazonaws.com/${fileName}`;
-        } 
-        catch (error) {
-            logger.error('Error uploading public file:', error);
-            throw error;
-        }
+    private getFileExtension(contentType: string): string {
+        const extensionMap: { [key: string]: string } = {
+            'image/jpeg': '.jpg',
+            'image/jpg': '.jpg',
+            'image/png': '.png',
+            'image/gif': '.gif',
+            'image/webp': '.webp',
+            'image/svg+xml': '.svg',
+            'application/pdf': '.pdf',
+            'text/plain': '.txt',
+            'application/json': '.json',
+        };
+        
+        return extensionMap[contentType] || '.bin';
     }
+
+    // public async uploadPublicFile(file: Buffer, fileName: string, contentType: string): Promise<string> {
+    //     try {
+    //         const command = new PutObjectCommand({
+    //             Bucket: this.publicBucketName,
+    //             Key: fileName,
+    //             Body: file,
+    //             ContentType: contentType,
+    //             // Note: ACL removed - bucket should be configured for public access via bucket policy
+    //         });
+
+    //         await this.s3Client.send(command);
+    //         return `https://${this.publicBucketName}.s3.${config.AWS_REGION}.amazonaws.com/${fileName}`;
+    //     } 
+    //     catch (error) {
+    //         logger.error('Error uploading public file:', error);
+    //         throw error;
+    //     }
+    // }
 }
 
 export const s3RepositoryInstance = new S3Repository();

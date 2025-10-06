@@ -209,7 +209,6 @@ export default function NDAContractsPage() {
         {/* Contracts List */}
         {filteredContracts.length === 0 ? (
           <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-            <div className="text-gray-400 text-6xl mb-4">📋</div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
               Chưa có hợp đồng nào
             </h3>
@@ -244,7 +243,7 @@ export default function NDAContractsPage() {
                           {statusInfo.icon} {statusInfo.text}
                         </span>
                         <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                          {contract.contractType === 'project' ? '📋 Dự án' : '📦 Sản phẩm'}
+                          {contract.contractType === 'project' ? 'Dự án' : 'Sản phẩm'}
                         </span>
                       </div>
 

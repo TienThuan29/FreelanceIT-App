@@ -12,6 +12,10 @@ router.post('/register', (req, res) => authApi.register(req, res));
 
 router.post('/verify-code', (req, res) => authApi.verifyCode(req, res));
 
+router.post('/forgot-password', (req, res) => authApi.forgotPassword(req, res));
+
+router.post('/reset-password', (req, res) => authApi.resetPassword(req, res));
+
 router.post('/authenticate', (req, res, next) => authApi.authenticate(req, res, next));
 
 router.post('/refresh-token', authApi.refreshToken);

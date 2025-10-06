@@ -6,6 +6,8 @@ import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { ConfigProvider } from 'antd';
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/contexts/AuthContext";
+import NavbarWrapper from "@/components/NavbarWrapper";
+import FooterWrapper from "@/components/FooterWrapper";
 
 const sans = Inter({
   subsets: ['latin'],
@@ -44,7 +46,11 @@ export default function RootLayout({
             }}
           >
               <AuthProvider>
-                {children}
+                <NavbarWrapper />
+                <main>
+                  {children}
+                </main>
+                <FooterWrapper />
               </AuthProvider>
           </ConfigProvider>
         </AntdRegistry>

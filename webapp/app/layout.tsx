@@ -6,6 +6,7 @@ import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { ConfigProvider } from 'antd';
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ChatProvider } from "@/contexts/ChatContext";
 
 const sans = Inter({
   subsets: ['latin'],
@@ -33,7 +34,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${sans.variable} ${mono.variable}`}>
-      <body>
+      <body suppressHydrationWarning={true}>
       <Toaster position="top-right" />
         <AntdRegistry>
           <ConfigProvider
@@ -44,7 +45,9 @@ export default function RootLayout({
             }}
           >
               <AuthProvider>
-                {children}
+                <ChatProvider>
+                  {children}
+                </ChatProvider>
               </AuthProvider>
           </ConfigProvider>
         </AntdRegistry>

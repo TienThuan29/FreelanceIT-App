@@ -37,6 +37,8 @@ export const config = {
     FILE_TABLE: process.env.FILE_TABLE || '',
     USERS_PROJECTS_TABLE: process.env.USERS_PROJECTS_TABLE || '',
     LOG_TABLE: process.env.LOG_TABLE || '',
+    CONVERSATION_TABLE: process.env.CONVERSATION_TABLE || '',
+    MESSAGE_TABLE: process.env.MESSAGE_TABLE || '',
 
     // redis
     REDIS_HOST: process.env.REDIS_HOST || 'localhost',

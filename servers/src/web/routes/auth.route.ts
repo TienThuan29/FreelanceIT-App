@@ -1,7 +1,6 @@
-import { authenticate, authorize, validateSystemSecret } from '@/web/middlewares/auth.middleware';
+import { authenticate, validateSystemSecret } from '@/web/middlewares/auth.middleware';
 import { AuthApi } from '@/web/api/auth.api';
 import { Router } from 'express';
-// import { Role } from '@/models/user.model';
 
 const router = Router();
 const authApi = new AuthApi();
@@ -18,7 +17,7 @@ router.post('/refresh-token', authApi.refreshToken);
 
 router.get('/profile', authenticate, (req, res) => authApi.getProfile(req, res));
 
-// router.get('/users', authenticate, authorize([Role.SYSTEM]), (req, res, next) => authApi.getAllUsers(req, res, next));
+router.get('/users', authenticate, (req, res, next) => authApi.getAllUsers(req, res, next));
 
 // router.post('/users/by-email', authenticate, (req, res, next) => authApi.getUserByEmail(req, res, next));
 

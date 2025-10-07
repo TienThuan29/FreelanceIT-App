@@ -34,6 +34,9 @@ const Navbar: React.FC = () => {
             <a href="/post" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
               Tuyển dụng
             </a>
+            <a href="/chatbox" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+              Chat
+            </a>
             <a href="/about" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
               Về chúng tôi
             </a>
@@ -83,6 +86,12 @@ const Navbar: React.FC = () => {
                 className="block px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors duration-300"
               >
                 Tuyển dụng
+              </a>
+              <a
+                href="/chatbox"
+                className="block px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors duration-300"
+              >
+                Chat
               </a>
               <a
                 href="/about"

@@ -16,6 +16,7 @@ export class DynamoRepository {
     constructor(tableName: string) {
         this.tableName = dynamoDbInstance.getTableName(tableName);
         logger.info(`DynamoRepository initialized for table: ${this.tableName}`);
+        console.log(`DynamoRepository: Creating table name from '${tableName}' to '${this.tableName}'`);
     }
 
     public getTableName(): string {
@@ -147,6 +148,16 @@ export class DynamoRepository {
     public async scanItems(): Promise<Record<string, any>[]> {
         const command = new ScanCommand({
             TableName: this.tableName,
+        });
+        const result = await dynamoDB.send(command);
+        return result.Items || [];
+    }
+
+    public async scanItemsWithFilter(filterExpression?: string, expressionAttributeValues?: Record<string, any>): Promise<Record<string, any>[]> {
+        const command = new ScanCommand({
+            TableName: this.tableName,
+            FilterExpression: filterExpression,
+            ExpressionAttributeValues: expressionAttributeValues,
         });
         const result = await dynamoDB.send(command);
         return result.Items || [];

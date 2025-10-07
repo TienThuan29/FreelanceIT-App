@@ -147,12 +147,10 @@ export class AuthApi {
                 return;
             }
 
-            // Verify user has admin/system role
+            // Verify user is authenticated
             const user = await this.authService.getUserByToken(accessToken);
-            if (!user || 
-                (user.role !== Role.CUSTOMER && user.role !== Role.DEVELOPER && user.role !== Role.SYSTEM)
-            ) {
-                ResponseUtil.error(response, 'Không đủ quyền truy cập', 403);
+            if (!user) {
+                ResponseUtil.error(response, 'Người dùng không hợp lệ', 401);
                 return;
             }
 

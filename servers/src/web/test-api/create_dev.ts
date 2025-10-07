@@ -200,7 +200,7 @@ export function generateDeveloperData(): { user: User, developerProfile: Develop
     const province = getRandomElement(sampleProvinces);
     
     const experienceYears = Math.floor(Math.random() * 10) + 1; // 1-10 years
-    const hourlyRate = 100000 + Math.floor(Math.random() * 100000); // 100,000-200,000 VND/hour
+    const hourlyRate = (100000 + Math.floor(Math.random() * 100000)) / 1000 * 1000; // 100,000-200,000 VND/hour (divisible by 1000)
     
     // Calculate developer level based on experience
     let developerLevel: DeveloperLevel;

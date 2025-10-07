@@ -58,4 +58,13 @@ export const config = {
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '',
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || '',
 
+    // pinecone vector database
+    PINECONE_API_KEY: process.env.PINECONE_API_KEY || '',
+    PINECONE_HOST_URL: process.env.PINECONE_HOST_URL || '',
+    PINECONE_INDEX_NAME: process.env.PINECONE_INDEX_NAME || '',
+
+    // google gemini ai
+    GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
+    GEMINI_EMBEDDING_MODEL: process.env.GEMINI_EMBEDDING_MODEL || 'gemini-embedding-001',
+
 } as const;

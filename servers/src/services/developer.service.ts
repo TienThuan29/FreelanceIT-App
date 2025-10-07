@@ -5,6 +5,8 @@ import { DeveloperProfileResponse } from "@/types/res/user.res";
 import type { UserProfileResponse } from "@/types/res/user.res";
 import { mapUserToUserProfileResponse } from "@/libs/mappers/user.mapper";
 import { S3Repository } from "@/repositories/s3.repo";
+import { geminiEmbeddingService } from "@/thirdparties/gemini.service";
+import { vectorDBRepository, DeveloperVectorData } from "@/repositories/vectordb.repo";
 
 export class DeveloperService {
 
@@ -176,17 +178,15 @@ export class DeveloperService {
     }
 
     public async updateDeveloperProfile(userId: string, developerProfile: DeveloperProfile): Promise<DeveloperProfileResponse | null> {
-        console.log('DeveloperService.updateDeveloperProfile called with userId:', userId);
-        console.log('Developer profile data:', developerProfile);
+        // console.log('DeveloperService.updateDeveloperProfile called with userId:', userId);
+        // console.log('Developer profile data:', developerProfile);
         
         const user = await this.userRepository.findById(userId);
         if (!user) {
             console.error('User not found for userId:', userId);
             return null;
         }
-        
-        console.log('User found:', user);
-        
+        // console.log('User found:', user);
         try {
             const updatedDeveloperProfile = await this.developerRepository.update(userId, developerProfile);
             if (!updatedDeveloperProfile) {
@@ -194,7 +194,14 @@ export class DeveloperService {
                 return null;
             }
             
-            console.log('Successfully updated developer profile:', updatedDeveloperProfile);
+            // After update developer profile, create a vector embedding for the developer profile
+            try {
+                await this.createAndStoreDeveloperEmbedding(userId, user, updatedDeveloperProfile);
+                console.log(`Successfully created and stored vector embedding for developer ${userId}`);
+            } catch (embeddingError) {
+                console.error(`Failed to create vector embedding for developer ${userId}:`, embeddingError);
+                // Don't fail the entire operation if embedding creation fails
+            }
             
             const userProfile = await mapUserToUserProfileResponse(user);
             return {
@@ -204,6 +211,147 @@ export class DeveloperService {
         } catch (error) {
             console.error('Error in updateDeveloperProfile:', error);
             return null;
+        }
+    }
+
+    /**
+     * Create and store vector embedding for developer profile
+     */
+    private async createAndStoreDeveloperEmbedding(
+        userId: string, 
+        user: User, 
+        developerProfile: DeveloperProfile
+    ): Promise<void> {
+        try {
+            // Prepare text for embedding generation
+            const embeddingText = this.prepareDeveloperEmbeddingText(user, developerProfile);
+            console.log(`Prepared embedding text for developer ${userId}: ${embeddingText.substring(0, 100)}...`);
+            
+            // Generate embedding using Gemini
+            const embedding = await geminiEmbeddingService.generateEmbedding(embeddingText);
+            console.log(`Generated embedding for developer ${userId}, dimension: ${embedding.length}`);
+            
+            // Prepare developer vector data
+            const developerVectorData: DeveloperVectorData = {
+                developerId: userId,
+                name: user.fullname || '',
+                bio: developerProfile.bio || '',
+                skills: developerProfile.skills?.map(skill => skill.name) || [],
+                experience: developerProfile.experienceYears?.toString() || '',
+                portfolio: developerProfile.githubUrl || ''
+            };
+            
+            console.log(`Prepared vector data for developer ${userId}:`, JSON.stringify(developerVectorData));
+            
+            // Store in vector database
+            await vectorDBRepository.storeDeveloperVectors([developerVectorData], [embedding]);
+            
+            console.log(`Vector embedding created and stored for developer ${userId}`);
+        } catch (error) {
+            console.error(`Error creating vector embedding for developer ${userId}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Prepare text for embedding generation from developer profile
+     */
+    private prepareDeveloperEmbeddingText(user: User, developerProfile: DeveloperProfile): string {
+        const parts: string[] = [];
+        
+        // Add name
+        if (user.fullname) {
+            parts.push(`Name: ${user.fullname}`);
+        }
+        
+        // Add bio
+        if (developerProfile.bio) {
+            parts.push(`Bio: ${developerProfile.bio}`);
+        }
+        
+        // Add skills
+        if (developerProfile.skills && developerProfile.skills.length > 0) {
+            const skillNames = developerProfile.skills.map(skill => skill.name).join(', ');
+            parts.push(`Skills: ${skillNames}`);
+        }
+        
+        // Add experience
+        if (developerProfile.experienceYears) {
+            parts.push(`Experience: ${developerProfile.experienceYears} years`);
+        }
+        
+        // Add developer level
+        if (developerProfile.developerLevel) {
+            parts.push(`Level: ${developerProfile.developerLevel}`);
+        }
+        
+        // Add GitHub URL
+        if (developerProfile.githubUrl) {
+            parts.push(`GitHub: ${developerProfile.githubUrl}`);
+        }
+        
+        // Add LinkedIn URL
+        if (developerProfile.linkedinUrl) {
+            parts.push(`LinkedIn: ${developerProfile.linkedinUrl}`);
+        }
+        
+        // Add availability status
+        if (developerProfile.isAvailable !== undefined) {
+            parts.push(`Available: ${developerProfile.isAvailable ? 'Yes' : 'No'}`);
+        }
+        
+        // Add hourly rate if available
+        if (developerProfile.hourlyRate) {
+            parts.push(`Hourly Rate: $${developerProfile.hourlyRate}`);
+        }
+        
+        // Add rating if available
+        if (developerProfile.rating) {
+            parts.push(`Rating: ${developerProfile.rating}/5`);
+        }
+        
+        // Add languages if available
+        if (developerProfile.languages && developerProfile.languages.length > 0) {
+            parts.push(`Languages: ${developerProfile.languages.join(', ')}`);
+        }
+        
+        // Add timezone if available
+        if (developerProfile.timezone) {
+            parts.push(`Timezone: ${developerProfile.timezone}`);
+        }
+        
+        return parts.join('. ');
+    }
+
+    /**
+     * Update vector embedding when developer profile changes
+     * This method should be called when specific fields are updated
+     */
+    public async updateDeveloperEmbedding(userId: string): Promise<boolean> {
+        try {
+            const user = await this.userRepository.findById(userId);
+            if (!user) {
+                console.error('User not found for userId:', userId);
+                return false;
+            }
+
+            const developerProfile = await this.developerRepository.findByUserId(userId);
+            if (!developerProfile) {
+                console.error('Developer profile not found for userId:', userId);
+                return false;
+            }
+
+            // Delete existing embedding
+            await vectorDBRepository.deleteDeveloperVectors([userId]);
+            
+            // Create new embedding
+            await this.createAndStoreDeveloperEmbedding(userId, user, developerProfile);
+            
+            console.log(`Successfully updated vector embedding for developer ${userId}`);
+            return true;
+        } catch (error) {
+            console.error(`Failed to update vector embedding for developer ${userId}:`, error);
+            return false;
         }
     }
 

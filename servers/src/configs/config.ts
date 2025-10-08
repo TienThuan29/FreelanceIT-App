@@ -37,6 +37,7 @@ export const config = {
     PROJECT_TYPE_TABLE: process.env.PROJECT_TYPE_TABLE || '',
     FILE_TABLE: process.env.FILE_TABLE || '',
     USERS_PROJECTS_TABLE: process.env.USERS_PROJECTS_TABLE || '',
+    CHATBOT_SESSION_TABLE: process.env.CHATBOT_SESSION_TABLE || 'chatbot-sessions',
     LOG_TABLE: process.env.LOG_TABLE || '',
 
     // redis
@@ -66,5 +67,8 @@ export const config = {
     // google gemini ai
     GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
     GEMINI_EMBEDDING_MODEL: process.env.GEMINI_EMBEDDING_MODEL || 'gemini-embedding-001',
+
+    // n8n chatbot
+    N8N_WEBHOOK_URL: process.env.N8N_WEBHOOK_URL || 'http://localhost:5678/webhook/4091fa09-fb9a-4039-9411-7104d213f601/chat',
 
 } as const;

@@ -52,9 +52,9 @@ const NavbarAuthenticated: React.FC = () => {
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
             {/* Navigation Links */}
-            <a href="/chatbot" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+            {/* <a href="/chatbot" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
               Chatbot AI
-            </a>
+            </a> */}
             {/* Role-specific links */}
             {isDeveloper && (
               <>
@@ -78,6 +78,9 @@ const NavbarAuthenticated: React.FC = () => {
 
             {isCustomer && (
               <>
+                <a href="/chatbot/customer" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                  Chatbot AI
+                </a>
                 <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Sản phẩm
                 </a>

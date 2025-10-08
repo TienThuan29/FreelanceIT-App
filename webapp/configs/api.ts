@@ -43,5 +43,11 @@ export const Api = {
         UPDATE_AVATAR: '/api/v1/developers/avatar/update',
     },
 
+    Customer: {
+        SEND_MESSAGE: '/api/v1/customers/chatbot/send-message',
+        GET_SESSIONS: '/api/v1/customers/chatbot/get-sessions',
+        GET_SESSION: '/api/v1/customers/chatbot/session',
+    },
+
     
 }

@@ -7,7 +7,7 @@ import {
       LoginCredentials,
       RegisterData,
 } from "@/types/auth.type";
-import { RegisterRequest, VerifyCodeRequest } from "@/types/req/user.req";
+import { RegisterRequest, VerifyCodeRequest, ForgotPasswordRequest, ResetPasswordRequest } from "@/types/req/user.req";
 import { UserProfileResponse } from "@/types/res/user.res";
 import { JwtUtil } from "@/utils/jwt.util";
 import { RedisRepository } from "@/repositories/redis.repo";
@@ -39,6 +39,8 @@ export class AuthService {
             this.refreshToken = this.refreshToken.bind(this);
             this.authenticate = this.authenticate.bind(this);
             this.getProfile = this.getProfile.bind(this);
+            this.forgotPassword = this.forgotPassword.bind(this);
+            this.resetPassword = this.resetPassword.bind(this);
       }
 
 
@@ -260,5 +262,113 @@ export class AuthService {
                   return null;
             }
             return mapUserToUserProfileResponse(updatedUser);
+      }
+
+      /**
+       * Handle forgot password request
+       * 1. Check if email exists in database
+       * 2. Generate reset token
+       * 3. Store token in Redis with expiration
+       * 4. Send password reset email
+       */
+      public async forgotPassword(forgotPasswordData: ForgotPasswordRequest): Promise<{ message: string }> {
+            try {
+                  // Check if user exists
+                  const user = await this.userRepository.findByEmail(forgotPasswordData.email);
+                  if (!user || !user.isEnable) {
+                        // Don't reveal if email exists or not for security
+                        return { message: 'Nếu email tồn tại, bạn sẽ nhận được liên kết đặt lại mật khẩu' };
+                  }
+
+                  // Generate reset token
+                  const resetToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                  
+                  // Store token in Redis with 1 hour expiration
+                  const tokenData = {
+                        email: user.email,
+                        userId: user.id,
+                        token: resetToken,
+                        createdAt: new Date().toISOString()
+                  };
+                  
+                  await this.redisRepository.saveObject(`reset_password:${resetToken}`, tokenData, 3600); // 1 hour
+
+                  // Generate reset URL
+                  const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+
+                  // Send password reset email
+                  await this.emailService.sendTemplateEmail(
+                        user.email,
+                        'password-reset',
+                        {
+                              userName: user.fullname || user.email,
+                              resetToken: resetToken,
+                              resetUrl: resetUrl,
+                              expirationTime: '1 giờ'
+                        }
+                  );
+
+                  logger.info(`Password reset email sent to: ${user.email}`);
+                  
+                  return { message: 'Nếu email tồn tại, bạn sẽ nhận được liên kết đặt lại mật khẩu' };
+            }
+            catch (error) {
+                  logger.error('Forgot password error:', error);
+                  throw new Error('Có lỗi xảy ra khi xử lý yêu cầu đặt lại mật khẩu');
+            }
+      }
+
+      /**
+       * Handle password reset with token
+       * 1. Validate reset token
+       * 2. Check token expiration
+       * 3. Update user password
+       * 4. Delete token from Redis
+       */
+      public async resetPassword(resetPasswordData: ResetPasswordRequest): Promise<{ success: boolean; message: string }> {
+            try {
+                  // Validate passwords match
+                  if (resetPasswordData.newPassword !== resetPasswordData.confirmPassword) {
+                        return { success: false, message: 'Mật khẩu xác nhận không khớp' };
+                  }
+
+                  // Validate password strength
+                  if (resetPasswordData.newPassword.length < 4) {
+                        return { success: false, message: 'Mật khẩu phải có ít nhất 4 ký tự' };
+                  }
+
+                  // Get token data from Redis
+                  const tokenData = await this.redisRepository.getObject(`reset_password:${resetPasswordData.token}`);
+                  if (!tokenData) {
+                        return { success: false, message: 'Token không hợp lệ hoặc đã hết hạn' };
+                  }
+
+                  // Get user
+                  const user = await this.userRepository.findById(tokenData.userId);
+                  if (!user || !user.isEnable) {
+                        return { success: false, message: 'Người dùng không tồn tại hoặc đã bị vô hiệu hóa' };
+                  }
+
+                  // Update password
+                  const updatedUser = await this.userRepository.update(user.id, {
+                        password: resetPasswordData.newPassword,
+                        updatedDate: new Date()
+                  });
+
+                  if (!updatedUser) {
+                        return { success: false, message: 'Cập nhật mật khẩu thất bại' };
+                  }
+
+                  // Delete token from Redis
+                  await this.redisRepository.delete(`reset_password:${resetPasswordData.token}`);
+
+                  logger.info(`Password reset successful for user: ${user.email}`);
+                  
+                  return { success: true, message: 'Đặt lại mật khẩu thành công' };
+            }
+            catch (error) {
+                  logger.error('Reset password error:', error);
+                  return { success: false, message: 'Có lỗi xảy ra khi đặt lại mật khẩu' };
+            }
       }
 }

@@ -1,9 +1,17 @@
 import { Router } from "express";
 import authRouter from "./auth.route";
+import projectRouter from "./project.route";
+import googleAuthRouter from "./google-auth.route";
+import developerRouter from "./developer.route";
+import testDataRouter from "./test-data.route";
 
 const router = Router();
 
 router.use('/auth', authRouter);
+router.use('/auth/google', googleAuthRouter);
+router.use('/projects', projectRouter);
+router.use('/developers', developerRouter);
+router.use('/test-data', testDataRouter);
 /**
  * @swagger
  * /health:

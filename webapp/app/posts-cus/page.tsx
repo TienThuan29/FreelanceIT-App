@@ -5,7 +5,6 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import type { Project } from '@/types'
-import { mockProjects } from '@/data/mockProjects'
 import { useRouter } from 'next/navigation'
 
 export default function PostPage() {

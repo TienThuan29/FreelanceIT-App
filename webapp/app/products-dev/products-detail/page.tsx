@@ -430,7 +430,7 @@ const ProductsDetail: React.FC = () => {
                     onClick={() => navigate(`/nda-contract?productId=${selectedProduct.id}&type=product&partnerId=${selectedProduct.developer.id}`)}
                     className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors font-medium"
                   >
-                    📋 Tạo hợp đồng NDA
+                    Tạo hợp đồng NDA
                   </button> */}
                   
                   {selectedProduct.liveUrl && (

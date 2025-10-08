@@ -6,6 +6,7 @@ import { useChatNotifications } from '../hooks/useChatNotifications'
 import Avatar from './Avatar'
 import SmartImage from './SmartImage'
 import { useRoleValidator } from '@/hooks/useRoleValidator'
+import { PageUrl } from '@/configs/page.url'
 
 const NavbarAuthenticated: React.FC = () => {
 
@@ -61,16 +62,18 @@ const NavbarAuthenticated: React.FC = () => {
             <a href="/chatbot" className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
               Chatbot AI
             </a>
-            
             {/* Role-specific links */}
             {isDeveloper && (
               <>
                 <a href="/profile-dev" className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
                   Hồ sơ
                 </a>
-                <a href="/manage-developer-projects" className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
-                  Quản lý dự án
+                <a href="/post" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                  Tuyển dụng
                 </a>
+                {/* <a href="/manage-developer-projects" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                  Quản lý dự án
+                </a> */}
                 {/* <a href="/nda-contracts" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Hợp đồng NDA
                 </a>
@@ -79,10 +82,16 @@ const NavbarAuthenticated: React.FC = () => {
                 </a> */}
               </>
             )}
-            
+
             {isCustomer && (
               <>
-                <a href="/profile-employer" className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
+                <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                  Sản phẩm
+                </a>
+                <a href={PageUrl.Customer.POSTS_DEV_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                  Tuyển dụng lập trình viên
+                </a>
+                <a href="/profile-employer" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Hồ sơ
                 </a>
                 {/* <a href="/nda-contracts" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
@@ -91,12 +100,12 @@ const NavbarAuthenticated: React.FC = () => {
                 <a href="/purchase-history" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Lịch sử mua hàng
                 </a> */}
-                {/* <a href="/post-project" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
-                  Đăng dự án
-                </a> */}
+                <a href={PageUrl.Customer.PROJECTS_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                  Dự án
+                </a>
               </>
             )}
-            
+
             {isAdmin && (
               <a href="/admin" className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
                 Quản trị
@@ -154,7 +163,7 @@ const NavbarAuthenticated: React.FC = () => {
                     <div className="text-xs text-gray-500">{user?.email}</div>
                     <div className="text-xs text-blue-600 capitalize">{user?.role}</div>
                   </div>
-                  
+
                   {isDeveloper && (
                     <a
                       href="/profile-dev"
@@ -163,7 +172,7 @@ const NavbarAuthenticated: React.FC = () => {
                       Hồ sơ của tôi
                     </a>
                   )}
-                  
+
                   {isCustomer && (
                     <a
                       href="/profile-employer"
@@ -172,7 +181,7 @@ const NavbarAuthenticated: React.FC = () => {
                       Hồ sơ công ty
                     </a>
                   )}
-                  
+
                   <a
                     href="/settings"
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
@@ -237,7 +246,7 @@ const NavbarAuthenticated: React.FC = () => {
               >
                 Tuyển dụng
               </a>
-              
+
               {/* Chat Link */}
               <a
                 href="/chatbox"
@@ -255,7 +264,7 @@ const NavbarAuthenticated: React.FC = () => {
                   )}
                 </div>
               </a>
-              
+
               {/* Role-specific links */}
               {isDeveloper && (
                 <>
@@ -273,7 +282,7 @@ const NavbarAuthenticated: React.FC = () => {
                   </a>
                 </>
               )}
-              
+
               {isCustomer && (
                 <>
                   <a
@@ -290,7 +299,7 @@ const NavbarAuthenticated: React.FC = () => {
                   </a>
                 </>
               )}
-              
+
               {isAdmin && (
                 <a
                   href="/admin"
@@ -299,7 +308,7 @@ const NavbarAuthenticated: React.FC = () => {
                   Quản trị
                 </a>
               )}
-              
+
               <a
                 href="/settings"
                 className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-300 font-medium"

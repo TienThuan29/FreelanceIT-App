@@ -5,6 +5,7 @@ export type User = {
     email: string;
     password: string;
     avatarUrl?: string;
+    avatar?: string;
     fullname: string;
     phone?: string;
     dateOfBirth?: Date;
@@ -13,12 +14,13 @@ export type User = {
     lastLoginDate?: Date;
     commune: Commune;
     province: Province;
+    googleId?: string;
     createdDate?: Date;
     updatedDate?: Date;
 }
 
 export type DeveloperProfile = {
-    userId: string;
+    userId: string; // this is id of developer profile
     title?: string;
     bio?: string;
     hourlyRate?: number;
@@ -33,6 +35,8 @@ export type DeveloperProfile = {
     languages?: string[];   
     timezone?: string;
     cvUrl?: string;
+    createdDate?: Date;
+    updatedDate?: Date;
 };
 
 export type CustomerProfile = {

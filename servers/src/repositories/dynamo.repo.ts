@@ -153,9 +153,15 @@ export class DynamoRepository {
     }
 
 
-    protected convertDateToISOString(date?: Date): string | undefined {
+    protected convertDateToISOString(date?: Date | string): string | undefined {
         if (!date) return undefined;
-        return date.toISOString();
+        try {
+            const dateObj = date instanceof Date ? date : new Date(date);
+            return dateObj.toISOString();
+        } catch (error) {
+            logger.error('Error converting date to ISO string:', error);
+            return undefined;
+        }
     }
 
     protected convertISOStringToDate(date?: string): Date | undefined {

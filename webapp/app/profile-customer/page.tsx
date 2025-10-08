@@ -7,7 +7,6 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import { mockProjects } from '@/data/mockProjects'
 import type { EmployerProfile } from '@/data/mockEmployerProfiles'
 import { getEmployerProfileByEmail } from '@/data/mockEmployerProfiles'
 
@@ -135,10 +134,10 @@ export default function ProfileEmployerPage() {
 
       setProfile(updatedProfile)
       setIsEditing(false)
-      alert('Cập nhật thông tin thành công!')
+      toast.success('Cập nhật thông tin thành công!')
     } catch (error) {
       console.error('Lỗi khi lưu thông tin:', error)
-      alert('Có lỗi xảy ra khi cập nhật thông tin!')
+      toast.error('Có lỗi xảy ra khi cập nhật thông tin!')
     } finally {
       setSaving(false)
     }

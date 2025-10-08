@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useChatNotifications } from '../hooks/useChatNotifications'
@@ -32,20 +34,19 @@ const NavbarAuthenticated: React.FC = () => {
   const avatar = user?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=3B82F6&color=fff`
 
   return (
-    <nav className="bg-white shadow-md sticky top-0 z-50">
+    <nav className="bg-white/95 backdrop-blur-sm border-b border-blue-100 shadow-lg sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <a href="/" className="flex items-center space-x-2">
-              <SmartImage
-                src={'/assets/icon.png'}
-                alt="FreeLanceIT Icon"
-                className="w-10 h-auto"
+            <a href="/" className="flex items-center">
+              <SmartImage 
+                src={'/assets/fulllogo_lightArtboard_1.png'} 
+                alt="FreeLanceIT Logo" 
+                className="h-12 w-auto"
                 type="logo"
                 fallbackName="FreeLanceIT"
               />
-              <span className="text-xl font-bold text-gray-800">FreeLanceIT</span>
             </a>
           </div>
 
@@ -58,7 +59,7 @@ const NavbarAuthenticated: React.FC = () => {
             {/* Role-specific links */}
             {isDeveloper && (
               <>
-                <a href="/profile-dev" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                <a href="/profile-dev" className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
                   Hồ sơ
                 </a>
                 <a href="/post" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
@@ -103,16 +104,16 @@ const NavbarAuthenticated: React.FC = () => {
             )}
 
             {isAdmin && (
-              <a href="/admin" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+              <a href="/admin" className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
                 Quản trị
               </a>
             )}
 
             {/* Chat Notification */}
             <div className="relative">
-              <a
-                href="/chatbox"
-                className="text-gray-600 hover:text-blue-600 transition-colors duration-300 relative"
+              <a 
+                href="/chatbox" 
+                className="text-gray-700 hover:text-blue-600 transition-colors duration-300 relative"
                 title="Tin nhắn"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -131,7 +132,7 @@ const NavbarAuthenticated: React.FC = () => {
             <div className="relative">
               <button
                 onClick={toggleUserMenu}
-                className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors duration-300"
+                className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors duration-300"
               >
                 <Avatar
                   src={user?.avatarUrl}
@@ -153,17 +154,17 @@ const NavbarAuthenticated: React.FC = () => {
 
               {/* User Dropdown Menu */}
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                  <div className="px-4 py-2 text-sm text-gray-500 border-b">
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg py-1 z-50">
+                  <div className="px-4 py-2 text-sm text-gray-600 border-b border-gray-200">
                     <div className="font-medium text-gray-900">{displayName}</div>
-                    <div className="text-xs">{user?.email}</div>
+                    <div className="text-xs text-gray-500">{user?.email}</div>
                     <div className="text-xs text-blue-600 capitalize">{user?.role}</div>
                   </div>
 
                   {isDeveloper && (
                     <a
                       href="/profile-dev"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                     >
                       Hồ sơ của tôi
                     </a>
@@ -172,7 +173,7 @@ const NavbarAuthenticated: React.FC = () => {
                   {isCustomer && (
                     <a
                       href="/profile-employer"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                     >
                       Hồ sơ công ty
                     </a>
@@ -180,15 +181,15 @@ const NavbarAuthenticated: React.FC = () => {
 
                   <a
                     href="/settings"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                   >
                     Cài đặt
                   </a>
-
-                  <div className="border-t">
+                  
+                  <div className="border-t border-gray-200">
                     <button
                       onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700"
                     >
                       Đăng xuất
                     </button>
@@ -202,7 +203,7 @@ const NavbarAuthenticated: React.FC = () => {
           <div className="md:hidden">
             <button
               onClick={toggleMenu}
-              className="text-gray-600 hover:text-blue-600 focus:outline-none"
+              className="text-gray-700 hover:text-blue-600 focus:outline-none"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -213,10 +214,10 @@ const NavbarAuthenticated: React.FC = () => {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden bg-white border-t border-gray-200">
+          <div className="md:hidden bg-white border-t border-blue-100 shadow-lg">
             <div className="px-2 pt-2 pb-3 space-y-1">
               {/* User Info */}
-              <div className="flex items-center space-x-3 px-3 py-2 bg-gray-50 rounded-md">
+              <div className="flex items-center space-x-3 px-3 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-md">
                 <img
                   src={avatar}
                   alt={displayName}
@@ -224,7 +225,7 @@ const NavbarAuthenticated: React.FC = () => {
                 />
                 <div>
                   <div className="font-medium text-gray-900 text-sm">{displayName}</div>
-                  <div className="text-xs text-gray-500">{user?.email}</div>
+                  <div className="text-xs text-gray-600">{user?.email}</div>
                   <div className="text-xs text-blue-600 capitalize">{user?.role}</div>
                 </div>
               </div>
@@ -232,13 +233,13 @@ const NavbarAuthenticated: React.FC = () => {
               {/* Navigation Links */}
               <a
                 href="/products-dev"
-                className="block px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors duration-300"
+                className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-300 font-medium"
               >
                 Sản phẩm
               </a>
               <a
                 href="/post"
-                className="block px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors duration-300"
+                className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-300 font-medium"
               >
                 Tuyển dụng
               </a>
@@ -246,7 +247,7 @@ const NavbarAuthenticated: React.FC = () => {
               {/* Chat Link */}
               <a
                 href="/chatbox"
-                className="block px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors duration-300 relative"
+                className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-300 relative font-medium"
               >
                 <div className="flex items-center space-x-2">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -266,13 +267,13 @@ const NavbarAuthenticated: React.FC = () => {
                 <>
                   <a
                     href="/profile-dev"
-                    className="block px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors duration-300"
+                    className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-300 font-medium"
                   >
                     Hồ sơ của tôi
                   </a>
                   <a
                     href="/manage-developer-projects"
-                    className="block px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors duration-300"
+                    className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-300 font-medium"
                   >
                     Quản lý dự án
                   </a>
@@ -283,13 +284,13 @@ const NavbarAuthenticated: React.FC = () => {
                 <>
                   <a
                     href="/profile-employer"
-                    className="block px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors duration-300"
+                    className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-300 font-medium"
                   >
                     Hồ sơ công ty
                   </a>
                   <a
                     href="/post-project"
-                    className="block px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors duration-300"
+                    className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-300 font-medium"
                   >
                     Đăng dự án
                   </a>
@@ -299,7 +300,7 @@ const NavbarAuthenticated: React.FC = () => {
               {isAdmin && (
                 <a
                   href="/admin"
-                  className="block px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors duration-300"
+                  className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-300 font-medium"
                 >
                   Quản trị
                 </a>
@@ -307,7 +308,7 @@ const NavbarAuthenticated: React.FC = () => {
 
               <a
                 href="/settings"
-                className="block px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors duration-300"
+                className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-300 font-medium"
               >
                 Cài đặt
               </a>
@@ -316,7 +317,7 @@ const NavbarAuthenticated: React.FC = () => {
               <div className="border-t border-gray-200 pt-4">
                 <button
                   onClick={handleLogout}
-                  className="block w-full text-left px-3 py-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors duration-300"
+                  className="block w-full text-left px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors duration-300 font-medium"
                 >
                   Đăng xuất
                 </button>

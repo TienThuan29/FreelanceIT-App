@@ -15,14 +15,13 @@ const SmartNavbar: React.FC = () => {
   // Hiển thị loading spinner trong khi check auth
   if (isLoading) {
     return (
-      <nav className="bg-white shadow-lg sticky top-0 z-50">
+      <nav className="bg-white/95 backdrop-blur-sm border-b border-blue-100 shadow-lg sticky top-0 z-50">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <a href="/" className="flex items-center space-x-2">
-                <Image src={'/assets/icon.png'} alt="Icon" className="w-10 h-auto" width={40} height={40} />
-                <span className="text-xl font-bold text-gray-800">FreeLanceIT</span>
+              <a href="/" className="flex items-center">
+                <Image src={'/assets/fulllogo_lightArtboard_1.png'} alt="FreeLanceIT Logo" className="h-12 w-auto" width={48} height={48} />
               </a>
             </div>
             

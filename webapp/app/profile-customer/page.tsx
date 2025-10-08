@@ -36,9 +36,10 @@ export default function ProfileEmployerPage() {
       : 0
 
     // Ưu tiên lấy từ employerProfile trong authentication system
-    if (user?.employerProfile) {
+    if (user && 'employerProfile' in user && user.employerProfile) {
+      const employerProfile = user.employerProfile as any
       return {
-        ...user.employerProfile,
+        ...employerProfile,
         totalProjects: userProjects.length,
         completedProjects: completedProjectsCount,
         averageBudget: averageBudgetValue,

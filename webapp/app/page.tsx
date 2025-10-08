@@ -37,7 +37,7 @@ export default function Page() {
                 </div> */}
                 
                 <h1 className="text-5xl md:text-7xl font-bold mb-8 text-gray-900 leading-tight">
-                  Nền tảng <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-600">mua bán phần mềm</span> giá rẻ
+                  Nền tảng <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-600">kết nối ITers</span> với dự án
                 </h1>
                 
                 <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-5xl mx-auto leading-relaxed">
@@ -68,7 +68,7 @@ export default function Page() {
                       <h3 className="text-xl font-bold text-gray-900">Giải pháp của chúng tôi</h3>
                     </div>
                     <p className="text-gray-600 leading-relaxed">
-                      Nền tảng mua bán phần mềm giá rẻ, cho phép ITers bán sản phẩm của mình và nhận dự án phù hợp.
+                      Nền tảng kết nối ITers với khách hàng, cho phép ITers tìm dự án phù hợp và khách hàng tìm được ITers chất lượng.
                     </p>
                   </div>
                 </div>

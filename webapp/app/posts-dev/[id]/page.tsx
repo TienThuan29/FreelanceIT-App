@@ -83,7 +83,7 @@ const DeveloperDetailPage: React.FC = () => {
     if (!isAuthenticated) {
         return (
             <>
-                <SmartNavbar />
+                {/* <SmartNavbar /> */}
                 <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                     <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-8 max-w-md mx-auto">
                         <h3 className="text-xl font-semibold text-yellow-800 mb-2">Yêu cầu đăng nhập</h3>

@@ -260,7 +260,7 @@ export default function CustomerProjectsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <NavbarAuthenticated />
+      {/* <NavbarAuthenticated /> */}
       <div className="flex">
         {/* Sidebar */}
         <div className="w-80 bg-white shadow-sm border-r border-gray-200 h-screen sticky top-0">

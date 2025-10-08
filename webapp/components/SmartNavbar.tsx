@@ -15,7 +15,7 @@ const SmartNavbar: React.FC = () => {
   // Hiển thị loading spinner trong khi check auth
   if (isLoading) {
     return (
-      <nav className="bg-white/95 backdrop-blur-sm border-b border-blue-100 shadow-lg sticky top-0 z-50">
+      <nav className="bg-white/95 backdrop-blur-sm border-b border-blue-100 shadow-xs sticky top-0 z-50">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}

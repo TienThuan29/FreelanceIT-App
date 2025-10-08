@@ -146,8 +146,8 @@ export default function ChatBotPage() {
 
   return (
     <div className="h-screen flex flex-col">
-      <SmartNavbar/>
-      <div className="flex-1 flex bg-gray-50">
+      {/* <SmartNavbar/> */}
+      <div className="flex-1 bg-gray-50 h-screen flex overflow-hidden">
         {/* Sidebar */}
         <div className={`${isSidebarOpen ? 'w-64' : 'w-0'} transition-all duration-300 bg-white border-r border-gray-200 flex flex-col`}>
           <div className="p-4 border-b border-gray-200">
@@ -202,8 +202,8 @@ export default function ChatBotPage() {
         </div>
 
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col bg-white">
-          {/* Header */}
+        <div className="flex-1 flex flex-col bg-white min-h-0">
+          {/* Header */}  
           <div className="border-b border-gray-200 p-4 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center space-x-3">
               <button

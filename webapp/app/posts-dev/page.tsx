@@ -442,7 +442,6 @@ Check console for detailed logs.`);
                     </>
                 )}
             </div>
-            <Footer />
         </>
     );
 };

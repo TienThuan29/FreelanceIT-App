@@ -89,9 +89,9 @@ export default function ProjectTab({
                             </span>
                         </div>
                     </div>
-                    <div className="text-sm text-gray-500">
+                    {/* <div className="text-sm text-gray-500">
                         Tổng giá trị: {formatCurrency(projects.reduce((sum, p) => sum + (p.budget || 0), 0))}
-                    </div>
+                    </div> */}
                 </div>
             </div>
 

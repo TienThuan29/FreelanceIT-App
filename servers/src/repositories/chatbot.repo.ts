@@ -7,7 +7,6 @@ export class ChatbotSessionRepository extends DynamoRepository {
 
     constructor() {
         super(config.CHATBOT_SESSION_TABLE);
-        console.log('ChatbotSessionRepository initialized with table:', config.CHATBOT_SESSION_TABLE);
     }
 
     public async findAllByUserId(userId: string): Promise<ChatbotSessionResponse[]> {

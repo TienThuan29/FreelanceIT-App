@@ -310,7 +310,7 @@ export default function Page() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div className="text-center group">
                   <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                    <FaShoppingCart className="text-white text-2xl" />
+                    <FaShoppingCart className="text-white text-4xl" />
                   </div>
                   <h3 className="text-xl font-bold mb-4 text-gray-900">Mua bán phần mềm</h3>
                   <p className="text-gray-600 leading-relaxed">
@@ -320,7 +320,7 @@ export default function Page() {
 
                 <div className="text-center group">
                   <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                    <FaClipboardList className="text-white text-2xl" />
+                    <FaClipboardList className="text-white text-4xl" />
                   </div>
                   <h3 className="text-xl font-bold mb-4 text-gray-900">Đăng dự án</h3>
                   <p className="text-gray-600 leading-relaxed">
@@ -330,7 +330,7 @@ export default function Page() {
 
                 <div className="text-center group">
                   <div className="w-20 h-20 bg-gradient-to-br from-sky-500 to-sky-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                    <FaRobot className="text-white text-2xl" />
+                    <FaRobot className="text-white text-4xl" />
                   </div>
                   <h3 className="text-xl font-bold mb-4 text-gray-900">AI gợi ý</h3>
                   <p className="text-gray-600 leading-relaxed">
@@ -340,7 +340,7 @@ export default function Page() {
 
                 <div className="text-center group">
                   <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                    <FaUsers className="text-white text-2xl" />
+                    <FaUsers className="text-white text-4xl" />
                   </div>
                   <h3 className="text-xl font-bold mb-4 text-gray-900">Làm việc nhóm</h3>
                   <p className="text-gray-600 leading-relaxed">

@@ -216,7 +216,7 @@ export default function ManagePostPage() {
             </div>
 
             {/* Company Info Card */}
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+            {/* <div className="bg-gray-50 rounded-lg p-4 mb-6">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                   <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -228,7 +228,7 @@ export default function ManagePostPage() {
                   <p className="text-xs text-gray-500">Nhà tuyển dụng</p>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* Search */}
             <div className="mb-6">
@@ -344,7 +344,7 @@ export default function ManagePostPage() {
             </div>
 
             {/* Stats */}
-            <div className="bg-gray-50 rounded-lg p-4">
+            {/* <div className="bg-gray-50 rounded-lg p-4">
               <h3 className="text-sm font-medium text-gray-700 mb-3">Thống kê</h3>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
@@ -370,7 +370,8 @@ export default function ManagePostPage() {
                   </span>
                 </div>
               </div>
-            </div>
+            </div> */}
+
           </div>
         </div>
 
@@ -407,7 +408,7 @@ export default function ManagePostPage() {
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+          {/* <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
@@ -433,7 +434,7 @@ export default function ManagePostPage() {
                 Tổng giá trị: {formatCurrency(projects.reduce((sum, p) => sum + p.budget, 0))}
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Projects List */}
           <div className="bg-white rounded-lg shadow-sm">

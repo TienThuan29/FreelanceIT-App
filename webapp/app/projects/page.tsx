@@ -289,7 +289,7 @@ export default function CustomerProjectsPage() {
             </div>
 
             {/* Company Info Card */}
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+            {/* <div className="bg-gray-50 rounded-lg p-4 mb-6">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                   <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -301,7 +301,7 @@ export default function CustomerProjectsPage() {
                   <p className="text-xs text-gray-500">Nhà tuyển dụng</p>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* Search */}
             <div className="mb-6">
@@ -417,7 +417,7 @@ export default function CustomerProjectsPage() {
             </div>
 
             {/* Stats */}
-            <div className="bg-gray-50 rounded-lg p-4">
+            {/* <div className="bg-gray-50 rounded-lg p-4">
               <h3 className="text-sm font-medium text-gray-700 mb-3">Thống kê</h3>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
@@ -443,7 +443,8 @@ export default function CustomerProjectsPage() {
                   </span>
                 </div>
               </div>
-            </div>
+            </div> */}
+
           </div>
         </div>
 

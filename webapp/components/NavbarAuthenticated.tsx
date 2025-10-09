@@ -104,7 +104,7 @@ const NavbarAuthenticated: React.FC = () => {
             )}
 
             {isAdmin && (
-              <a href="/admin" className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
+              <a href="/" className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
                 Quản trị
               </a>
             )}
@@ -112,7 +112,7 @@ const NavbarAuthenticated: React.FC = () => {
             {/* Chat Notification */}
             <div className="relative">
               <a 
-                href="/chatbox" 
+                href="#" 
                 className="text-gray-700 hover:text-blue-600 transition-colors duration-300 relative"
                 title="Tin nhắn"
               >

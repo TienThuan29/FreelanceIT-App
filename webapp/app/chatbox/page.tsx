@@ -408,7 +408,7 @@ const ChatBoxPage: React.FC = () => {
     <ProtectedRoute>
       <div className="h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col">
         {/* Smart Navbar */}
-        <SmartNavbar />
+        {/* <SmartNavbar /> */}
         
         {/* Chat Content */}
         <div className="flex flex-1 overflow-hidden">

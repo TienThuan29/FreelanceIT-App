@@ -32,18 +32,9 @@ const Navbar: React.FC = () => {
             </a>
             <a href="/post" className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
               Tuyển dụng
-<<<<<<< HEAD
             </a> */}
             <a href="/about" className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
               Giới thiệu
-=======
-            </a>
-            <a href="/chatbox" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
-              Chat
-            </a>
-            <a href="/about" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
-              Về chúng tôi
->>>>>>> e7dce7fb6bab6133a0ecdc66b49e064a2a0c5851
             </a>
             
             {/* CTA Buttons */}

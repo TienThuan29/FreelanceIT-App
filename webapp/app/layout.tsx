@@ -8,18 +8,18 @@ import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/contexts/AuthContext";
 import NavbarWrapper from "@/components/NavbarWrapper";
 import FooterWrapper from "@/components/FooterWrapper";
-// import { ChatProvider } from "@/contexts/ChatContext";
+import { ChatProvider } from "@/contexts/ChatContext";
 
 const sans = Inter({
   subsets: ['latin'],
-  weight: ['300','400','500','600','700'],
+  weight: ['300', '400', '500', '600', '700'],
   display: 'swap',
   variable: '--font-sans',
 })
 
 const mono = JetBrains_Mono({
   subsets: ['latin'],
-  weight: ['400','500','600'],
+  weight: ['400', '500', '600'],
   display: 'swap',
   variable: '--font-mono',
 })
@@ -37,7 +37,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${sans.variable} ${mono.variable}`}>
       <body suppressHydrationWarning={true}>
-      <Toaster position="top-right" />
+        <Toaster position="top-right" />
         <AntdRegistry>
           <ConfigProvider
             theme={{
@@ -46,13 +46,15 @@ export default function RootLayout({
               },
             }}
           >
-              <AuthProvider>
+            <AuthProvider>
+              <ChatProvider>
                 <NavbarWrapper />
                 <main>
                   {children}
                 </main>
-                <FooterWrapper />
-              </AuthProvider>
+              </ChatProvider>
+              <FooterWrapper />
+            </AuthProvider>
           </ConfigProvider>
         </AntdRegistry>
       </body>

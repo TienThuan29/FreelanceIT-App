@@ -17,7 +17,6 @@ import {
 } from '@heroicons/react/24/outline';
 import ConversationListWrapper from '@/components/chat/ConversationListWrapper';
 import DeveloperList from '@/components/chat/DeveloperList';
-import SmartNavbar from '@/components/SmartNavbar';
 import ConversationSettingsModal from '@/components/chat/ConversationSettingsModal';
 import StarterMessages from '@/components/chat/StarterMessages';
 import { toast } from 'sonner';

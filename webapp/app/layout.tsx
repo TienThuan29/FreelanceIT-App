@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/contexts/AuthContext";
 import NavbarWrapper from "@/components/NavbarWrapper";
 import FooterWrapper from "@/components/FooterWrapper";
+// import { ChatProvider } from "@/contexts/ChatContext";
 
 const sans = Inter({
   subsets: ['latin'],
@@ -35,7 +36,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${sans.variable} ${mono.variable}`}>
-      <body>
+      <body suppressHydrationWarning={true}>
       <Toaster position="top-right" />
         <AntdRegistry>
           <ConfigProvider

@@ -5,6 +5,7 @@ import googleAuthRouter from "./google-auth.route";
 import developerRouter from "./developer.route";
 import testDataRouter from "./test-data.route";
 import customerRouter from "./customer.route";
+import chatRouter from "./chat.route";
 
 const router = Router();
 
@@ -15,6 +16,7 @@ router.use('/developers', developerRouter);
 router.use('/customers', customerRouter);
 
 router.use('/test-data', testDataRouter);
+router.use('/chat', chatRouter);
 /**
  * @swagger
  * /health:
@@ -23,7 +25,7 @@ router.use('/test-data', testDataRouter);
  *       200:
  *         description: OK
  */
-router.get('/health', (request, response) => {
+router.get('/health', (_, response) => {
   response.json({
     success: true,
     message: 'API is running',

@@ -1,107 +1,137 @@
-import { useState, useEffect } from 'react'
-import { useAuth } from '../contexts/AuthContext'
+'use client';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { useChat } from '@/contexts/ChatContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ChatNotification {
-  conversationId: string
-  unreadCount: number
-  lastMessage: string
-  timestamp: Date
+  id: string;
+  message: string;
+  type: 'new_message' | 'typing' | 'user_online' | 'user_offline';
+  timestamp: Date;
+  read: boolean;
 }
 
-/**
- * Hook quản lý thông báo chat
- * @returns Object chứa totalUnread và notifications
- */
 export const useChatNotifications = () => {
-  const { user } = useAuth()
-  const [notifications, setNotifications] = useState<ChatNotification[]>([])
-  const [totalUnread, setTotalUnread] = useState(0)
+  const { messages, typingUsers, onlineUsers, isConnected } = useChat();
+  const { user } = useAuth();
+  const [notifications, setNotifications] = useState<ChatNotification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  
+  // Use refs to track previous values to avoid unnecessary re-renders
+  const lastMessageIdRef = useRef<string | null>(null);
+  const lastTypingStateRef = useRef<string>('');
+  const processedMessagesRef = useRef<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (!user) {
-      setNotifications([])
-      setTotalUnread(0)
-      return
-    }
+  // Add notification
+  const addNotification = (notification: Omit<ChatNotification, 'id' | 'timestamp'>) => {
+    const newNotification: ChatNotification = {
+      ...notification,
+      id: `notification_${Date.now()}_${Math.random()}`,
+      timestamp: new Date()
+    };
 
-    // Mock data cho các conversation với tin nhắn chưa đọc
-    const mockNotifications: ChatNotification[] = [
-      {
-        conversationId: '1',
-        unreadCount: 2,
-        lastMessage: 'Chúng tôi cần phát triển một web app với React...',
-        timestamp: new Date(Date.now() - 1800000)
-      },
-      {
-        conversationId: '3', 
-        unreadCount: 1,
-        lastMessage: 'Khi nào bạn có thể bắt đầu dự án này?',
-        timestamp: new Date(Date.now() - 3600000)
-      }
-    ]
+    setNotifications(prev => [newNotification, ...prev.slice(0, 49)]); // Keep last 50
+    setUnreadCount(prev => prev + 1);
+  };
 
-    setNotifications(mockNotifications)
-    
-    // Tính tổng số tin nhắn chưa đọc
-    const total = mockNotifications.reduce((sum, notif) => sum + notif.unreadCount, 0)
-    setTotalUnread(total)
-
-  }, [user])
-
-  /**
-   * Đánh dấu conversation đã đọc
-   */
-  const markAsRead = (conversationId: string) => {
+  // Mark notification as read
+  const markAsRead = (notificationId: string) => {
     setNotifications(prev => 
       prev.map(notif => 
-        notif.conversationId === conversationId 
-          ? { ...notif, unreadCount: 0 }
+        notif.id === notificationId 
+          ? { ...notif, read: true }
           : notif
       )
-    )
-    
-    // Cập nhật lại total
-    setTotalUnread(prev => {
-      const currentNotif = notifications.find(n => n.conversationId === conversationId)
-      return prev - (currentNotif?.unreadCount || 0)
-    })
-  }
+    );
+    setUnreadCount(prev => Math.max(0, prev - 1));
+  };
 
-  /**
-   * Thêm tin nhắn mới
-   */
-  const addNewMessage = (conversationId: string, message: string) => {
-    setNotifications(prev => {
-      const existingIndex = prev.findIndex(n => n.conversationId === conversationId)
+  // Mark all as read
+  const markAllAsRead = () => {
+    setNotifications(prev => 
+      prev.map(notif => ({ ...notif, read: true }))
+    );
+    setUnreadCount(0);
+  };
+
+  // Clear all notifications
+  const clearAll = () => {
+    setNotifications([]);
+    setUnreadCount(0);
+  };
+
+  // Monitor new messages - optimized to avoid unnecessary re-renders
+  useEffect(() => {
+    if (!user || !isConnected || messages.length === 0) return;
+
+    const lastMessage = messages[0];
+    if (!lastMessage || lastMessage.senderId === user.id) return;
+
+    // Only process if this is a new message we haven't seen
+    if (lastMessage.id === lastMessageIdRef.current || processedMessagesRef.current.has(lastMessage.id)) {
+      return;
+    }
+
+    // Check if this is a new message (within last 10 seconds)
+    const messageTime = new Date(lastMessage.createdAt);
+    const now = new Date();
+    const diffInSeconds = (now.getTime() - messageTime.getTime()) / 1000;
+
+    if (diffInSeconds < 10) {
+      addNotification({
+        message: `Tin nhắn mới từ người dùng ${lastMessage.senderId}`,
+        type: 'new_message',
+        read: false
+      });
       
-      if (existingIndex >= 0) {
-        // Cập nhật conversation hiện có
-        const updated = [...prev]
-        updated[existingIndex] = {
-          ...updated[existingIndex],
-          unreadCount: updated[existingIndex].unreadCount + 1,
-          lastMessage: message,
-          timestamp: new Date()
-        }
-        return updated
-      } else {
-        // Thêm conversation mới
-        return [...prev, {
-          conversationId,
-          unreadCount: 1,
-          lastMessage: message,
-          timestamp: new Date()
-        }]
-      }
-    })
+      // Mark as processed
+      lastMessageIdRef.current = lastMessage.id;
+      processedMessagesRef.current.add(lastMessage.id);
+    }
+  }, [messages, user, isConnected]);
+
+  // Monitor typing indicators - optimized to avoid unnecessary re-renders
+  useEffect(() => {
+    if (!user || !isConnected) return;
+
+    const otherTypingUsers = typingUsers.filter(
+      typingUser => typingUser.userId !== user.id && typingUser.isTyping
+    );
+
+    // Create a string representation of typing state to compare
+    const typingState = otherTypingUsers.map(u => u.userId).sort().join(',');
     
-    setTotalUnread(prev => prev + 1)
-  }
+    // Only add notification if typing state actually changed
+    if (typingState !== lastTypingStateRef.current && otherTypingUsers.length > 0) {
+      const typingUser = otherTypingUsers[0];
+      addNotification({
+        message: `Người dùng ${typingUser.userId} đang nhập...`,
+        type: 'typing',
+        read: false
+      });
+      
+      lastTypingStateRef.current = typingState;
+    } else if (otherTypingUsers.length === 0) {
+      // Reset when no one is typing
+      lastTypingStateRef.current = '';
+    }
+  }, [typingUsers, user, isConnected]);
+
+  // Monitor online status changes
+  useEffect(() => {
+    if (!user || !isConnected) return;
+
+    // This would need to be implemented with a more sophisticated state tracking
+    // to detect when users come online/offline
+  }, [onlineUsers, user, isConnected]);
 
   return {
     notifications,
-    totalUnread,
+    unreadCount,
+    totalUnread: unreadCount, // Alias for backward compatibility
+    addNotification,
     markAsRead,
-    addNewMessage
-  }
-}
+    markAllAsRead,
+    clearAll
+  };
+};

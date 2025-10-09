@@ -39,6 +39,8 @@ export const config = {
     USERS_PROJECTS_TABLE: process.env.USERS_PROJECTS_TABLE || '',
     CHATBOT_SESSION_TABLE: process.env.CHATBOT_SESSION_TABLE || 'chatbot-sessions',
     LOG_TABLE: process.env.LOG_TABLE || '',
+    CONVERSATION_TABLE: process.env.CONVERSATION_TABLE || '',
+    MESSAGE_TABLE: process.env.MESSAGE_TABLE || '',
 
     // redis
     REDIS_HOST: process.env.REDIS_HOST || 'localhost',

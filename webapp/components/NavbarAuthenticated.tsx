@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useChatNotifications } from '../hooks/useChatNotifications'
 import Avatar from './Avatar'
@@ -29,9 +29,16 @@ const NavbarAuthenticated: React.FC = () => {
     window.location.href = '/'
   }
 
-  // Lấy tên hiển thị
-  const displayName = user?.fullname || user?.email?.split('@')[0] || 'User'
-  const avatar = user?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=3B82F6&color=fff`
+  // Memoize display name and avatar to prevent unnecessary re-renders
+  const displayName = useMemo(() => 
+    user?.fullname || user?.email?.split('@')[0] || 'User', 
+    [user?.fullname, user?.email]
+  );
+  
+  const avatar = useMemo(() => 
+    user?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=3B82F6&color=fff`,
+    [user?.avatarUrl, displayName]
+  );
 
   return (
     <nav className="bg-white/95 backdrop-blur-sm border-b border-blue-100 shadow-lg sticky top-0 z-50">

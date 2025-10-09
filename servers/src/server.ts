@@ -1,12 +1,24 @@
 import app from '@/app';
 import { config } from '@/configs/config';
 import logger from '@/libs/logger';
-
+import { createServer } from 'http';
+import { SocketService } from '@/services/socket.service';
+import { chatService } from '@/services/chat.service';
 
 const startServer = async (): Promise<void> => {
       try {
-            const server = app.listen(config.PORT, () => {
+            // Create HTTP server
+            const server = createServer(app);
+            
+            // Initialize Socket.IO
+            const socketService = new SocketService(server, chatService);
+            
+            // Make Socket.IO instance globally available
+            (global as any).io = socketService.getSocketIO();
+            
+            server.listen(config.PORT, () => {
                   logger.info(`Server is running in ${config.NODE_ENV} mode on port ${config.PORT}`);
+                  logger.info(`Socket.IO server initialized`);
             });
 
             const gracefulShutdown = (signal: string) => {

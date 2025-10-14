@@ -1,4 +1,4 @@
-import { DeveloperProfile, User, Role } from "@/models/user.model";
+import { DeveloperProfile, User, Role, Skill } from "@/models/user.model";
 import { DeveloperRepository } from "@/repositories/developer.repo";
 import { UserRepository } from "@/repositories/user.repo";
 import { DeveloperProfileResponse } from "@/types/res/user.res";
@@ -7,6 +7,7 @@ import { mapUserToUserProfileResponse } from "@/libs/mappers/user.mapper";
 import { S3Repository } from "@/repositories/s3.repo";
 import { geminiEmbeddingService } from "@/thirdparties/gemini.service";
 import { vectorDBRepository, DeveloperVectorData } from "@/repositories/vectordb.repo";
+import logger from "@/libs/logger";
 
 export class DeveloperService {
 
@@ -18,6 +19,14 @@ export class DeveloperService {
         this.developerRepository = new DeveloperRepository();
         this.userRepository = new UserRepository();
         this.s3Repository = new S3Repository();
+    }
+    /**
+     * Check if user data changes should trigger vector embedding update
+     */
+    private shouldUpdateVectorEmbedding(userData: Partial<User>): boolean {
+        // Update vector embedding if name or other searchable fields change
+        const searchableFields: (keyof User)[] = ['fullname', 'email'];
+        return Object.keys(userData).some(key => searchableFields.includes(key as keyof User));
     }
 
     public async getDevelopersByPage(page: number, pageSize: number): Promise<{ developers: DeveloperProfileResponse[], totalAvailable: number }> {
@@ -143,6 +152,17 @@ export class DeveloperService {
                 }
             }
             
+            // Update vector embedding if developer profile exists
+            if (developerProfile) {
+                try {
+                    await this.createAndStoreDeveloperEmbedding(userId, updatedUser, developerProfile);
+                    logger.info(`Successfully updated vector embedding for developer ${userId} after avatar update`);
+                } catch (embeddingError) {
+                    logger.error(`Failed to update vector embedding for developer ${userId} after avatar update:`, embeddingError);
+                    // Don't fail the entire operation if embedding update fails
+                }
+            }
+            
             return {
                 userProfile: userProfile,
                 developerProfile: developerProfile || null,
@@ -177,29 +197,26 @@ export class DeveloperService {
         } as DeveloperProfileResponse;
     }
 
-    public async updateDeveloperProfile(userId: string, developerProfile: DeveloperProfile): Promise<DeveloperProfileResponse | null> {
-        // console.log('DeveloperService.updateDeveloperProfile called with userId:', userId);
-        // console.log('Developer profile data:', developerProfile);
-        
+    public async updateDeveloperProfile(userId: string, developerProfile: DeveloperProfile): Promise<DeveloperProfileResponse | null> {        
         const user = await this.userRepository.findById(userId);
         if (!user) {
             console.error('User not found for userId:', userId);
             return null;
         }
-        // console.log('User found:', user);
+
         try {
             const updatedDeveloperProfile = await this.developerRepository.update(userId, developerProfile);
             if (!updatedDeveloperProfile) {
-                console.error('Failed to update developer profile');
+                logger.error('Failed to update developer profile');
                 return null;
             }
             
             // After update developer profile, create a vector embedding for the developer profile
             try {
                 await this.createAndStoreDeveloperEmbedding(userId, user, updatedDeveloperProfile);
-                console.log(`Successfully created and stored vector embedding for developer ${userId}`);
+                logger.info(`Successfully created and stored vector embedding for developer ${userId}`);
             } catch (embeddingError) {
-                console.error(`Failed to create vector embedding for developer ${userId}:`, embeddingError);
+                logger.error(`Failed to create vector embedding for developer ${userId}:`, embeddingError);
                 // Don't fail the entire operation if embedding creation fails
             }
             
@@ -209,7 +226,7 @@ export class DeveloperService {
                 developerProfile: updatedDeveloperProfile,
             } as DeveloperProfileResponse;
         } catch (error) {
-            console.error('Error in updateDeveloperProfile:', error);
+            logger.error('Error in updateDeveloperProfile:', error);
             return null;
         }
     }
@@ -352,6 +369,167 @@ export class DeveloperService {
         } catch (error) {
             console.error(`Failed to update vector embedding for developer ${userId}:`, error);
             return false;
+        }
+    }
+
+    /**
+     * Add a skill to developer profile
+     */
+    public async addSkill(userId: string, skill: Skill): Promise<DeveloperProfileResponse | null> {
+        try {
+            const user = await this.userRepository.findById(userId);
+            if (!user) {
+                console.error('User not found for userId:', userId);
+                return null;
+            }
+
+            const developerProfile = await this.developerRepository.findByUserId(userId);
+            if (!developerProfile) {
+                console.error('Developer profile not found for userId:', userId);
+                return null;
+            }
+
+            // Add skill to existing skills array
+            const updatedSkills = [...(developerProfile.skills || []), skill];
+            const updatedProfile = await this.developerRepository.update(userId, {
+                ...developerProfile,
+                skills: updatedSkills
+            });
+
+            if (!updatedProfile) {
+                console.error('Failed to add skill to developer profile');
+                return null;
+            }
+
+            // Update vector embedding
+            try {
+                await this.updateDeveloperEmbedding(userId);
+            } catch (embeddingError) {
+                console.error(`Failed to update vector embedding after adding skill:`, embeddingError);
+                // Don't fail the entire operation if embedding update fails
+            }
+
+            const userProfile = await mapUserToUserProfileResponse(user);
+            return {
+                userProfile: userProfile,
+                developerProfile: updatedProfile,
+            } as DeveloperProfileResponse;
+        } catch (error) {
+            console.error('Error adding skill to developer profile:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Update a skill in developer profile
+     */
+    public async updateSkill(userId: string, skillId: string, updatedSkill: Partial<Skill>): Promise<DeveloperProfileResponse | null> {
+        try {
+            const user = await this.userRepository.findById(userId);
+            if (!user) {
+                console.error('User not found for userId:', userId);
+                return null;
+            }
+
+            const developerProfile = await this.developerRepository.findByUserId(userId);
+            if (!developerProfile) {
+                console.error('Developer profile not found for userId:', userId);
+                return null;
+            }
+
+            // Update the specific skill in the skills array
+            const updatedSkills = (developerProfile.skills || []).map(skill => 
+                skill.id === skillId ? { ...skill, ...updatedSkill } : skill
+            );
+
+            const updatedProfile = await this.developerRepository.update(userId, {
+                ...developerProfile,
+                skills: updatedSkills
+            });
+
+            if (!updatedProfile) {
+                console.error('Failed to update skill in developer profile');
+                return null;
+            }
+
+            // Update vector embedding
+            try {
+                await this.updateDeveloperEmbedding(userId);
+            } catch (embeddingError) {
+                console.error(`Failed to update vector embedding after updating skill:`, embeddingError);
+                // Don't fail the entire operation if embedding update fails
+            }
+
+            const userProfile = await mapUserToUserProfileResponse(user);
+            return {
+                userProfile: userProfile,
+                developerProfile: updatedProfile,
+            } as DeveloperProfileResponse;
+        } catch (error) {
+            console.error('Error updating skill in developer profile:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Remove a skill from developer profile
+     */
+    public async removeSkill(userId: string, skillId: string): Promise<DeveloperProfileResponse | null> {
+        try {
+            const user = await this.userRepository.findById(userId);
+            if (!user) {
+                console.error('User not found for userId:', userId);
+                return null;
+            }
+
+            const developerProfile = await this.developerRepository.findByUserId(userId);
+            if (!developerProfile) {
+                console.error('Developer profile not found for userId:', userId);
+                return null;
+            }
+
+            // Remove the skill from the skills array
+            const updatedSkills = (developerProfile.skills || []).filter(skill => skill.id !== skillId);
+
+            const updatedProfile = await this.developerRepository.update(userId, {
+                ...developerProfile,
+                skills: updatedSkills
+            });
+
+            if (!updatedProfile) {
+                console.error('Failed to remove skill from developer profile');
+                return null;
+            }
+
+            // Update vector embedding
+            try {
+                await this.updateDeveloperEmbedding(userId);
+            } catch (embeddingError) {
+                console.error(`Failed to update vector embedding after removing skill:`, embeddingError);
+                // Don't fail the entire operation if embedding update fails
+            }
+
+            const userProfile = await mapUserToUserProfileResponse(user);
+            return {
+                userProfile: userProfile,
+                developerProfile: updatedProfile,
+            } as DeveloperProfileResponse;
+        } catch (error) {
+            console.error('Error removing skill from developer profile:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Get all skills for a developer
+     */
+    public async getSkills(userId: string): Promise<Skill[]> {
+        try {
+            const developerProfile = await this.developerRepository.findByUserId(userId);
+            return developerProfile?.skills || [];
+        } catch (error) {
+            console.error('Error getting skills for developer:', error);
+            return [];
         }
     }
 

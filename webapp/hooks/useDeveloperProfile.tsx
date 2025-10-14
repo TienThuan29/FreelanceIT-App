@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import useAxios from './useAxios';
 import { Api } from '@/configs/api';
-import { DeveloperProfile } from '@/types/user.type';
+import { DeveloperProfile, Skill, SkillProficiency } from '@/types/user.type';
 import cacheService, { CacheKeys } from '@/utils/cache';
 
 // Types for API responses
@@ -31,19 +31,23 @@ export interface UseDeveloperProfileState {
     developerProfile: DeveloperProfile | null;
     developersList: DeveloperProfileResponse[];
     totalAvailable: number;
+    skills: Skill[];
     
     // Loading states
     isLoading: boolean;
     isUpdating: boolean;
     isLoadingList: boolean;
+    isSkillLoading: boolean;
     
     // Error states
     error: string | null;
     updateError: string | null;
     listError: string | null;
+    skillError: string | null;
     
     // Success states
     isUpdated: boolean;
+    isSkillUpdated: boolean;
     
     // Cache states
     isFromCache: boolean;
@@ -63,6 +67,13 @@ export interface UseDeveloperProfileReturn extends UseDeveloperProfileState {
     clearCache: () => void;
     refreshDevelopersList: () => Promise<void>;
     
+    // Skill management actions
+    addSkill: (userId: string, skill: Omit<Skill, 'id' | 'createdDate' | 'updatedDate'>) => Promise<boolean>;
+    updateSkill: (userId: string, skillId: string, updatedSkill: Partial<Skill>) => Promise<boolean>;
+    removeSkill: (userId: string, skillId: string) => Promise<boolean>;
+    getSkills: (userId: string) => Promise<void>;
+    resetSkillState: () => void;
+    
     // Computed values
     isProfileComplete: boolean;
     hasProfile: boolean;
@@ -74,13 +85,17 @@ const defaultState: UseDeveloperProfileState = {
     developerProfile: null,
     developersList: [],
     totalAvailable: 0,
+    skills: [],
     isLoading: false,
     isUpdating: false,
     isLoadingList: false,
+    isSkillLoading: false,
     error: null,
     updateError: null,
     listError: null,
+    skillError: null,
     isUpdated: false,
+    isSkillUpdated: false,
     isFromCache: false,
 };
 
@@ -97,6 +112,7 @@ export const useDeveloperProfile = (): UseDeveloperProfileReturn => {
             error: null,
             updateError: null,
             listError: null,
+            skillError: null,
         }));
     }, []);
 
@@ -530,6 +546,254 @@ export const useDeveloperProfile = (): UseDeveloperProfileReturn => {
         return !!state.developerProfile;
     }, [state.developerProfile]);
 
+    /**
+     * Reset skill state
+     */
+    const resetSkillState = useCallback(() => {
+        setState(prev => ({
+            ...prev,
+            isSkillUpdated: false,
+            skillError: null,
+        }));
+    }, []);
+
+    /**
+     * Add a skill to developer profile
+     */
+    const addSkill = useCallback(async (
+        userId: string, 
+        skill: Omit<Skill, 'id' | 'createdDate' | 'updatedDate'>
+    ): Promise<boolean> => {
+        if (!userId) {
+            setState(prev => ({
+                ...prev,
+                skillError: 'User ID is required',
+                isSkillLoading: false,
+            }));
+            return false;
+        }
+
+        setState(prev => ({
+            ...prev,
+            isSkillLoading: true,
+            skillError: null,
+            isSkillUpdated: false,
+        }));
+
+        try {
+            const response = await axiosInstance.post(
+                `${Api.Developer.ADD_SKILL}/${userId}`,
+                skill
+            );
+
+            if (response.data.success) {
+                const updatedProfileData: DeveloperProfileResponse = response.data.dataResponse;
+                setState(prev => ({
+                    ...prev,
+                    userProfile: updatedProfileData.userProfile,
+                    developerProfile: updatedProfileData.developerProfile,
+                    skills: updatedProfileData.developerProfile?.skills || [],
+                    isSkillLoading: false,
+                    skillError: null,
+                    isSkillUpdated: true,
+                }));
+                return true;
+            } else {
+                setState(prev => ({
+                    ...prev,
+                    isSkillLoading: false,
+                    skillError: response.data.message || 'Failed to add skill',
+                }));
+                return false;
+            }
+        } catch (error: any) {
+            console.error('Error adding skill:', error);
+            setState(prev => ({
+                ...prev,
+                isSkillLoading: false,
+                skillError: error.response?.data?.message || 
+                           error.message || 
+                           'Failed to add skill',
+            }));
+            return false;
+        }
+    }, [axiosInstance]);
+
+    /**
+     * Update a skill in developer profile
+     */
+    const updateSkill = useCallback(async (
+        userId: string, 
+        skillId: string, 
+        updatedSkill: Partial<Skill>
+    ): Promise<boolean> => {
+        if (!userId || !skillId) {
+            setState(prev => ({
+                ...prev,
+                skillError: 'User ID and Skill ID are required',
+                isSkillLoading: false,
+            }));
+            return false;
+        }
+
+        setState(prev => ({
+            ...prev,
+            isSkillLoading: true,
+            skillError: null,
+            isSkillUpdated: false,
+        }));
+
+        try {
+            const response = await axiosInstance.put(
+                `${Api.Developer.UPDATE_SKILL}/${userId}/${skillId}`,
+                updatedSkill
+            );
+
+            if (response.data.success) {
+                const updatedProfileData: DeveloperProfileResponse = response.data.dataResponse;
+                setState(prev => ({
+                    ...prev,
+                    userProfile: updatedProfileData.userProfile,
+                    developerProfile: updatedProfileData.developerProfile,
+                    skills: updatedProfileData.developerProfile?.skills || [],
+                    isSkillLoading: false,
+                    skillError: null,
+                    isSkillUpdated: true,
+                }));
+                return true;
+            } else {
+                setState(prev => ({
+                    ...prev,
+                    isSkillLoading: false,
+                    skillError: response.data.message || 'Failed to update skill',
+                }));
+                return false;
+            }
+        } catch (error: any) {
+            console.error('Error updating skill:', error);
+            setState(prev => ({
+                ...prev,
+                isSkillLoading: false,
+                skillError: error.response?.data?.message || 
+                           error.message || 
+                           'Failed to update skill',
+            }));
+            return false;
+        }
+    }, [axiosInstance]);
+
+    /**
+     * Remove a skill from developer profile
+     */
+    const removeSkill = useCallback(async (
+        userId: string, 
+        skillId: string
+    ): Promise<boolean> => {
+        if (!userId || !skillId) {
+            setState(prev => ({
+                ...prev,
+                skillError: 'User ID and Skill ID are required',
+                isSkillLoading: false,
+            }));
+            return false;
+        }
+
+        setState(prev => ({
+            ...prev,
+            isSkillLoading: true,
+            skillError: null,
+            isSkillUpdated: false,
+        }));
+
+        try {
+            const response = await axiosInstance.delete(
+                `${Api.Developer.REMOVE_SKILL}/${userId}/${skillId}`
+            );
+
+            if (response.data.success) {
+                const updatedProfileData: DeveloperProfileResponse = response.data.dataResponse;
+                setState(prev => ({
+                    ...prev,
+                    userProfile: updatedProfileData.userProfile,
+                    developerProfile: updatedProfileData.developerProfile,
+                    skills: updatedProfileData.developerProfile?.skills || [],
+                    isSkillLoading: false,
+                    skillError: null,
+                    isSkillUpdated: true,
+                }));
+                return true;
+            } else {
+                setState(prev => ({
+                    ...prev,
+                    isSkillLoading: false,
+                    skillError: response.data.message || 'Failed to remove skill',
+                }));
+                return false;
+            }
+        } catch (error: any) {
+            console.error('Error removing skill:', error);
+            setState(prev => ({
+                ...prev,
+                isSkillLoading: false,
+                skillError: error.response?.data?.message || 
+                           error.message || 
+                           'Failed to remove skill',
+            }));
+            return false;
+        }
+    }, [axiosInstance]);
+
+    /**
+     * Get skills for a developer
+     */
+    const getSkills = useCallback(async (userId: string): Promise<void> => {
+        if (!userId) {
+            setState(prev => ({
+                ...prev,
+                skillError: 'User ID is required',
+                isSkillLoading: false,
+            }));
+            return;
+        }
+
+        setState(prev => ({
+            ...prev,
+            isSkillLoading: true,
+            skillError: null,
+        }));
+
+        try {
+            const response = await axiosInstance.get(
+                `${Api.Developer.GET_SKILLS}/${userId}`
+            );
+
+            if (response.data.success) {
+                const skills: Skill[] = response.data.dataResponse;
+                setState(prev => ({
+                    ...prev,
+                    skills: skills,
+                    isSkillLoading: false,
+                    skillError: null,
+                }));
+            } else {
+                setState(prev => ({
+                    ...prev,
+                    isSkillLoading: false,
+                    skillError: response.data.message || 'Failed to fetch skills',
+                }));
+            }
+        } catch (error: any) {
+            console.error('Error fetching skills:', error);
+            setState(prev => ({
+                ...prev,
+                isSkillLoading: false,
+                skillError: error.response?.data?.message || 
+                           error.message || 
+                           'Failed to fetch skills',
+            }));
+        }
+    }, [axiosInstance]);
+
     return {
         // State
         ...state,
@@ -545,6 +809,13 @@ export const useDeveloperProfile = (): UseDeveloperProfileReturn => {
         resetUpdateState,
         clearCache,
         refreshDevelopersList,
+        
+        // Skill management actions
+        addSkill,
+        updateSkill,
+        removeSkill,
+        getSkills,
+        resetSkillState,
         
         // Computed values
         isProfileComplete: isProfileComplete(),

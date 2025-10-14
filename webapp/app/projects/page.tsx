@@ -199,7 +199,7 @@ export default function CustomerProjectsPage() {
   }
 
   const handleDeleteProject = async (projectId: string) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa dự án này?')) {
+    if (window.confirm(' xóa dự án này?')) {
       try {
         const result = await deleteProject(projectId)
         if (result) {
@@ -274,7 +274,7 @@ export default function CustomerProjectsPage() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
-                <span>Quay lại Profile</span>
+                <span>Quay lại trang chủ</span>
               </button>
             </div>
 

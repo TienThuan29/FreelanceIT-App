@@ -1,4 +1,5 @@
-import { Role } from "@/models/user.model";
+import { Role, CustomerProfile } from "@/models/user.model";
+import { Commune, Province } from "@/models/address.model";
 
 export type RegisterRequest= {
     registerSessionId: string;
@@ -22,4 +23,27 @@ export type ResetPasswordRequest = {
     token: string;
     newPassword: string;
     confirmPassword: string;
+}
+
+export type CreateCustomerProfileRequest = {
+    userId: string;
+    companyName?: string;
+    companyWebsite?: string;
+    industry?: string;
+    companySize?: string;
+    taxId?: string;
+    houseNumberAndStreet?: string;
+    commune: Commune;
+    province: Province;
+}
+
+export type UpdateCustomerProfileRequest = {
+    companyName?: string;
+    companyWebsite?: string;
+    industry?: string;
+    companySize?: string;
+    taxId?: string;
+    houseNumberAndStreet?: string;
+    commune?: Commune;
+    province?: Province;
 }

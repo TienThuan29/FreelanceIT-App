@@ -69,7 +69,7 @@ const NavbarAuthenticated: React.FC = () => {
                 <a href="/profile-dev" className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
                   Hồ sơ
                 </a>
-                <a href="/post" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                <a href={PageUrl.Dev.AVAILABLE_PROJECTS_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Tuyển dụng
                 </a>
                 {/* <a href="/manage-developer-projects" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
@@ -95,7 +95,7 @@ const NavbarAuthenticated: React.FC = () => {
                 <a href={PageUrl.Customer.POSTS_DEV_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Tuyển dụng lập trình viên
                 </a>
-                <a href="/profile-employer" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                <a href={PageUrl.Customer.PROFILE_CUSTOMER_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Hồ sơ
                 </a>
                 {/* <a href="/nda-contracts" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
@@ -179,7 +179,7 @@ const NavbarAuthenticated: React.FC = () => {
 
                   {isCustomer && (
                     <a
-                      href="/profile-employer"
+                      href={PageUrl.Customer.PROFILE_CUSTOMER_PAGE}
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                     >
                       Hồ sơ công ty
@@ -290,7 +290,7 @@ const NavbarAuthenticated: React.FC = () => {
               {isCustomer && (
                 <>
                   <a
-                    href="/profile-employer"
+                    href={PageUrl.Customer.PROFILE_CUSTOMER_PAGE}
                     className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-300 font-medium"
                   >
                     Hồ sơ công ty

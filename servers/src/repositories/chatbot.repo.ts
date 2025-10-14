@@ -10,13 +10,10 @@ export class ChatbotSessionRepository extends DynamoRepository {
     }
 
     public async findAllByUserId(userId: string): Promise<ChatbotSessionResponse[]> {
-        console.log('Repository: Finding sessions for userId:', userId);
         const allSessions = await this.scanItems();
-        console.log('Repository: All sessions from scan:', allSessions);
         const sessions = allSessions.filter(session => 
             session.userId === userId && session.isDeleted !== true
         );
-        console.log('Repository: Filtered sessions:', sessions);
         const result = sessions.map(session => ({
             sessionId: session.sessionId,
             userId: session.userId,
@@ -26,7 +23,6 @@ export class ChatbotSessionRepository extends DynamoRepository {
             createdDate: session.createdDate,
             updatedDate: session.updatedDate
         })) as ChatbotSessionResponse[];
-        console.log('Repository: Final result:', result);
         return result;
     }
 

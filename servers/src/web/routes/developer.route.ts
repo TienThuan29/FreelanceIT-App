@@ -13,4 +13,10 @@ router.put('/profile/update/:userId', developerApi.updateDeveloperProfile);
 router.put('/user/update/:userId', developerApi.updateUserProfile);
 router.put('/avatar/update/:userId', uploadProjectImage, developerApi.updateUserAvatar);
 
+// Skill management routes
+router.post('/skills/add/:userId', developerApi.addSkill);
+router.put('/skills/update/:userId/:skillId', developerApi.updateSkill);
+router.delete('/skills/remove/:userId/:skillId', developerApi.removeSkill);
+router.get('/skills/:userId', developerApi.getSkills);
+
 export default router;

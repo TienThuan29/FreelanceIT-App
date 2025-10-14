@@ -134,4 +134,6 @@ export const CacheKeys = {
     DEVELOPERS_LIST: (page: number, pageSize: number) => `developers_list_${page}_${pageSize}`,
     DEVELOPER_PROFILE: (userId: string) => `developer_profile_${userId}`,
     USER_PROFILE: (userId: string) => `user_profile_${userId}`,
+    CUSTOMERS_LIST: () => `customers_list`,
+    CUSTOMER_PROFILE: (userId: string) => `customer_profile_${userId}`,
 } as const;

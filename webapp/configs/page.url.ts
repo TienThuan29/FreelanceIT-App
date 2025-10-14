@@ -9,6 +9,11 @@ export const PageUrl = {
     Customer: {
         PROJECTS_PAGE: '/projects',
         POSTS_DEV_PAGE: '/posts-dev',
+        PROFILE_CUSTOMER_PAGE: '/profile-customer',
+    },
+
+    Dev: {
+        AVAILABLE_PROJECTS_PAGE: '/posts-cus',
     }
 
 }

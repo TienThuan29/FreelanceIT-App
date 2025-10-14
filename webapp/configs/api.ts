@@ -1,6 +1,7 @@
 export const Api = {
 
     BASE_API: process.env.NEXT_PUBLIC_BASE_API || 'http://localhost:5000',
+    SOCKET_URL: process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000',
 
     Auth: {
         LOGIN: '/api/v1/auth/authenticate',
@@ -41,6 +42,18 @@ export const Api = {
         UPDATE_PROFILE: '/api/v1/developers/profile/update',
         UPDATE_USER: '/api/v1/developers/user/update',
         UPDATE_AVATAR: '/api/v1/developers/avatar/update',
+    },
+
+    Customer: {
+        SEND_MESSAGE: '/api/v1/customers/chatbot/send-message',
+        GET_SESSIONS: '/api/v1/customers/chatbot/get-sessions',
+        GET_SESSION: '/api/v1/customers/chatbot/session',
+    },
+
+    Chat: {
+        CONVERSATIONS: '/api/v1/chat/conversations',
+        MESSAGES: '/api/v1/chat/conversations',
+        MARK_READ: '/api/v1/chat/messages/read',
     },
 
     

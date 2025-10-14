@@ -4,8 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useDeveloperProfile } from '@/hooks/useDeveloperProfile';
 import { useAuth } from '@/contexts/AuthContext';
-import SmartNavbar from '@/components/SmartNavbar';
-import Footer from '@/components/Footer';
 import Image from 'next/image';
 
 const DeveloperDetailPage: React.FC = () => {
@@ -66,16 +64,14 @@ const DeveloperDetailPage: React.FC = () => {
 
     if (authLoading) {
         return (
-            <>
-                <SmartNavbar />
+            <>  
                 <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                     <div className="text-center">
                         <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-                        <h3 className="text-xl font-semibold text-gray-700 mb-2">Đang kiểm tra quyền truy cập...</h3>
-                        <p className="text-gray-500">Vui lòng chờ trong giây lát</p>
+                        {/* <h3 className="text-xl font-semibold text-gray-700 mb-2">Đang kiểm tra quyền truy cập...</h3> */}
+                        {/* <p className="text-gray-500">Vui lòng chờ trong giây lát</p> */}
                     </div>
                 </div>
-                <Footer />
             </>
         );
     }
@@ -83,7 +79,6 @@ const DeveloperDetailPage: React.FC = () => {
     if (!isAuthenticated) {
         return (
             <>
-                <SmartNavbar />
                 <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                     <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-8 max-w-md mx-auto">
                         <h3 className="text-xl font-semibold text-yellow-800 mb-2">Yêu cầu đăng nhập</h3>
@@ -96,7 +91,6 @@ const DeveloperDetailPage: React.FC = () => {
                         </button>
                     </div>
                 </div>
-                <Footer />
             </>
         );
     }
@@ -104,7 +98,6 @@ const DeveloperDetailPage: React.FC = () => {
     if (user?.role !== 'CUSTOMER') {
         return (
             <>
-                <SmartNavbar />
                 <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                     <div className="bg-red-50 border border-red-200 rounded-xl p-8 max-w-md mx-auto">
                         <h3 className="text-xl font-semibold text-red-800 mb-2">Không có quyền truy cập</h3>
@@ -117,7 +110,6 @@ const DeveloperDetailPage: React.FC = () => {
                         </button>
                     </div>
                 </div>
-                <Footer />
             </>
         );
     }
@@ -125,7 +117,6 @@ const DeveloperDetailPage: React.FC = () => {
     if (isLoading) {
         return (
             <>
-                <SmartNavbar />
                 <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                     <div className="text-center">
                         <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
@@ -133,7 +124,6 @@ const DeveloperDetailPage: React.FC = () => {
                         <p className="text-gray-500">Vui lòng chờ trong giây lát</p>
                     </div>
                 </div>
-                <Footer />
             </>
         );
     }
@@ -141,7 +131,6 @@ const DeveloperDetailPage: React.FC = () => {
     if (error) {
         return (
             <>
-                <SmartNavbar />
                 <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                     <div className="bg-red-50 border border-red-200 rounded-xl p-8 max-w-md mx-auto">
                         <h3 className="text-xl font-semibold text-red-800 mb-2">Có lỗi xảy ra</h3>
@@ -154,7 +143,6 @@ const DeveloperDetailPage: React.FC = () => {
                         </button>
                     </div>
                 </div>
-                <Footer />
             </>
         );
     }
@@ -162,7 +150,6 @@ const DeveloperDetailPage: React.FC = () => {
     if (!userProfile || !developerProfile) {
         return (
             <>
-                <SmartNavbar />
                 <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                     <div className="bg-gray-50 border border-gray-200 rounded-xl p-8 max-w-md mx-auto">
                         <h3 className="text-xl font-semibold text-gray-800 mb-2">Không tìm thấy developer</h3>
@@ -175,14 +162,12 @@ const DeveloperDetailPage: React.FC = () => {
                         </button>
                     </div>
                 </div>
-                <Footer />
             </>
         );
     }
 
     return (
         <>
-            <SmartNavbar />
             <div className="min-h-screen bg-gray-50">
                 {/* Header */}
                 <div className="bg-white border-b border-gray-200">
@@ -543,7 +528,6 @@ const DeveloperDetailPage: React.FC = () => {
                     </div>
                 </div>
             </div>
-            <Footer />
         </>
     );
 };

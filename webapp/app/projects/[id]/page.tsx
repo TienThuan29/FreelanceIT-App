@@ -8,7 +8,7 @@ import { formatCurrency } from '@/lib/curency'
 import { formatDate } from '@/lib/date'
 import { useProjectManagement } from '@/hooks/useProjectManagement'
 import { toast } from 'sonner'
-import NavbarAuthenticated from '@/components/NavbarAuthenticated'
+// import NavbarAuthenticated from '@/components/NavbarAuthenticated'
 
 interface ProjectTeamMember {
     id: string
@@ -172,7 +172,6 @@ export default function ProjectDetailPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <NavbarAuthenticated />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
                 {/* Header */}
                 <div className="mb-8">

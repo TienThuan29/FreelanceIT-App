@@ -3,6 +3,7 @@
 import { Constant } from '@/configs/constant';
 import { useAuth } from '@/contexts/AuthContext';
 import React, { useState, useRef, useEffect } from 'react';
+import { toast } from 'sonner';
 
 interface EmailVerificationProps {
   email: string;
@@ -83,10 +84,12 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({
       })
       if (verifyCodeResponse) {
       } else {
+        toast.error('Mã xác thực không hợp lệ!');
         throw new Error('Verify code failed');
       }   
     }
     catch (error) {
+      toast.error('Mã xác thực không hợp lệ!');
       console.error('Verify code failed:', error);
     }
     finally {

@@ -93,8 +93,6 @@ Check console for detailed logs.`);
 
     return (
         <>
-            <SmartNavbar /> 
-            {/* <NavbarAuthenticated /> */}
             <div className="min-h-screen bg-gray-50">
                 {/* Hero Section */}
                 {/* <section className="bg-gradient-to-br from-blue-600 to-blue-800 text-white py-16">
@@ -444,7 +442,6 @@ Check console for detailed logs.`);
                     </>
                 )}
             </div>
-            <Footer />
         </>
     );
 };

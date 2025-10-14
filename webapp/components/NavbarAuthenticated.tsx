@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useChatNotifications } from '../hooks/useChatNotifications'
 import Avatar from './Avatar'
@@ -29,9 +29,16 @@ const NavbarAuthenticated: React.FC = () => {
     window.location.href = '/'
   }
 
-  // Lấy tên hiển thị
-  const displayName = user?.fullname || user?.email?.split('@')[0] || 'User'
-  const avatar = user?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=3B82F6&color=fff`
+  // Memoize display name and avatar to prevent unnecessary re-renders
+  const displayName = useMemo(() => 
+    user?.fullname || user?.email?.split('@')[0] || 'User', 
+    [user?.fullname, user?.email]
+  );
+  
+  const avatar = useMemo(() => 
+    user?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=3B82F6&color=fff`,
+    [user?.avatarUrl, displayName]
+  );
 
   return (
     <nav className="bg-white/95 backdrop-blur-sm border-b border-blue-100 shadow-lg sticky top-0 z-50">
@@ -53,15 +60,9 @@ const NavbarAuthenticated: React.FC = () => {
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
             {/* Navigation Links */}
-            <a href="/products-dev" className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
-              Sản phẩm
-            </a>
-            <a href="/post" className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
-              Tuyển dụng
-            </a>
-            <a href="/chatbot" className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
+            {/* <a href="/chatbot" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
               Chatbot AI
-            </a>
+            </a> */}
             {/* Role-specific links */}
             {isDeveloper && (
               <>
@@ -85,6 +86,9 @@ const NavbarAuthenticated: React.FC = () => {
 
             {isCustomer && (
               <>
+                <a href="/chatbot/customer" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                  Chatbot AI
+                </a>
                 <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Sản phẩm
                 </a>
@@ -107,7 +111,7 @@ const NavbarAuthenticated: React.FC = () => {
             )}
 
             {isAdmin && (
-              <a href="/admin" className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
+              <a href="/" className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
                 Quản trị
               </a>
             )}
@@ -115,7 +119,7 @@ const NavbarAuthenticated: React.FC = () => {
             {/* Chat Notification */}
             <div className="relative">
               <a 
-                href="/chatbox" 
+                href="#" 
                 className="text-gray-700 hover:text-blue-600 transition-colors duration-300 relative"
                 title="Tin nhắn"
               >

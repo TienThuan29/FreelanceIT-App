@@ -4,10 +4,10 @@ import { config } from "./config";
 
 class DynamoDB {
 
-    private dynamoDBClient: DynamoDBClient;
-    private region: string = config.AWS_REGION;
-    private accessKeyId: string = config.AWS_ACCESS_KEY_ID!;
-    private secretAccessKey: string = config.AWS_SECRET_ACCESS_KEY!;
+    private readonly dynamoDBClient: DynamoDBClient;
+    private readonly region: string = config.AWS_REGION;
+    private readonly accessKeyId: string = config.AWS_ACCESS_KEY_ID!;
+    private readonly secretAccessKey: string = config.AWS_SECRET_ACCESS_KEY!;
 
     constructor() {
         this.dynamoDBClient = new DynamoDBClient({
@@ -20,7 +20,9 @@ class DynamoDB {
     }
     
     public getTableName(tableName: string): string {
-        return `${config.DYNAMODB_TABLE_PREFIX}-${tableName}`;
+        const fullTableName = `${config.DYNAMODB_TABLE_PREFIX}-${tableName}`;
+        console.log(`DynamoDB: Creating table name from '${tableName}' to '${fullTableName}' (prefix: '${config.DYNAMODB_TABLE_PREFIX}')`);
+        return fullTableName;
     }
 
     public getDynamoDBClient(): DynamoDBClient {

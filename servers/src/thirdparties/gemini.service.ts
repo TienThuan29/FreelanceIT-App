@@ -3,20 +3,6 @@ import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import { config } from '../configs/config';
 import logger from '../libs/logger';
 
-export interface ChatMessage {
-    role: 'user' | 'assistant' | 'system';
-    content: string;
-}
-
-export interface ChatResponse {
-    content: string;
-    usage?: {
-        promptTokens: number;
-        completionTokens: number;
-        totalTokens: number;
-    };
-}
-
 export interface EmbeddingResponse {
     embedding: number[];
     usage?: {

@@ -6,6 +6,7 @@ import developerRouter from "./developer.route";
 import testDataRouter from "./test-data.route";
 import customerRouter from "./customer.route";
 import chatRouter from "./chat.route";
+import planningRoute from './planning.route';
 
 const router = Router();
 
@@ -17,6 +18,7 @@ router.use('/customers', customerRouter);
 
 router.use('/test-data', testDataRouter);
 router.use('/chat', chatRouter);
+router.use('/api', planningRoute);
 /**
  * @swagger
  * /health:

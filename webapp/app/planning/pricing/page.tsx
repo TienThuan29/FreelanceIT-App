@@ -3,21 +3,18 @@
 import { useState, useEffect } from "react";
 import { FaCheckCircle, FaCrown, FaRocket, FaStar } from "react-icons/fa";
 import { usePlanningManagement } from "@/hooks/usePlanningManagement";
-import { Planning, DurationType } from "@/types/planning.type";
+import { Planning, AiModelConfig } from "@/types/planning.type";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
 type PlanData = {
   id: string;
   name: string;
-  descriptions: string[];
+  description: string;
   price: number;
-  currency: string;
-  duration: number;
-  durationType: DurationType;
-  maxProjects?: number;
-  maxStorage?: number;
-  prioritySupport: boolean;
+  dailyLimit: number;
+  daysLimit: number;
+  aiModel: AiModelConfig;
   button: {
     text: string;
     type: "primary" | "secondary";
@@ -39,34 +36,24 @@ export default function PlanningPricing() {
   useEffect(() => {
     if (plannings.length > 0) {
       const formattedPlans: PlanData[] = plannings
-        .filter((planning: Planning) => planning.isActive)
+        .filter((planning: Planning) => !planning.isDeleted)
         .map((planning: Planning, index: number) => {
-          // Split description by "." and filter out empty strings
-          const descriptions = planning.description 
-            ? planning.description.split('.').map(desc => desc.trim()).filter(desc => desc.length > 0)
-            : ["Quản lý dự án hiệu quả", "Tối ưu hóa quy trình làm việc"];
-          
-          // Extract features from planning features
-          const features = planning.features
-            .filter(feature => feature.isIncluded)
-            .map(feature => feature.name);
+          // Use AI model features
+          const features = planning.aiModel?.features || [];
 
           return {
             id: planning.id || `plan-${index}`,
             name: planning.name || "Gói cơ bản",
-            descriptions: descriptions,
+            description: planning.description || "Gói dịch vụ AI cơ bản",
             price: planning.price || 0,
-            currency: planning.currency || 'VND',
-            duration: planning.duration || 30,
-            durationType: planning.durationType || DurationType.DAYS,
-            maxProjects: planning.maxProjects,
-            maxStorage: planning.maxStorage,
-            prioritySupport: planning.prioritySupport || false,
+            dailyLimit: planning.dailyLimit || 0,
+            daysLimit: planning.daysLimit || 30,
+            aiModel: planning.aiModel,
             button: {
               text: "Chọn gói",
               type: index === 1 ? "primary" : "secondary"
             },
-            badge: index === 1 ? "Popular" : index === 0 ? "Basic" : "Premium",
+            badge: getPlanBadge(planning.aiModel?.modelType || 'basic'),
             features: features
           };
         });
@@ -75,29 +62,37 @@ export default function PlanningPricing() {
     }
   }, [plannings]);
 
+  const getPlanBadge = (modelType: string): string => {
+    switch (modelType) {
+      case 'basic': return 'Basic';
+      case 'pro': return 'Popular';
+      case 'enterprise': return 'Enterprise';
+      case 'developer': return 'Developer';
+      default: return 'Basic';
+    }
+  };
+
   const handleSelectPackage = (packageId: string) => {
     router.push(`/planning/pricing/${packageId}`);
   };
 
-  const formatDuration = (duration: number, durationType: DurationType): string => {
-    switch (durationType) {
-      case DurationType.DAYS:
-        return `${duration} ngày`;
-      case DurationType.MONTHS:
-        return `${duration} tháng`;
-      case DurationType.YEARS:
-        return `${duration} năm`;
-      default:
-        return `${duration} ngày`;
+  const formatDuration = (daysLimit: number): string => {
+    if (daysLimit >= 365) {
+      const years = Math.floor(daysLimit / 365);
+      return `${years} năm`;
+    } else if (daysLimit >= 30) {
+      const months = Math.floor(daysLimit / 30);
+      return `${months} tháng`;
+    } else {
+      return `${daysLimit} ngày`;
     }
   };
 
-  const formatStorage = (storage?: number): string => {
-    if (!storage) return "Không giới hạn";
-    if (storage >= 1024) {
-      return `${(storage / 1024).toFixed(1)} GB`;
+  const formatRequests = (dailyLimit: number): string => {
+    if (dailyLimit >= 1000) {
+      return `${(dailyLimit / 1000).toFixed(1)}K requests/ngày`;
     }
-    return `${storage} MB`;
+    return `${dailyLimit} requests/ngày`;
   };
 
   if (isLoading) {
@@ -124,15 +119,15 @@ export default function PlanningPricing() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
       <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold mb-2 text-gray-900">
-        Gói dịch vụ quản lý dự án và lập kế hoạch
+        Gói dịch vụ AI chuyên nghiệp
       </h2>
       <p className="text-xs sm:text-sm text-gray-700 mb-6 sm:mb-8">
-        Tối ưu hóa quy trình làm việc và quản lý dự án hiệu quả với các gói dịch vụ chuyên nghiệp.
+        Khám phá sức mạnh của AI với các gói dịch vụ được thiết kế cho mọi nhu cầu từ cá nhân đến doanh nghiệp.
       </p>
 
       {/* Pricing cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-        {plans.map(({ id, name, descriptions, price, currency, duration, durationType, maxProjects, maxStorage, prioritySupport, button, badge, features }, i) => (
+        {plans.map(({ id, name, description, price, dailyLimit, daysLimit, aiModel, button, badge, features }, i) => (
           <div
             key={id}
             className="bg-white rounded-xl shadow-lg flex flex-col p-4 sm:p-6 relative hover:shadow-xl transition-shadow"
@@ -143,8 +138,10 @@ export default function PlanningPricing() {
                 className={`absolute top-3 right-3 sm:top-4 sm:right-4 text-xs font-semibold px-2 py-1 rounded-full ${
                   badge === "Popular" 
                     ? "bg-blue-600 text-white" 
-                    : badge === "Premium"
+                    : badge === "Enterprise"
                     ? "bg-purple-600 text-white"
+                    : badge === "Developer"
+                    ? "bg-orange-600 text-white"
                     : "bg-green-600 text-white"
                 }`}
               >
@@ -157,14 +154,18 @@ export default function PlanningPricing() {
               <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center ${
                 badge === "Popular" 
                   ? "bg-blue-100" 
-                  : badge === "Premium"
+                  : badge === "Enterprise"
                   ? "bg-purple-100"
+                  : badge === "Developer"
+                  ? "bg-orange-100"
                   : "bg-green-100"
               }`}>
-                {badge === "Premium" ? (
-                  <FaCrown className={`text-lg sm:text-xl ${badge === "Premium" ? "text-purple-600" : "text-green-600"}`} />
+                {badge === "Enterprise" ? (
+                  <FaCrown className="text-lg sm:text-xl text-purple-600" />
                 ) : badge === "Popular" ? (
                   <FaRocket className="text-lg sm:text-xl text-blue-600" />
+                ) : badge === "Developer" ? (
+                  <FaStar className="text-lg sm:text-xl text-orange-600" />
                 ) : (
                   <FaStar className="text-lg sm:text-xl text-green-600" />
                 )}
@@ -176,7 +177,7 @@ export default function PlanningPricing() {
               <span className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900">
                 {price.toLocaleString('vi-VN')}
               </span>
-              <span className="text-xs sm:text-sm text-gray-700 block sm:inline"> {currency} / {formatDuration(duration, durationType)}</span>
+              <span className="text-xs sm:text-sm text-gray-700 block sm:inline"> VND / {formatDuration(daysLimit)}</span>
             </div>
 
             {/* Title */}
@@ -184,16 +185,10 @@ export default function PlanningPricing() {
             
             {/* Package Details */}
             <div className="text-xs sm:text-sm text-gray-700 mb-3 sm:mb-4 space-y-1">
-              {maxProjects && (
-                <p>Tối đa: {maxProjects >= 999999 ? 'Không giới hạn' : maxProjects} dự án</p>
-              )}
-              {maxStorage && (
-                <p>Lưu trữ: {formatStorage(maxStorage)}</p>
-              )}
-              <p>Thời hạn: {formatDuration(duration, durationType)}</p>
-              {prioritySupport && (
-                <p className="text-blue-600 font-semibold">✓ Hỗ trợ ưu tiên</p>
-              )}
+              <p>{formatRequests(dailyLimit)}</p>
+              <p>Thời hạn: {formatDuration(daysLimit)}</p>
+              <p>Tokens: {aiModel?.maxTokens?.toLocaleString()} max</p>
+              <p>Response: {aiModel?.responseTime || 'standard'}</p>
             </div>
 
             {/* Features */}
@@ -205,12 +200,12 @@ export default function PlanningPricing() {
                     <FaCheckCircle className="text-green-500 mt-[2px] sm:mt-[3px] flex-shrink-0 text-xs sm:text-sm" />
                     <span className="leading-relaxed">{feature}</span>
                   </li>
-                )) : descriptions.map((desc, idx) => (
-                  <li key={idx} className="flex items-start gap-2">
+                )) : (
+                  <li className="flex items-start gap-2">
                     <FaCheckCircle className="text-green-500 mt-[2px] sm:mt-[3px] flex-shrink-0 text-xs sm:text-sm" />
-                    <span className="leading-relaxed">{desc}</span>
+                    <span className="leading-relaxed">{description}</span>
                   </li>
-                ))}
+                )}
               </ul>
             </div>
 
@@ -220,8 +215,10 @@ export default function PlanningPricing() {
               className={`cursor-pointer w-full rounded-full py-2 sm:py-3 text-white font-semibold transition text-sm sm:text-base ${
                 button.type === "primary"
                   ? "bg-blue-600 hover:bg-blue-700"
-                  : badge === "Premium"
+                  : badge === "Enterprise"
                   ? "bg-purple-600 hover:bg-purple-700"
+                  : badge === "Developer"
+                  ? "bg-orange-600 hover:bg-orange-700"
                   : "bg-green-600 hover:bg-green-700"
               }`}
             >

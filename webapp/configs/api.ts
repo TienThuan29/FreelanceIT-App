@@ -56,5 +56,22 @@ export const Api = {
         MARK_READ: '/api/v1/chat/messages/read',
     },
 
+    Planning: {
+        // Public endpoints
+        GET_ALL_PLANNINGS: '/api/plannings',
+        GET_PLANNING_BY_ID: '/api/plannings',
+        
+        // User endpoints
+        GET_USER_PLANNINGS: '/api/user/plannings',
+        GET_ACTIVE_USER_PLANNING: '/api/user/plannings/active',
+        PURCHASE_PLANNING: '/api/plannings/purchase',
+        CONFIRM_PAYMENT: '/api/plannings',
+        
+        // Admin endpoints
+        CREATE_PLANNING: '/api/admin/plannings',
+        UPDATE_PLANNING: '/api/admin/plannings',
+        DELETE_PLANNING: '/api/admin/plannings',
+    },
+
     
 }

@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { usePlanningManagement } from "@/hooks/usePlanningManagement";
-import { UserPlanning, PaymentStatus } from "@/types/planning.type";
+import { UserPlanning } from "@/types/planning.type";
 import {
   FaCheckCircle,
   FaTimesCircle,
@@ -38,14 +38,14 @@ export default function PlanningPaymentSuccessPage() {
       }
 
       // Get user plannings to find the specific one
-      const userPlannings = await getUserPlannings();
-      const foundPlanning = userPlannings.find(up => up.id === planningId);
+      const userPlannings = await getUserPlannings(user?.id);
+      const foundPlanning = userPlannings.find(up => up.planningId === planningId);
       
       if (foundPlanning) {
         setUserPlanning(foundPlanning);
       } else {
         // Try to get active user planning as fallback
-        const activePlanning = await getActiveUserPlanning();
+        const activePlanning = await getActiveUserPlanning(user?.id);
         if (activePlanning) {
           setUserPlanning(activePlanning);
         }
@@ -105,7 +105,7 @@ export default function PlanningPaymentSuccessPage() {
     );
   }
 
-  const isPaymentSuccessful = userPlanning?.paymentStatus === PaymentStatus.COMPLETED;
+  const isPaymentSuccessful = userPlanning?.isEnable === true;
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6">
@@ -149,43 +149,31 @@ export default function PlanningPaymentSuccessPage() {
                 </h3>
                 <div className="space-y-2 sm:space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-xs sm:text-sm text-gray-600">Mã giao dịch:</span>
-                    <span className="font-medium text-xs sm:text-sm text-right">{userPlanning.id}</span>
+                    <span className="text-xs sm:text-sm text-gray-600">Order ID:</span>
+                    <span className="font-medium text-xs sm:text-sm text-right">{userPlanning.orderId}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-xs sm:text-sm text-gray-600">Số tiền:</span>
                     <span className="font-medium text-xs sm:text-sm text-right">
-                      {userPlanning.planning.price?.toLocaleString("vi-VN")} {userPlanning.planning.currency}
+                      {userPlanning.price?.toLocaleString("vi-VN")} VND
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-xs sm:text-sm text-gray-600">Trạng thái:</span>
                     <span
                       className={`font-medium text-xs sm:text-sm ${
-                        userPlanning.paymentStatus === PaymentStatus.COMPLETED
+                        userPlanning.isEnable
                           ? "text-green-600"
-                          : userPlanning.paymentStatus === PaymentStatus.PENDING
-                          ? "text-yellow-600"
                           : "text-red-600"
                       }`}
                     >
-                      {userPlanning.paymentStatus === PaymentStatus.COMPLETED
-                        ? "Thành công"
-                        : userPlanning.paymentStatus === PaymentStatus.PENDING
-                        ? "Đang xử lý"
-                        : "Thất bại"}
+                      {userPlanning.isEnable ? "Thành công" : "Thất bại"}
                     </span>
                   </div>
-                  {userPlanning.paymentMethod && (
-                    <div className="flex justify-between">
-                      <span className="text-xs sm:text-sm text-gray-600">Phương thức thanh toán:</span>
-                      <span className="font-medium text-xs sm:text-sm text-right">{userPlanning.paymentMethod}</span>
-                    </div>
-                  )}
                   <div className="flex justify-between">
                     <span className="text-xs sm:text-sm text-gray-600">Thời gian mua:</span>
                     <span className="font-medium text-xs sm:text-sm text-right">
-                      {new Date(userPlanning.createdDate).toLocaleString("vi-VN")}
+                      {new Date(userPlanning.transactionDate).toLocaleString("vi-VN")}
                     </span>
                   </div>
                 </div>
@@ -208,50 +196,33 @@ export default function PlanningPaymentSuccessPage() {
                   <div className="flex justify-between">
                     <span className="text-xs sm:text-sm text-gray-600">Giá:</span>
                     <span className="font-medium text-xs sm:text-sm text-right">
-                      {userPlanning.planning.price?.toLocaleString(
-                        "vi-VN"
-                      )}{" "}
-                      {userPlanning.planning.currency}
+                      {userPlanning.planning.price?.toLocaleString("vi-VN")} VND
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-xs sm:text-sm text-gray-600">Thời hạn:</span>
                     <span className="font-medium text-xs sm:text-sm text-right">
-                      {formatDuration(userPlanning.startDate, userPlanning.endDate)}
+                      {userPlanning.planning.daysLimit} ngày
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-xs sm:text-sm text-gray-600">Ngày bắt đầu:</span>
+                    <span className="text-xs sm:text-sm text-gray-600">Requests/ngày:</span>
                     <span className="font-medium text-xs sm:text-sm text-right">
-                      {new Date(userPlanning.startDate).toLocaleDateString("vi-VN")}
+                      {userPlanning.planning.dailyLimit}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-xs sm:text-sm text-gray-600">Ngày kết thúc:</span>
+                    <span className="text-xs sm:text-sm text-gray-600">Max Tokens:</span>
                     <span className="font-medium text-xs sm:text-sm text-right">
-                      {new Date(userPlanning.endDate).toLocaleDateString("vi-VN")}
+                      {userPlanning.planning.aiModel?.maxTokens?.toLocaleString() || "N/A"}
                     </span>
                   </div>
-                  {userPlanning.planning.maxProjects && (
-                    <div className="flex justify-between">
-                      <span className="text-xs sm:text-sm text-gray-600">Dự án tối đa:</span>
-                      <span className="font-medium text-xs sm:text-sm text-right">
-                        {userPlanning.planning.maxProjects >= 999999 
-                          ? 'Không giới hạn' 
-                          : userPlanning.planning.maxProjects} dự án
-                      </span>
-                    </div>
-                  )}
-                  {userPlanning.planning.maxStorage && (
-                    <div className="flex justify-between">
-                      <span className="text-xs sm:text-sm text-gray-600">Dung lượng lưu trữ:</span>
-                      <span className="font-medium text-xs sm:text-sm text-right">
-                        {userPlanning.planning.maxStorage >= 1024 
-                          ? `${(userPlanning.planning.maxStorage / 1024).toFixed(1)} GB`
-                          : `${userPlanning.planning.maxStorage} MB`}
-                      </span>
-                    </div>
-                  )}
+                  <div className="flex justify-between">
+                    <span className="text-xs sm:text-sm text-gray-600">Response Time:</span>
+                    <span className="font-medium text-xs sm:text-sm text-right">
+                      {userPlanning.planning.aiModel?.responseTime || "standard"}
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
@@ -274,7 +245,7 @@ export default function PlanningPaymentSuccessPage() {
                   <div className="flex items-center gap-2 sm:gap-3">
                     <FaHeadset className="text-green-600 text-sm sm:text-base flex-shrink-0" />
                     <span className="text-xs sm:text-sm text-gray-700">
-                      Hỗ trợ {userPlanning.planning.prioritySupport ? "ưu tiên" : "24/7"}
+                      Hỗ trợ AI {userPlanning.planning.aiModel?.modelType || "basic"}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 sm:gap-3">
@@ -317,3 +288,5 @@ export default function PlanningPaymentSuccessPage() {
         </div>
   );
 }
+
+

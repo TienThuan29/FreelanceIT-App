@@ -73,4 +73,8 @@ export const config = {
     // n8n chatbot
     N8N_WEBHOOK_URL: process.env.N8N_WEBHOOK_URL || 'http://localhost:5678/webhook/4091fa09-fb9a-4039-9411-7104d213f601/chat',
 
+    // planning
+    PLANNING_TABLE: process.env.PLANNING_TABLE || 'plannings',
+    USER_PLANNING_TABLE: process.env.USER_PLANNING_TABLE || 'user-plannings',
+
 } as const;

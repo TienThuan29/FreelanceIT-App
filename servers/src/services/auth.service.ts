@@ -105,7 +105,6 @@ export class AuthService {
 
 
       public async createAccount(registerData: RegisterData): Promise<AuthResponse> {
-            console.log(registerData);
             const existingUser = await this.userRepository.findByEmail(registerData.email);
             if (existingUser) {
                   throw new Error("Email already exists");
@@ -184,7 +183,6 @@ export class AuthService {
             if (!cachedData) {
                   return false;
             }
-            console.log(cachedData.sixDigitsCode, verifyCodeData.sixDigitsCode);
             if (cachedData.sixDigitsCode == verifyCodeData.sixDigitsCode) {
                   // Save user 
                   const user = await this.userRepository.create({

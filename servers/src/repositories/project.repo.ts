@@ -30,6 +30,20 @@ export class ProjectRepository extends DynamoRepository {
         }
     }
 
+    public async findAll(): Promise<Project[]> {
+        try {
+            // Use scan to find all projects
+            const command = new ScanCommand({
+                TableName: this.getTableName()
+            });
+            const result = await dynamoDB.send(command);
+            return (result.Items || []) as Project[];
+        } catch (error) {
+            console.error('Error finding all projects:', error);
+            return [];
+        }
+    }
+
     public async createProject(project: ProjectCreateRequest, projectImageUrl?: string): Promise<Project | null> {
         const id = uuidv4();
         const createdDate = new Date();

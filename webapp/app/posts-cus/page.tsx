@@ -3,19 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Project } from '@/types/project.type';
-import { mockProjects } from '../../data/mockProjects';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Role } from '@/types/user.type';
 import { ProjectStatus } from '@/types/shared.type';
 import Footer from '@/components/Footer';
-import NavbarAuthenticated from '@/components/NavbarAuthenticated'; // Import NavbarAuthenticated component
+import useAllProjects from '@/hooks/useAllProjects';
 
 export default function PostPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { projects, isLoading, getAllProjects } = useAllProjects();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [filter, setFilter] = useState({
     search: '',
@@ -25,14 +22,10 @@ export default function PostPage() {
     sort: 'newest'
   });
 
-  // Rest of the state and helper functions...
+  // Fetch projects on component mount
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setProjects(mockProjects);
-      setLoading(false);
-    }, 1000);
-  }, []);
+    getAllProjects();
+  }, [getAllProjects]);
 
   // Your existing filter and formatting functions
   const filteredProjects = projects.filter(project => {
@@ -49,9 +42,13 @@ export default function PostPage() {
     return matchesSearch && matchesSkills && matchesStatus;
   }).sort((a, b) => {
     if (filter.sort === 'newest') {
-      return new Date(b.createdDate || 0).getTime() - new Date(a.createdDate || 0).getTime();
+      const dateA = new Date(a.createdDate || 0).getTime();
+      const dateB = new Date(b.createdDate || 0).getTime();
+      return dateB - dateA;
     } else if (filter.sort === 'deadline') {
-      return new Date(a.endDate || 0).getTime() - new Date(b.endDate || 0).getTime();
+      const dateA = new Date(a.endDate || 0).getTime();
+      const dateB = new Date(b.endDate || 0).getTime();
+      return dateA - dateB;
     } else if (filter.sort === 'budget-high') {
       return (b.budget || 0) - (a.budget || 0);
     } else if (filter.sort === 'budget-low') {
@@ -92,19 +89,21 @@ export default function PostPage() {
     }).format(amount);
   };
 
-  const formatDate = (date: Date | undefined) => {
+  const formatDate = (date: Date | string | undefined) => {
     if (!date) return 'Chưa xác định';
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
     return new Intl.DateTimeFormat('vi-VN', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
-    }).format(date);
+    }).format(dateObj);
   };
 
-  const formatDateDistance = (date: Date | undefined) => {
+  const formatDateDistance = (date: Date | string | undefined) => {
     if (!date) return 'Chưa xác định';
     const now = new Date();
-    const diffInDays = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    const diffInDays = Math.ceil((dateObj.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
     if (diffInDays < 0) {
       return `Đã hết hạn ${Math.abs(diffInDays)} ngày trước`;
@@ -123,7 +122,7 @@ export default function PostPage() {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -401,7 +400,7 @@ export default function PostPage() {
                                 {/* Project Title and Description */}
                                 <div className="flex-1">
                                   <h3 className="text-lg font-semibold text-gray-900 mb-1.5 line-clamp-1 hover:text-blue-600">
-                                    <a href={`/detail-post/${project.id}`}>{project.title}</a>
+                                    <a href={`/posts-cus/${project.id}`}>{project.title}</a>
                                   </h3>
                                   <div className="text-sm text-gray-500 mb-2">
                                     <span className="font-medium">Công ty ABC Tech</span> • <span>TP. Hồ Chí Minh</span>
@@ -465,14 +464,14 @@ export default function PostPage() {
                                 {/* Actions - Only visible on hover */}
                                 <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                   <button
-                                    onClick={() => router.push(`/detail-post/${project.id}`)}
+                                    onClick={() => router.push(`/posts-cus/${project.id}`)}
                                     className="px-3 py-1 text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50 transition-colors text-sm"
                                   >
                                     Chi tiết
                                   </button>
                                   {project.status === ProjectStatus.OPEN_APPLYING && (
                                     <button
-                                      onClick={() => router.push(`/detail-post/${project.id}`)}
+                                      onClick={() => router.push(`/posts-cus/${project.id}`)}
                                       className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
                                     >
                                       Apply

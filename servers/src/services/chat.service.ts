@@ -16,14 +16,10 @@ export class ChatService {
 
   constructor() {
     this.chatRepository = new ChatRepository();
-    console.log(`ChatService: Tên bảng cuộc trò chuyện: ${this.chatRepository.getConversationTableName()}`);
-    console.log(`ChatService: Tên bảng tin nhắn: ${this.chatRepository.getMessageTableName()}`);
   }
 
   // Create new conversation
   async createConversation(input: CreateConversationInput): Promise<Conversation> {
-    console.log('ChatService: Đang tạo cuộc trò chuyện với input:', input);
-    
     const conversation: Conversation = {
       id: uuidv4(),
       name: input.name,
@@ -35,16 +31,12 @@ export class ChatService {
       isArchived: false
     };
 
-    console.log('ChatService: Đã tạo object cuộc trò chuyện:', conversation);
-    console.log('ChatService: Sử dụng bảng cuộc trò chuyện:', this.chatRepository.getConversationTableName());
-
     try {
       const result = await this.chatRepository.createConversation(conversation);
       logger.info(`Đã tạo cuộc trò chuyện ${conversation.id}`);
-      console.log('ChatService: Đã lưu cuộc trò chuyện vào database thành công');
       return result;
     } catch (error) {
-      console.error('ChatService: Lỗi khi lưu cuộc trò chuyện:', error);
+      logger.error('Lỗi khi lưu cuộc trò chuyện:', error);
       throw error;
     }
   }
@@ -103,7 +95,7 @@ export class ChatService {
     // Update conversation lastMessageDate
     await this.updateConversationLastMessage(input.conversationId, new Date().toISOString());
     
-    logger.info(`Đã tạo tin nhắn ${message.id} trong cuộc trò chuyện ${input.conversationId}`);
+    logger.info(`Created message ${message.id} in conversation ${input.conversationId}`);
     
     return result;
   }

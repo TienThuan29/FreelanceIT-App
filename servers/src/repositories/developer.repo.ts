@@ -26,10 +26,6 @@ export class DeveloperRepository extends DynamoRepository {
 
     public async create(userId: string, developerProfile: DeveloperProfile): Promise<DeveloperProfile | null> {
         try {
-            console.log('Creating developer profile for userId:', userId);
-            console.log('Profile data:', developerProfile);
-            console.log('Table name:', this.getTableName());
-            
             const profileData = {
                 ...developerProfile,
                 userId,
@@ -37,15 +33,12 @@ export class DeveloperRepository extends DynamoRepository {
                 updatedDate: this.convertDateToISOString(new Date()),
             };
             
-            console.log('Final profile data to save:', profileData);
-            
             const success = await this.putItem(profileData);
             if (!success) {
                 console.error('Failed to put item in DynamoDB');
                 return null;
             }
             
-            console.log('Successfully created developer profile');
             return await this.findByUserId(userId);
         } catch (error) {
             console.error('Error creating developer profile:', error);
@@ -55,38 +48,28 @@ export class DeveloperRepository extends DynamoRepository {
 
     public async update(userId: string, developerProfile: DeveloperProfile): Promise<DeveloperProfile | null> {
         try {
-            console.log('Updating developer profile for userId:', userId);
-            console.log('Profile data:', developerProfile);
-            
             // Check if profile exists
             const existingProfile = await this.findByUserId(userId);
-            console.log('Existing profile:', existingProfile);
             
             if (!existingProfile) {
-                console.log('Profile does not exist, creating new one');
                 // Create new profile if it doesn't exist
                 return await this.create(userId, developerProfile);
             }
             
-            console.log('Profile exists, updating existing one');
-            // Update existing profile
+            // Update existing profile - exclude userId from update data since it's the primary key
+            const { userId: _, ...profileDataWithoutUserId } = developerProfile;
             const updateData = {
-                ...developerProfile,
+                ...profileDataWithoutUserId,
                 updatedDate: this.convertDateToISOString(new Date()),
             };
             
-            console.log('Update data:', updateData);
-            
             const updateResult = await this.updateItem({ userId }, updateData as Record<string, any>);
             if (!updateResult) {
-                console.error('Failed to update item in DynamoDB');
                 return null;
             }
             
-            console.log('Successfully updated developer profile');
             return await this.findByUserId(userId);
         } catch (error) {
-            console.error('Error updating developer profile:', error);
             return null;
         }
     }

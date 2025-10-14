@@ -21,7 +21,6 @@ class DynamoDB {
     
     public getTableName(tableName: string): string {
         const fullTableName = `${config.DYNAMODB_TABLE_PREFIX}-${tableName}`;
-        console.log(`DynamoDB: Creating table name from '${tableName}' to '${fullTableName}' (prefix: '${config.DYNAMODB_TABLE_PREFIX}')`);
         return fullTableName;
     }
 

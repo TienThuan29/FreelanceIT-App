@@ -40,7 +40,7 @@ const useAxios = () => {
                     refreshToken: refreshToken
                 });
 
-                const newAccessToken = response.data.data.accessToken;
+                const newAccessToken = response.data.dataResponse.accessToken;
                 memoizedSetAccessToken(newAccessToken);
                 
                 const storedAuth = localStorage.getItem(Constant.AUTH_TOKEN_KEY);

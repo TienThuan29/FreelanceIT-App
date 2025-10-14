@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react'
-import type { DeveloperProfile} from '@/types/user.type'
+import type { DeveloperProfile, Skill} from '@/types/user.type'
 import { DeveloperLevel, SkillProficiency } from '@/types/user.type'
 import type { Product } from '@/types/product.type'
 import Avatar from '@/components/Avatar'
@@ -31,7 +31,8 @@ import {
   HiDocument,
   HiEye,
   HiArrowDown,
-  HiHeart
+  HiHeart,
+  HiXMark
 } from 'react-icons/hi2'
 import { toast } from 'sonner';
 
@@ -43,10 +44,18 @@ export default function ProfileDevPage() {
     developerProfile,
     isLoading,
     isUpdating,
+    isSkillLoading,
+    skillError,
+    isSkillUpdated,
     getDeveloperProfile,
     updateDeveloperProfile,
     updateUserProfile,
     updateUserAvatar,
+    addSkill,
+    updateSkill,
+    removeSkill,
+    getSkills,
+    resetSkillState,
     clearErrors,
     resetUpdateState,
     hasProfile
@@ -58,6 +67,18 @@ export default function ProfileDevPage() {
   const [formData, setFormData] = useState<Partial<DeveloperProfile>>({})
   const [userFormData, setUserFormData] = useState<Partial<UserProfileResponse>>({})
   const [products, setProducts] = useState<Product[]>([])
+  
+  // Skill modal state
+  const [isSkillModalOpen, setIsSkillModalOpen] = useState<boolean>(false)
+  const [skillFormData, setSkillFormData] = useState<{
+    name: string;
+    proficiency: SkillProficiency;
+    yearsOfExperience: number;
+  }>({
+    name: '',
+    proficiency: SkillProficiency.BEGINNER,
+    yearsOfExperience: 1
+  })
 
   useEffect(() => {
     const loadProfile = async (): Promise<void> => {
@@ -276,6 +297,62 @@ export default function ProfileDevPage() {
     setUserFormData(userProfile || {})
     setIsEditing(false)
     clearErrors()
+  }
+
+  // Skill modal handlers
+  const handleOpenSkillModal = (): void => {
+    setIsSkillModalOpen(true)
+    resetSkillState()
+  }
+
+  const handleCloseSkillModal = (): void => {
+    setIsSkillModalOpen(false)
+    setSkillFormData({
+      name: '',
+      proficiency: SkillProficiency.BEGINNER,
+      yearsOfExperience: 1
+    })
+    resetSkillState()
+  }
+
+  const handleSkillFormChange = (field: string, value: string | number): void => {
+    setSkillFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleAddSkill = async (): Promise<void> => {
+    if (!user?.id) return
+
+    // Validate form data
+    if (!skillFormData.name.trim()) {
+      toast.error('Vui lòng nhập tên kỹ năng')
+      return
+    }
+
+    if (skillFormData.yearsOfExperience < 1) {
+      toast.error('Số năm kinh nghiệm phải lớn hơn 0')
+      return
+    }
+
+    try {
+      const success = await addSkill(user.id, {
+        name: skillFormData.name.trim(),
+        proficiency: skillFormData.proficiency,
+        yearsOfExperience: skillFormData.yearsOfExperience
+      })
+
+      if (success) {
+        toast.success('Thêm kỹ năng thành công!')
+        handleCloseSkillModal()
+      } else {
+        toast.error('Có lỗi xảy ra khi thêm kỹ năng!')
+      }
+    } catch (error) {
+      console.error('Error adding skill:', error)
+      toast.error('Có lỗi xảy ra khi thêm kỹ năng!')
+    }
   }
 
 
@@ -807,6 +884,7 @@ export default function ProfileDevPage() {
                 <h3 className="text-lg font-medium text-gray-900">Kỹ năng & Chuyên môn</h3>
                 {hasProfile && (
                   <button
+                    onClick={handleOpenSkillModal}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     type="button"
                   >
@@ -863,6 +941,7 @@ export default function ProfileDevPage() {
                           Hãy thêm kỹ năng của bạn để khách hàng có thể tìm thấy bạn dễ dàng hơn
                         </p>
                         <button
+                          onClick={handleOpenSkillModal}
                           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                           type="button"
                         >
@@ -1422,6 +1501,110 @@ export default function ProfileDevPage() {
           )}
         </div>
       </div>
+
+      {/* Skill Addition Modal */}
+      {isSkillModalOpen && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-medium text-gray-900">Thêm kỹ năng mới</h3>
+                <button
+                  onClick={handleCloseSkillModal}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  type="button"
+                >
+                  <HiXMark className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Skill Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tên kỹ năng *
+                  </label>
+                  <input
+                    type="text"
+                    value={skillFormData.name}
+                    onChange={(e) => handleSkillFormChange('name', e.target.value)}
+                    placeholder="Ví dụ: React, Node.js, Python..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                {/* Proficiency Level */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Mức độ thành thạo *
+                  </label>
+                  <select
+                    value={skillFormData.proficiency}
+                    onChange={(e) => handleSkillFormChange('proficiency', e.target.value as SkillProficiency)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value={SkillProficiency.BEGINNER}>Mới bắt đầu</option>
+                    <option value={SkillProficiency.INTERMEDIATE}>Trung bình</option>
+                    <option value={SkillProficiency.ADVANCED}>Nâng cao</option>
+                    <option value={SkillProficiency.EXPERT}>Chuyên gia</option>
+                  </select>
+                </div>
+
+                {/* Years of Experience */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Số năm kinh nghiệm *
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={skillFormData.yearsOfExperience}
+                    onChange={(e) => handleSkillFormChange('yearsOfExperience', parseInt(e.target.value) || 1)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                {/* Error Display */}
+                {skillError && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-600">{skillError}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Actions */}
+              <div className="flex justify-end space-x-4 mt-6 pt-6 border-t border-gray-200">
+                <button
+                  onClick={handleCloseSkillModal}
+                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  type="button"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleAddSkill}
+                  disabled={isSkillLoading || !skillFormData.name.trim()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
+                  type="button"
+                >
+                  {isSkillLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Đang thêm...</span>
+                    </>
+                  ) : (
+                    <>
+                      <HiPlus className="w-4 h-4" />
+                      <span>Thêm kỹ năng</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
   // return (

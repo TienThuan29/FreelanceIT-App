@@ -7,42 +7,62 @@ import { ProjectStatus } from '@/types/shared.type'
 import { formatCurrency } from '@/lib/curency'
 import { formatDate } from '@/lib/date'
 import { useProjectManagement } from '@/hooks/useProjectManagement'
+import useApplicationManagement, { ProjectApplication } from '@/hooks/useApplicationManagement'
+import { ProjectTeamMember } from '@/hooks/useProjectManagement'
 import { toast } from 'sonner'
+import { ApplicationStatus } from '@/types/shared.type'
+import { useAuth } from '@/contexts/AuthContext'
 // import NavbarAuthenticated from '@/components/NavbarAuthenticated'
 
-interface ProjectTeamMember {
-    id: string
-    developerId: string
-    developerName: string
-    developerEmail: string
-    developerAvatar?: string
-    agreedRate?: number
-    contractUrl?: string
-    joinedDate?: Date
-    isActive: boolean
-}
 
 export default function ProjectDetailPage() {
     const params = useParams()
     const router = useRouter()
-    const { getProjectById, addUserToProject, removeUserFromProject } = useProjectManagement()
+    const { user, isLoading: authLoading } = useAuth()
+    const { 
+        getProjectById, 
+        addUserToProject, 
+        removeUserFromProject,
+        getProjectTeamMembers,
+        addProjectTeamMember,
+        removeProjectTeamMember,
+        teamMembers,
+        isLoading: isLoadingTeamMembers
+    } = useProjectManagement()
+    const { 
+        applications, 
+        isLoading: isLoadingApplications, 
+        isUpdating, 
+        getApplicationsByProject, 
+        updateApplicationStatus, 
+        deleteApplication 
+    } = useApplicationManagement()
     
     const [project, setProject] = useState<Project | null>(null)
-    const [teamMembers, setTeamMembers] = useState<ProjectTeamMember[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [isAddingMember, setIsAddingMember] = useState(false)
     const [showAddMemberModal, setShowAddMemberModal] = useState(false)
+    const [showApplicationsModal, setShowApplicationsModal] = useState(false)
     const [newMemberData, setNewMemberData] = useState({
         userId: '',
         agreedRate: 0,
         contractUrl: ''
     })
+    const [selectedApplication, setSelectedApplication] = useState<ProjectApplication | null>(null)
+    const [showStatusModal, setShowStatusModal] = useState(false)
+    const [statusUpdateData, setStatusUpdateData] = useState({
+        status: ApplicationStatus.PENDING,
+        notes: ''
+    })
+    const [isLoadingApplicationsButton, setIsLoadingApplicationsButton] = useState(false)
 
     const projectId = params.id as string
 
     useEffect(() => {
-        fetchProjectDetails()
-    }, [projectId])
+        if (!authLoading && user) {
+            fetchProjectDetails()
+        }
+    }, [projectId, authLoading, user])
 
     const fetchProjectDetails = async () => {
         try {
@@ -50,31 +70,8 @@ export default function ProjectDetailPage() {
             const projectData = await getProjectById(projectId)
             setProject(projectData)
             
-            // Mock team members data - replace with actual API call
-            setTeamMembers([
-                {
-                    id: '1',
-                    developerId: 'dev1',
-                    developerName: 'Nguyễn Văn A',
-                    developerEmail: 'nguyenvana@email.com',
-                    developerAvatar: 'https://via.placeholder.com/40',
-                    agreedRate: 5000000,
-                    contractUrl: 'https://example.com/contract1.pdf',
-                    joinedDate: new Date('2024-01-15'),
-                    isActive: true
-                },
-                {
-                    id: '2',
-                    developerId: 'dev2',
-                    developerName: 'Trần Thị B',
-                    developerEmail: 'tranthib@email.com',
-                    developerAvatar: 'https://via.placeholder.com/40',
-                    agreedRate: 4500000,
-                    contractUrl: 'https://example.com/contract2.pdf',
-                    joinedDate: new Date('2024-02-01'),
-                    isActive: true
-                }
-            ])
+            // Fetch real team members data
+            await getProjectTeamMembers(projectId)
         } catch (error) {
             toast.error('Không thể tải thông tin dự án')
             console.error('Error fetching project:', error)
@@ -91,13 +88,12 @@ export default function ProjectDetailPage() {
 
         try {
             setIsAddingMember(true)
-            await addUserToProject({
+            await addProjectTeamMember({
                 projectId,
                 userId: newMemberData.userId,
                 agreedRate: newMemberData.agreedRate,
                 contractUrl: newMemberData.contractUrl
             })
-            toast.success('Thêm thành viên thành công')
             setShowAddMemberModal(false)
             setNewMemberData({ userId: '', agreedRate: 0, contractUrl: '' })
             fetchProjectDetails()
@@ -114,12 +110,69 @@ export default function ProjectDetailPage() {
         }
 
         try {
-            await removeUserFromProject(projectId, userId)
-            toast.success('Xóa thành viên thành công')
+            await removeProjectTeamMember(projectId, userId)
             fetchProjectDetails()
         } catch (error) {
             toast.error('Không thể xóa thành viên')
         }
+    }
+
+    const handleViewApplications = async () => {
+        try {
+            setIsLoadingApplicationsButton(true)
+            await getApplicationsByProject(projectId)
+            setShowApplicationsModal(true)
+        } catch (error) {
+            toast.error('Không thể tải danh sách ứng tuyển')
+        } finally {
+            setIsLoadingApplicationsButton(false)
+        }
+    }
+
+    const handleUpdateApplicationStatus = async () => {
+        if (!selectedApplication) return
+
+        try {
+            await updateApplicationStatus(
+                selectedApplication.id, 
+                statusUpdateData.status, 
+                statusUpdateData.notes,
+                projectId,
+                selectedApplication.developerId,
+                selectedApplication.expectedRate
+            )
+            setShowStatusModal(false)
+            setSelectedApplication(null)
+            setStatusUpdateData({ status: ApplicationStatus.PENDING, notes: '' })
+            
+            // Refresh team members if application was accepted
+            if (statusUpdateData.status === ApplicationStatus.ACCEPTED) {
+                await getProjectTeamMembers(projectId)
+            }
+        } catch (error) {
+            toast.error('Không thể cập nhật trạng thái')
+        }
+    }
+
+    const handleDeleteApplication = async (applicationId: string) => {
+        if (!window.confirm('Bạn có chắc chắn muốn xóa đơn ứng tuyển này?')) {
+            return
+        }
+
+        try {
+            await deleteApplication(applicationId)
+        } catch (error) {
+            toast.error('Không thể xóa đơn ứng tuyển')
+        }
+    }
+
+    const openStatusModal = (application: ProjectApplication) => {
+        setSelectedApplication(application)
+        setStatusUpdateData({
+            status: application.status,
+            notes: application.notes || ''
+        })
+        setShowStatusModal(true)
     }
 
     const getStatusColor = (status: Project['status']) => {
@@ -144,6 +197,51 @@ export default function ProjectDetailPage() {
             case ProjectStatus.CLOSED_APPLYING: return 'Đã đóng đơn'
             default: return 'Không xác định'
         }
+    }
+
+    const getApplicationStatusColor = (status: ApplicationStatus) => {
+        switch (status) {
+            case ApplicationStatus.PENDING: return 'bg-yellow-100 text-yellow-800'
+            case ApplicationStatus.ACCEPTED: return 'bg-green-100 text-green-800'
+            case ApplicationStatus.REJECTED: return 'bg-red-100 text-red-800'
+            default: return 'bg-gray-100 text-gray-800'
+        }
+    }
+
+    const getApplicationStatusText = (status: ApplicationStatus) => {
+        switch (status) {
+            case ApplicationStatus.PENDING: return 'Chờ xét duyệt'
+            case ApplicationStatus.ACCEPTED: return 'Đã chấp nhận'
+            case ApplicationStatus.REJECTED: return 'Đã từ chối'
+            default: return 'Không xác định'
+        }
+    }
+
+    const formatDate = (date: Date | string | undefined) => {
+        if (!date) return 'Chưa xác định'
+        const dateObj = typeof date === 'string' ? new Date(date) : date
+        return new Intl.DateTimeFormat('vi-VN', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        }).format(dateObj)
+    }
+
+    // Show loading while authentication is being checked
+    if (authLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+            </div>
+        )
+    }
+
+    // Redirect to login if not authenticated
+    if (!user) {
+        router.push('/login')
+        return null
     }
 
     if (isLoading) {
@@ -395,15 +493,29 @@ export default function ProjectDetailPage() {
                         <div className="bg-white rounded-lg shadow-sm p-6">
                             <h2 className="text-xl font-semibold text-gray-900 mb-4">Thao tác</h2>
                             <div className="space-y-3">
-                                <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                {/* <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                                     Chỉnh sửa dự án
+                                </button> */}
+                                <button 
+                                    onClick={handleViewApplications}
+                                    disabled={isLoadingApplicationsButton}
+                                    className="cursor-pointer w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    {isLoadingApplicationsButton ? (
+                                        <div className="flex items-center justify-center">
+                                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Đang tải...
+                                        </div>
+                                    ) : (
+                                        `Đơn ứng tuyển`
+                                    )}
                                 </button>
-                                <button className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                                    Xuất báo cáo
-                                </button>
-                                <button className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                                {/* <button className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
                                     Sao chép dự án
-                                </button>
+                                </button> */}
                             </div>
                         </div>
                     </div>
@@ -467,9 +579,200 @@ export default function ProjectDetailPage() {
                             <button
                                 onClick={handleAddMember}
                                 disabled={isAddingMember}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                                className="cursor-pointer px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
                             >
                                 {isAddingMember ? 'Đang thêm...' : 'Thêm thành viên'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Applications Modal */}
+            {showApplicationsModal && (
+                <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg border border-gray-200 shadow-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold">Đơn ứng tuyển ({applications.length})</h2>
+                            <button
+                                onClick={() => setShowApplicationsModal(false)}
+                                className="text-gray-500 hover:text-gray-700"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {isLoadingApplications ? (
+                            <div className="flex items-center justify-center py-8">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                            </div>
+                        ) : applications.length === 0 ? (
+                            <div className="text-center py-8">
+                                <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <p className="text-gray-500">Chưa có đơn ứng tuyển nào</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {applications.map((application) => (
+                                    <div key={application.id} className="border border-gray-200 rounded-lg p-6">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="flex items-center">
+                                                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                                                    <span className="text-blue-600 font-semibold">
+                                                        {application.developer?.name?.charAt(0) || 'D'}
+                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <h3 className="font-semibold text-gray-900">
+                                                            {application.developer?.name || 'Người dùng'}
+                                                        </h3>
+                                                        {teamMembers.some(member => member.developerId === application.developerId) && (
+                                                            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                                                                Đã trong đội ngũ
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-sm text-gray-500">
+                                                        {application.developer?.email || 'email@example.com'}
+                                                    </p>
+                                                    <p className="text-xs text-gray-400">
+                                                        Ứng tuyển lúc: {formatDate(application.appliedDate)}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <span className={`px-3 py-1 text-sm font-medium rounded-full ${getApplicationStatusColor(application.status)}`}>
+                                                {getApplicationStatusText(application.status)}
+                                            </span>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                            <div>
+                                                <p className="text-sm font-medium text-gray-500">Mức lương mong muốn</p>
+                                                <p className="text-gray-900">
+                                                    {application.expectedRate ? formatCurrency(application.expectedRate) : 'Thỏa thuận'}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium text-gray-500">Thời gian hoàn thành</p>
+                                                <p className="text-gray-900">
+                                                    {application.deliveryTime ? `${application.deliveryTime} ngày` : 'Chưa xác định'}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium text-gray-500">Kỹ năng</p>
+                                                <div className="flex flex-wrap gap-1">
+                                                    {application.developer?.developerProfile?.skills?.slice(0, 3).map((skill, index) => (
+                                                        <span key={index} className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs">
+                                                            {typeof skill === 'string' ? skill : (skill?.name || 'Unknown Skill')}
+                                                        </span>
+                                                    ))}
+                                                    {(application.developer?.developerProfile?.skills?.length || 0) > 3 && (
+                                                        <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
+                                                            +{(application.developer?.developerProfile?.skills?.length || 0) - 3}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {application.coverLetter && (
+                                            <div className="mb-4">
+                                                <p className="text-sm font-medium text-gray-500 mb-2">Thư xin việc</p>
+                                                <p className="text-gray-900 bg-gray-50 p-3 rounded-lg text-sm">
+                                                    {application.coverLetter}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {application.notes && (
+                                            <div className="mb-4">
+                                                <p className="text-sm font-medium text-gray-500 mb-2">Ghi chú</p>
+                                                <p className="text-gray-900 bg-yellow-50 p-3 rounded-lg text-sm">
+                                                    {application.notes}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        <div className="flex justify-end space-x-2">
+                                            <button
+                                                onClick={() => openStatusModal(application)}
+                                                disabled={application.status === ApplicationStatus.ACCEPTED && teamMembers.some(member => member.developerId === application.developerId)}
+                                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                            >
+                                                {application.status === ApplicationStatus.ACCEPTED && teamMembers.some(member => member.developerId === application.developerId) 
+                                                    ? 'Đã chấp nhận' 
+                                                    : 'Cập nhật trạng thái'
+                                                }
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteApplication(application.id)}
+                                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
+                                            >
+                                                Xóa
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Status Update Modal */}
+            {showStatusModal && selectedApplication && (
+                <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg border border-gray-200 shadow-xl p-6 w-full max-w-md">
+                        <h2 className="text-xl font-bold mb-4">Cập nhật trạng thái ứng tuyển</h2>
+                        
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Trạng thái *
+                                </label>
+                                <select
+                                    value={statusUpdateData.status}
+                                    onChange={(e) => setStatusUpdateData(prev => ({ ...prev, status: e.target.value as ApplicationStatus }))}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value={ApplicationStatus.PENDING}>Chờ xét duyệt</option>
+                                    <option value={ApplicationStatus.ACCEPTED}>Chấp nhận</option>
+                                    <option value={ApplicationStatus.REJECTED}>Từ chối</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Ghi chú
+                                </label>
+                                <textarea
+                                    value={statusUpdateData.notes}
+                                    onChange={(e) => setStatusUpdateData(prev => ({ ...prev, notes: e.target.value }))}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    rows={3}
+                                    placeholder="Nhập ghi chú (tùy chọn)"
+                                />
+                            </div>
+                        </div>
+                        
+                        <div className="flex justify-end space-x-3 mt-6">
+                            <button
+                                onClick={() => setShowStatusModal(false)}
+                                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                onClick={handleUpdateApplicationStatus}
+                                disabled={isUpdating}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                            >
+                                {isUpdating ? 'Đang cập nhật...' : 'Cập nhật'}
                             </button>
                         </div>
                     </div>

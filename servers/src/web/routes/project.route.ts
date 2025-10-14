@@ -6,7 +6,11 @@ import { authenticate } from "@/web/middlewares/auth.middleware";
 const router = Router();
 const projectApi = new ProjectApi();
 
-// Apply authentication middleware to all routes
+// Public routes (no authentication required)
+router.get('/public/get-all', projectApi.getAllProjectsPublic);
+router.get('/public/get-by-id/:id', projectApi.getProjectByIdPublic);
+
+// Apply authentication middleware to protected routes
 router.use(authenticate);
 
 router.post('/types/create-project-type', handleProjectFormData, projectApi.createProjectType);
@@ -18,6 +22,7 @@ router.delete('/types/delete/:id', projectApi.deleteProjectType);
 
 router.post('/create-project', handleProjectFormData, projectApi.createProject);
 router.get('/get-by-user-id', projectApi.getProjectByUserId);
+router.get('/get-all', projectApi.getAllProjects);
 router.get('/get-by-id/:id', projectApi.getProjectById);
 router.put('/update/:id', handleProjectFormData, projectApi.updateProject);
 router.delete('/delete/:id', projectApi.deleteProject);

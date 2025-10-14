@@ -2,6 +2,7 @@ import { ResponseUtil } from "@/libs/response";
 import { DeveloperService } from "@/services/developer.service";
 import { Request, Response } from "express";
 import { uploadProjectImage } from "@/web/middlewares/multer.middleware";
+import { Skill } from "@/models/user.model";
 
 export class DeveloperApi {
 
@@ -14,6 +15,10 @@ export class DeveloperApi {
         this.updateDeveloperProfile = this.updateDeveloperProfile.bind(this);
         this.updateUserProfile = this.updateUserProfile.bind(this);
         this.updateUserAvatar = this.updateUserAvatar.bind(this);
+        this.addSkill = this.addSkill.bind(this);
+        this.updateSkill = this.updateSkill.bind(this);
+        this.removeSkill = this.removeSkill.bind(this);
+        this.getSkills = this.getSkills.bind(this);
     }
 
     public async getDeveloperProfile(request: Request, response: Response): Promise<void> {
@@ -106,5 +111,76 @@ export class DeveloperApi {
             return;
         }
         ResponseUtil.success(response, updatedDeveloperProfile, 'Cập nhật developer profile thành công', 200);
+    }
+
+    // Skill management endpoints
+    public async addSkill(request: Request, response: Response): Promise<void> {
+        const { userId } = request.params;
+        const skill: Skill = request.body;
+
+        if (!userId) {
+            ResponseUtil.error(response, 'User ID is required', 400);
+            return;
+        }
+
+        if (!skill.name || !skill.proficiency || !skill.yearsOfExperience) {
+            ResponseUtil.error(response, 'Skill name, proficiency, and years of experience are required', 400);
+            return;
+        }
+
+        const updatedProfile = await this.developerService.addSkill(userId, skill);
+        if (!updatedProfile) {
+            ResponseUtil.error(response, 'Thêm skill thất bại', 400);
+            return;
+        }
+
+        ResponseUtil.success(response, updatedProfile, 'Thêm skill thành công', 200);
+    }
+
+    public async updateSkill(request: Request, response: Response): Promise<void> {
+        const { userId, skillId } = request.params;
+        const updatedSkill: Partial<Skill> = request.body;
+
+        if (!userId || !skillId) {
+            ResponseUtil.error(response, 'User ID and Skill ID are required', 400);
+            return;
+        }
+
+        const updatedProfile = await this.developerService.updateSkill(userId, skillId, updatedSkill);
+        if (!updatedProfile) {
+            ResponseUtil.error(response, 'Cập nhật skill thất bại', 400);
+            return;
+        }
+
+        ResponseUtil.success(response, updatedProfile, 'Cập nhật skill thành công', 200);
+    }
+
+    public async removeSkill(request: Request, response: Response): Promise<void> {
+        const { userId, skillId } = request.params;
+
+        if (!userId || !skillId) {
+            ResponseUtil.error(response, 'User ID and Skill ID are required', 400);
+            return;
+        }
+
+        const updatedProfile = await this.developerService.removeSkill(userId, skillId);
+        if (!updatedProfile) {
+            ResponseUtil.error(response, 'Xóa skill thất bại', 400);
+            return;
+        }
+
+        ResponseUtil.success(response, updatedProfile, 'Xóa skill thành công', 200);
+    }
+
+    public async getSkills(request: Request, response: Response): Promise<void> {
+        const { userId } = request.params;
+
+        if (!userId) {
+            ResponseUtil.error(response, 'User ID is required', 400);
+            return;
+        }
+
+        const skills = await this.developerService.getSkills(userId);
+        ResponseUtil.success(response, skills, 'Lấy danh sách skills thành công', 200);
     }
 }

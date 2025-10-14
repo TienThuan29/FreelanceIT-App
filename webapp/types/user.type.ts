@@ -125,10 +125,9 @@ export type CustomerProfile = {
     industry?: string;
     companySize?: string;
     taxId?: string;
-    address?: string;
-    city?: string;
-    state?: string;
-    countryName?: string;
+    houseNumberAndStreet?: string;
+    commune: Commune;
+    province: Province;
     rating?: number;
     totalProjectsPosted?: number;
 };

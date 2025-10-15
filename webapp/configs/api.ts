@@ -120,6 +120,4 @@ export const Api = {
         VERIFY_CALLBACK: '/api/v1/payment/momo/verify',
         REFUND: '/api/v1/payment/momo/refund',
     }
-
-
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { usePlanningManagement } from "@/hooks/usePlanningManagement";
-import { UserPlanning, PaymentStatus } from "@/types/planning.type";
+import { UserPlanning } from "@/types/planning.type";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import {
@@ -20,74 +20,54 @@ import {
 export default function PlanningDashboard() {
   const { user } = useAuth();
   const router = useRouter();
-  const { activeUserPlanning, getUserPlannings, isLoading, error } = usePlanningManagement();
+  const { activeUserPlanning, getUserPlannings, getActiveUserPlanning, isLoading, error } = usePlanningManagement();
   const [userPlannings, setUserPlannings] = useState<UserPlanning[]>([]);
+  const [activePlanning, setActivePlanning] = useState<UserPlanning | null>(null);
 
   useEffect(() => {
     if (user) {
       const fetchUserPlannings = async () => {
-        const plannings = await getUserPlannings();
+        const plannings = await getUserPlannings(user.id);
+        const active = await getActiveUserPlanning(user.id);
         setUserPlannings(plannings);
+        setActivePlanning(active);
       };
       fetchUserPlannings();
     }
-  }, [user, getUserPlannings]);
+  }, [user, getUserPlannings, getActiveUserPlanning]);
 
-  const formatDuration = (startDate: Date, endDate: Date): string => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays < 30) {
-      return `${diffDays} ngày`;
-    } else if (diffDays < 365) {
-      const months = Math.floor(diffDays / 30);
+  const formatDuration = (daysLimit: number): string => {
+    if (daysLimit >= 365) {
+      const years = Math.floor(daysLimit / 365);
+      return `${years} năm`;
+    } else if (daysLimit >= 30) {
+      const months = Math.floor(daysLimit / 30);
       return `${months} tháng`;
     } else {
-      const years = Math.floor(diffDays / 365);
-      return `${years} năm`;
+      return `${daysLimit} ngày`;
     }
   };
 
-  const getStatusColor = (status: PaymentStatus): string => {
-    switch (status) {
-      case PaymentStatus.COMPLETED:
-        return "text-green-600 bg-green-100";
-      case PaymentStatus.PENDING:
-        return "text-yellow-600 bg-yellow-100";
-      case PaymentStatus.FAILED:
-        return "text-red-600 bg-red-100";
-      case PaymentStatus.REFUNDED:
-        return "text-gray-600 bg-gray-100";
-      default:
-        return "text-gray-600 bg-gray-100";
-    }
+  const getStatusColor = (isEnable: boolean): string => {
+    return isEnable ? "text-green-600 bg-green-100" : "text-red-600 bg-red-100";
   };
 
-  const getStatusText = (status: PaymentStatus): string => {
-    switch (status) {
-      case PaymentStatus.COMPLETED:
-        return "Hoàn thành";
-      case PaymentStatus.PENDING:
-        return "Đang xử lý";
-      case PaymentStatus.FAILED:
-        return "Thất bại";
-      case PaymentStatus.REFUNDED:
-        return "Đã hoàn tiền";
-      default:
-        return "Không xác định";
-    }
+  const getStatusText = (isEnable: boolean): string => {
+    return isEnable ? "Đang hoạt động" : "Đã hết hạn";
   };
 
   const getBadgeInfo = (planning: any) => {
-    if (planning.prioritySupport) {
-      return { text: "Premium", color: "purple", icon: FaCrown };
+    const modelType = planning.aiModel?.modelType || 'basic';
+    switch (modelType) {
+      case 'enterprise':
+        return { text: "Enterprise", color: "purple", icon: FaCrown };
+      case 'pro':
+        return { text: "Popular", color: "blue", icon: FaRocket };
+      case 'developer':
+        return { text: "Developer", color: "orange", icon: FaStar };
+      default:
+        return { text: "Basic", color: "green", icon: FaStar };
     }
-    if (planning.price > 1000000) {
-      return { text: "Popular", color: "blue", icon: FaRocket };
-    }
-    return { text: "Basic", color: "green", icon: FaStar };
   };
 
   if (isLoading) {
@@ -108,10 +88,10 @@ export default function PlanningDashboard() {
           {/* Header */}
           <div className="mb-6 sm:mb-8">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-              Quản lý dự án và lập kế hoạch
+              Quản lý gói AI dịch vụ
             </h1>
             <p className="text-sm sm:text-base text-gray-600">
-              Tối ưu hóa quy trình làm việc và quản lý dự án hiệu quả
+              Theo dõi và quản lý các gói AI dịch vụ của bạn
             </p>
           </div>
 
@@ -123,55 +103,49 @@ export default function PlanningDashboard() {
           )}
 
           {/* Active Planning */}
-          {activeUserPlanning ? (
+          {activePlanning ? (
             <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
                 <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
                   Gói đang hoạt động
                 </h2>
-                <span className={`px-3 py-1 rounded-full text-xs sm:text-sm font-medium w-fit ${getStatusColor(activeUserPlanning.paymentStatus)}`}>
-                  {getStatusText(activeUserPlanning.paymentStatus)}
+                <span className={`px-3 py-1 rounded-full text-xs sm:text-sm font-medium w-fit ${getStatusColor(activePlanning.isEnable)}`}>
+                  {getStatusText(activePlanning.isEnable)}
                 </span>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <div>
                   <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
-                    {activeUserPlanning.planning.name}
+                    {activePlanning.planning?.name || "Gói AI"}
                   </h3>
                   <p className="text-sm sm:text-base text-gray-600 mb-4">
-                    {activeUserPlanning.planning.description}
+                    {activePlanning.planning?.description || "Gói dịch vụ AI"}
                   </p>
                   
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <FaClock className="text-blue-600 text-sm sm:text-base flex-shrink-0" />
                       <span className="text-xs sm:text-sm text-gray-600">
-                        Thời hạn: {formatDuration(activeUserPlanning.startDate, activeUserPlanning.endDate)}
+                        Thời hạn: {formatDuration(activePlanning.planning?.daysLimit || 30)}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <FaProjectDiagram className="text-green-600 text-sm sm:text-base flex-shrink-0" />
                       <span className="text-xs sm:text-sm text-gray-600">
-                        Dự án tối đa: {!activeUserPlanning.planning.maxProjects || activeUserPlanning.planning.maxProjects >= 999999 
-                          ? 'Không giới hạn' 
-                          : activeUserPlanning.planning.maxProjects}
+                        Requests/ngày: {activePlanning.planning?.dailyLimit || 0}
                       </span>
                     </div>
-                    {activeUserPlanning.planning.maxStorage && (
-                      <div className="flex items-center gap-2">
-                        <FaDatabase className="text-purple-600 text-sm sm:text-base flex-shrink-0" />
-                        <span className="text-xs sm:text-sm text-gray-600">
-                          Lưu trữ: {activeUserPlanning.planning.maxStorage >= 1024 
-                            ? `${(activeUserPlanning.planning.maxStorage / 1024).toFixed(1)} GB`
-                            : `${activeUserPlanning.planning.maxStorage} MB`}
-                        </span>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <FaDatabase className="text-purple-600 text-sm sm:text-base flex-shrink-0" />
+                      <span className="text-xs sm:text-sm text-gray-600">
+                        Max Tokens: {activePlanning.planning?.aiModel?.maxTokens?.toLocaleString() || "N/A"}
+                      </span>
+                    </div>
                     <div className="flex items-center gap-2">
                       <FaHeadset className="text-orange-600 text-sm sm:text-base flex-shrink-0" />
                       <span className="text-xs sm:text-sm text-gray-600">
-                        Hỗ trợ: {activeUserPlanning.planning.prioritySupport ? "Ưu tiên" : "Tiêu chuẩn"}
+                        Response: {activePlanning.planning?.aiModel?.responseTime || "standard"}
                       </span>
                     </div>
                   </div>
@@ -183,24 +157,22 @@ export default function PlanningDashboard() {
                     <div className="flex justify-between">
                       <span className="text-gray-600">Giá:</span>
                       <span className="font-medium text-right">
-                        {activeUserPlanning.planning.price.toLocaleString("vi-VN")} {activeUserPlanning.planning.currency}
+                        {activePlanning.price.toLocaleString("vi-VN")} VND
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Bắt đầu:</span>
+                      <span className="text-gray-600">Mua lúc:</span>
                       <span className="font-medium text-right">
-                        {new Date(activeUserPlanning.startDate).toLocaleDateString("vi-VN")}
+                        {new Date(activePlanning.transactionDate).toLocaleDateString("vi-VN")}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Kết thúc:</span>
-                      <span className="font-medium text-right">
-                        {new Date(activeUserPlanning.endDate).toLocaleDateString("vi-VN")}
-                      </span>
+                      <span className="text-gray-600">Order ID:</span>
+                      <span className="font-medium text-right">{activePlanning.orderId}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Phương thức:</span>
-                      <span className="font-medium text-right">{activeUserPlanning.paymentMethod || "N/A"}</span>
+                      <span className="text-gray-600">Model Type:</span>
+                      <span className="font-medium text-right">{activePlanning.planning?.aiModel?.modelType || "basic"}</span>
                     </div>
                   </div>
                 </div>
@@ -212,17 +184,17 @@ export default function PlanningDashboard() {
                 <FaExclamationTriangle className="text-gray-400 text-xl sm:text-2xl" />
               </div>
               <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
-                Chưa có gói dịch vụ nào
+                Chưa có gói AI nào
               </h2>
               <p className="text-sm sm:text-base text-gray-600 mb-6">
-                Bạn chưa có gói dịch vụ quản lý dự án nào. Hãy chọn một gói phù hợp để bắt đầu.
+                Bạn chưa có gói AI dịch vụ nào. Hãy chọn một gói phù hợp để bắt đầu sử dụng AI.
               </p>
               <button
                 onClick={() => router.push("/planning/pricing")}
                 className="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
               >
                 <FaRocket />
-                Xem các gói dịch vụ
+                Xem các gói AI
               </button>
             </div>
           )}
@@ -231,14 +203,14 @@ export default function PlanningDashboard() {
           {userPlannings.length > 0 && (
             <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
               <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">
-                Lịch sử gói dịch vụ
+                Lịch sử gói AI
               </h2>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Gói dịch vụ
+                        Gói AI
                       </th>
                       <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Thời hạn
@@ -252,43 +224,45 @@ export default function PlanningDashboard() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {userPlannings.map((userPlanning) => {
-                      const badgeInfo = getBadgeInfo(userPlanning.planning);
+                    {userPlannings.map((userPlanning, index) => {
+                      const badgeInfo = getBadgeInfo(userPlanning.planning || {});
                       const BadgeIcon = badgeInfo.icon;
                       
                       return (
-                        <tr key={userPlanning.id}>
+                        <tr key={`${userPlanning.userId}-${userPlanning.planningId}-${index}`}>
                           <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center mr-2 sm:mr-3 ${
                                 badgeInfo.color === 'purple' ? 'bg-purple-100' : 
-                                badgeInfo.color === 'blue' ? 'bg-blue-100' : 'bg-green-100'
+                                badgeInfo.color === 'blue' ? 'bg-blue-100' : 
+                                badgeInfo.color === 'orange' ? 'bg-orange-100' : 'bg-green-100'
                               }`}>
                                 <BadgeIcon className={`text-xs sm:text-sm ${
                                   badgeInfo.color === 'purple' ? 'text-purple-600' : 
-                                  badgeInfo.color === 'blue' ? 'text-blue-600' : 'text-green-600'
+                                  badgeInfo.color === 'blue' ? 'text-blue-600' : 
+                                  badgeInfo.color === 'orange' ? 'text-orange-600' : 'text-green-600'
                                 }`} />
                               </div>
                               <div>
                                 <div className="text-xs sm:text-sm font-medium text-gray-900">
-                                  {userPlanning.planning.name}
+                                  {userPlanning.planning?.name || "Gói AI"}
                                 </div>
                                 <div className="text-xs sm:text-sm text-gray-500">
-                                  {userPlanning.planning.price.toLocaleString("vi-VN")} {userPlanning.planning.currency}
+                                  {userPlanning.price.toLocaleString("vi-VN")} VND
                                 </div>
                               </div>
                             </div>
                           </td>
                           <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">
-                            {formatDuration(userPlanning.startDate, userPlanning.endDate)}
+                            {formatDuration(userPlanning.planning?.daysLimit || 30)}
                           </td>
                           <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(userPlanning.paymentStatus)}`}>
-                              {getStatusText(userPlanning.paymentStatus)}
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(userPlanning.isEnable)}`}>
+                              {getStatusText(userPlanning.isEnable)}
                             </span>
                           </td>
                           <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
-                            {new Date(userPlanning.createdDate).toLocaleDateString("vi-VN")}
+                            {new Date(userPlanning.transactionDate).toLocaleDateString("vi-VN")}
                           </td>
                         </tr>
                       );

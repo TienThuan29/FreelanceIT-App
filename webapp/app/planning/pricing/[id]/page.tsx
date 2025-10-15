@@ -16,6 +16,7 @@ import {
   FaHeadset,
 } from "react-icons/fa";
 import { usePlanningManagement } from "@/hooks/usePlanningManagement";
+
 import { useMoMo, CreateMomoPaymentRequest } from "@/hooks/useMomo";
 import { Planning } from "@/types/planning.type";
 import { Planning, DurationType } from "@/types/planning.type";
@@ -59,6 +60,12 @@ export default function PlanningPackageDetail() {
 
     try {
       setPurchaseLoading(true);
+      const purchaseRequest = {
+        planningId: planningData.id,
+        orderId: `ORDER-${Date.now()}`,
+        price: planningData.price,
+      };
+
 
       if (paymentMethod === 'momo') {
         // Handle MoMo payment
@@ -71,6 +78,7 @@ export default function PlanningPackageDetail() {
 
         console.log("Momo payment request:", momoPaymentRequest);
         const momoResponse = await createMomoPayment(momoPaymentRequest);
+
 
         if (momoResponse && momoResponse.payUrl) {
           // Redirect to MoMo payment page
@@ -106,16 +114,15 @@ export default function PlanningPackageDetail() {
     }
   };
 
-  const formatDuration = (duration: number, durationType: DurationType): string => {
-    switch (durationType) {
-      case DurationType.DAYS:
-        return `${duration} ngày`;
-      case DurationType.MONTHS:
-        return `${duration} tháng`;
-      case DurationType.YEARS:
-        return `${duration} năm`;
-      default:
-        return `${duration} ngày`;
+  const formatDuration = (daysLimit: number): string => {
+    if (daysLimit >= 365) {
+      const years = Math.floor(daysLimit / 365);
+      return `${years} năm`;
+    } else if (daysLimit >= 30) {
+      const months = Math.floor(daysLimit / 30);
+      return `${months} tháng`;
+    } else {
+      return `${daysLimit} ngày`;
     }
   };
 
@@ -128,13 +135,17 @@ export default function PlanningPackageDetail() {
   };
 
   const getBadgeInfo = (planning: Planning) => {
-    if (planning.prioritySupport) {
-      return { text: "Premium", color: "purple", icon: FaCrown };
+    const modelType = planning.aiModel?.modelType || 'basic';
+    switch (modelType) {
+      case 'enterprise':
+        return { text: "Enterprise", color: "purple", icon: FaCrown };
+      case 'pro':
+        return { text: "Popular", color: "blue", icon: FaRocket };
+      case 'developer':
+        return { text: "Developer", color: "orange", icon: FaStar };
+      default:
+        return { text: "Basic", color: "green", icon: FaStar };
     }
-    if (planning.price > 1000000) {
-      return { text: "Popular", color: "blue", icon: FaRocket };
-    }
-    return { text: "Basic", color: "green", icon: FaStar };
   };
 
   if (isLoading) {
@@ -202,11 +213,13 @@ export default function PlanningPackageDetail() {
               <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                 <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center ${
                   badgeInfo.color === 'purple' ? 'bg-purple-100' : 
-                  badgeInfo.color === 'blue' ? 'bg-blue-100' : 'bg-green-100'
+                  badgeInfo.color === 'blue' ? 'bg-blue-100' : 
+                  badgeInfo.color === 'orange' ? 'bg-orange-100' : 'bg-green-100'
                 }`}>
                   <BadgeIcon className={`text-xl sm:text-2xl ${
                     badgeInfo.color === 'purple' ? 'text-purple-600' : 
-                    badgeInfo.color === 'blue' ? 'text-blue-600' : 'text-green-600'
+                    badgeInfo.color === 'blue' ? 'text-blue-600' : 
+                    badgeInfo.color === 'orange' ? 'text-orange-600' : 'text-green-600'
                   }`} />
                 </div>
                 <div>
@@ -223,7 +236,7 @@ export default function PlanningPackageDetail() {
                   <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
                     {planningData.price.toLocaleString("vi-VN")}
                   </div>
-                  <div className="text-sm sm:text-base text-gray-600">{planningData.currency} / {formatDuration(planningData.duration, planningData.durationType)}</div>
+                  <div className="text-sm sm:text-base text-gray-600">VND / {formatDuration(planningData.daysLimit)}</div>
                 </div>
               </div>
             </div>
@@ -234,40 +247,36 @@ export default function PlanningPackageDetail() {
                 <FaClock className="text-blue-600 text-lg sm:text-xl flex-shrink-0" />
                 <div>
                   <div className="font-semibold text-gray-900 text-sm sm:text-base">
-                    {formatDuration(planningData.duration, planningData.durationType)}
+                    {formatDuration(planningData.daysLimit)}
                   </div>
                   <div className="text-xs sm:text-sm text-gray-600">Thời hạn sử dụng</div>
                 </div>
               </div>
-              {planningData.maxProjects && (
-                <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-green-50 rounded-lg">
-                  <FaProjectDiagram className="text-green-600 text-lg sm:text-xl flex-shrink-0" />
-                  <div>
-                    <div className="font-semibold text-gray-900 text-sm sm:text-base">
-                      {planningData.maxProjects >= 999999 ? 'Không giới hạn' : planningData.maxProjects}
-                    </div>
-                    <div className="text-xs sm:text-sm text-gray-600">Dự án tối đa</div>
+              <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-green-50 rounded-lg">
+                <FaProjectDiagram className="text-green-600 text-lg sm:text-xl flex-shrink-0" />
+                <div>
+                  <div className="font-semibold text-gray-900 text-sm sm:text-base">
+                    {planningData.dailyLimit}
                   </div>
+                  <div className="text-xs sm:text-sm text-gray-600">Requests/ngày</div>
                 </div>
-              )}
-              {planningData.maxStorage && (
-                <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-purple-50 rounded-lg">
-                  <FaDatabase className="text-purple-600 text-lg sm:text-xl flex-shrink-0" />
-                  <div>
-                    <div className="font-semibold text-gray-900 text-sm sm:text-base">
-                      {formatStorage(planningData.maxStorage)}
-                    </div>
-                    <div className="text-xs sm:text-sm text-gray-600">Dung lượng lưu trữ</div>
+              </div>
+              <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-purple-50 rounded-lg">
+                <FaDatabase className="text-purple-600 text-lg sm:text-xl flex-shrink-0" />
+                <div>
+                  <div className="font-semibold text-gray-900 text-sm sm:text-base">
+                    {planningData.aiModel?.maxTokens?.toLocaleString() || "N/A"}
                   </div>
+                  <div className="text-xs sm:text-sm text-gray-600">Max Tokens</div>
                 </div>
-              )}
+              </div>
               <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-orange-50 rounded-lg">
                 <FaHeadset className="text-orange-600 text-lg sm:text-xl flex-shrink-0" />
                 <div>
                   <div className="font-semibold text-gray-900 text-sm sm:text-base">
-                    {planningData.prioritySupport ? "Ưu tiên" : "Tiêu chuẩn"}
+                    {planningData.aiModel?.responseTime || "standard"}
                   </div>
-                  <div className="text-xs sm:text-sm text-gray-600">Hỗ trợ khách hàng</div>
+                  <div className="text-xs sm:text-sm text-gray-600">Response Time</div>
                 </div>
               </div>
             </div>
@@ -278,20 +287,13 @@ export default function PlanningPackageDetail() {
                 Tính năng bao gồm
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                {planningData.features.length > 0 ? (
-                  planningData.features
-                    .filter(feature => feature.isIncluded)
-                    .map((feature, idx) => (
-                      <div key={idx} className="flex items-start gap-2 sm:gap-3">
-                        <FaCheckCircle className="text-green-500 mt-1 flex-shrink-0 text-sm sm:text-base" />
-                        <div>
-                          <span className="text-sm sm:text-base text-gray-700 font-medium">{feature.name}</span>
-                          {feature.description && (
-                            <p className="text-xs sm:text-sm text-gray-500 mt-1">{feature.description}</p>
-                          )}
-                        </div>
-                      </div>
-                    ))
+                {planningData.aiModel?.features?.length > 0 ? (
+                  planningData.aiModel.features.map((feature, idx) => (
+                    <div key={idx} className="flex items-start gap-2 sm:gap-3">
+                      <FaCheckCircle className="text-green-500 mt-1 flex-shrink-0 text-sm sm:text-base" />
+                      <span className="text-sm sm:text-base text-gray-700">{feature}</span>
+                    </div>
+                  ))
                 ) : (
                   descriptions.map((desc, idx) => (
                     <div key={idx} className="flex items-start gap-2 sm:gap-3">
@@ -359,6 +361,7 @@ export default function PlanningPackageDetail() {
                   )}
                 </button>
               </div>
+
               <p className="text-xs sm:text-sm text-gray-500 mt-3">
                 Dùng thử miễn phí trong 7 ngày. Hủy bất cứ lúc nào.
               </p>
@@ -394,7 +397,7 @@ export default function PlanningPackageDetail() {
                 <li className="flex items-start gap-2 sm:gap-3">
                   <FaCheckCircle className="text-green-500 mt-1 flex-shrink-0 text-sm sm:text-base" />
                   <span className="text-sm sm:text-base text-gray-700">
-                    Hỗ trợ khách hàng {planningData.prioritySupport ? "ưu tiên" : "24/7"}
+                    Hỗ trợ AI {planningData.aiModel?.modelType || "basic"}
                   </span>
                 </li>
               </ul>

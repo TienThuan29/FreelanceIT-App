@@ -297,8 +297,10 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { FaCheckCircle, FaTimesCircle, FaArrowLeft, FaHome } from "react-icons/fa";
 
 export default function PaymentResultPage() {
+
   const searchParams = useSearchParams();
   const router = useRouter();
+
 
   // Lấy resultCode từ URL
   const resultCode = searchParams.get("resultCode");
@@ -355,3 +357,5 @@ export default function PaymentResultPage() {
     </div>
   );
 }
+
+

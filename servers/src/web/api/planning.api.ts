@@ -194,6 +194,7 @@ export class PlanningApi {
 
             const userPlannings = await this.planningService.getUserPlannings(currentUser.id);
             ResponseUtil.success(response, userPlannings, 'Lấy lịch sử gói thành công');
+            console.log("1111:", userPlannings);
         } catch (error) {
             logger.error('Error getting user plannings:', error);
             ResponseUtil.error(response, 'Lỗi server', 500);

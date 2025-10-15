@@ -103,10 +103,10 @@ export const Api = {
         GET_PLANNING_BY_ID: '/api/plannings',
 
         // User endpoints
-        GET_USER_PLANNINGS: '/api/user/plannings',
-        GET_ACTIVE_USER_PLANNING: '/api/user/plannings/active',
-        PURCHASE_PLANNING: '/api/plannings/purchase',
-        CONFIRM_PAYMENT: '/api/plannings',
+        GET_USER_PLANNINGS: '/api/v1/user/plannings',
+        GET_ACTIVE_USER_PLANNING: '/api/v1/user/plannings/active',
+        PURCHASE_PLANNING: '/api/v1/plannings/purchase',
+        CONFIRM_PAYMENT: '/api/v1/plannings',
 
         // Admin endpoints
         CREATE_PLANNING: '/api/admin/plannings',

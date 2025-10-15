@@ -19,7 +19,6 @@ import { usePlanningManagement } from "@/hooks/usePlanningManagement";
 
 import { useMoMo, CreateMomoPaymentRequest } from "@/hooks/useMomo";
 import { Planning } from "@/types/planning.type";
-import { Planning, DurationType } from "@/types/planning.type";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 

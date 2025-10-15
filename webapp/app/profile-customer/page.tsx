@@ -1,409 +1,616 @@
 "use client";
 
-// import React from "react";
-// import ProfileEmployer from '@/components/profile-employer';
-// import { ProtectedRoute } from '@/contexts/AuthContext';
-
 import React, { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import type { CustomerProfile, Commune, Province } from '@/types/user.type'
+import Avatar from '@/components/Avatar'
 import { useRouter } from 'next/navigation'
-import type { EmployerProfile } from '@/data/mockEmployerProfiles'
-import { getEmployerProfileByEmail } from '@/data/mockEmployerProfiles'
+import { useCustomerProfile, type UserProfileResponse } from '@/hooks/useCustomerProfile'
+import { useAuth } from '@/contexts/AuthContext'
+import { formatCurrency, formatDate } from '@/utils'
+import { Api } from '@/configs/api'
+import {
+  HiChartBar,
+  HiCog,
+  HiShoppingBag,
+  HiBuildingOffice,
+  HiPlus,
+  HiPencil,
+  HiCheck,
+  HiChartPie,
+  HiCheckCircle,
+  HiStar,
+  HiCube,
+  HiEnvelope,
+  HiPhone,
+  HiMapPin,
+  HiClock,
+  HiGlobeAlt,
+  HiBriefcase,
+  HiDocument,
+  HiEye,
+  HiArrowDown,
+  HiHeart,
+  HiBuildingOffice2,
+  HiIdentification,
+  HiHome
+} from 'react-icons/hi2'
+import { toast } from 'sonner';
 
-
-export default function ProfileEmployerPage() {
-  const { user } = useAuth()
+export default function ProfileCustomerPage() {
   const router = useRouter()
+  const { user } = useAuth()
+  const {
+    userProfile,
+    customerProfile,
+    isLoading,
+    isUpdating,
+    isCreating,
+    error,
+    getCustomerProfile,
+    createCustomerProfile,
+    updateCustomerProfile,
+    clearErrors,
+    resetUpdateState,
+    resetCreateState,
+    hasProfile
+  } = useCustomerProfile()
 
-  // State management
-  const [profile, setProfile] = useState<EmployerProfile | null>(null)
+  // Local state for UI
   const [isEditing, setIsEditing] = useState<boolean>(false)
-  const [loading, setLoading] = useState<boolean>(true)
-  const [saving, setSaving] = useState<boolean>(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'company' | 'settings'>('overview')
-  const [formData, setFormData] = useState<Partial<EmployerProfile>>({})
+  const [formData, setFormData] = useState<Partial<CustomerProfile>>({})
+  const [userFormData, setUserFormData] = useState<Partial<UserProfileResponse>>({})
+  
+  // Address API state
+  const [provinces, setProvinces] = useState<Province[]>([])
+  const [communes, setCommunes] = useState<Commune[]>([])
+  const [selectedProvince, setSelectedProvince] = useState<Province | null>(null)
+  const [selectedCommune, setSelectedCommune] = useState<Commune | null>(null)
+  const [loadingProvinces, setLoadingProvinces] = useState<boolean>(false)
+  const [loadingCommunes, setLoadingCommunes] = useState<boolean>(false)
 
-  // Lấy dự án của user hiện tại
-  const userProjects = mockProjects.filter(project => project.clientId === (user?.id || 'client1'))
-
-  /**
-   * Load profile từ authentication system hoặc fallback data
-   */
-  const createMockProfile = (): EmployerProfile => {
-    const completedProjectsCount = userProjects.filter(p => p.status === 'completed').length
-    const averageBudgetValue = userProjects.length > 0
-      ? userProjects.reduce((sum, p) => sum + p.budget, 0) / userProjects.length
-      : 0
-
-    // Ưu tiên lấy từ employerProfile trong authentication system
-    if (user && 'employerProfile' in user && user.employerProfile) {
-      const employerProfile = user.employerProfile as any
-      return {
-        ...employerProfile,
-        totalProjects: userProjects.length,
-        completedProjects: completedProjectsCount,
-        averageBudget: averageBudgetValue,
-        updatedAt: new Date()
-      }
-    }
-
-    // Fallback: tìm theo email
-    if (user?.email) {
-      const profileByEmail = getEmployerProfileByEmail(user.email)
-      if (profileByEmail) {
-        return {
-          ...profileByEmail,
-          totalProjects: userProjects.length,
-          completedProjects: completedProjectsCount,
-          averageBudget: averageBudgetValue,
-          updatedAt: new Date()
-        }
-      }
-    }
-
-    // Default fallback profile
-    return {
-      id: 'employer_default',
-      companyName: 'My Company',
-      companyLogo: 'https://via.placeholder.com/150x150/6B7280/ffffff?text=MC',
-      email: user?.email || 'contact@company.com',
-      phone: '0123456789',
-      website: 'https://mycompany.com',
-      address: '123 Business Street',
-      city: 'Hồ Chí Minh',
-      industry: 'Technology',
-      companySize: '11-50 employees',
-      founded: '2023',
-      description: 'Công ty công nghệ chuyên nghiệp, tập trung vào việc phát triển các giải pháp phần mềm chất lượng cao.',
-      benefits: [
-        'Lương thưởng cạnh tranh',
-        'Bảo hiểm y tế',
-        'Môi trường làm việc tốt',
-        'Cơ hội phát triển'
-      ],
-      socialLinks: {
-        linkedin: 'https://linkedin.com/company/mycompany'
-      },
-      verificationStatus: 'pending',
-      rating: 0,
-      totalProjects: userProjects.length,
-      completedProjects: completedProjectsCount,
-      averageBudget: averageBudgetValue,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }
-  }
-
-  /**
-   * Load profile data khi component mount
-   */
   useEffect(() => {
     const loadProfile = async (): Promise<void> => {
-      try {
-        // Simulate API call với delay
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        const mockProfile = createMockProfile()
-        setProfile(mockProfile)
-        setFormData(mockProfile)
-      } catch (error) {
-        console.error('Lỗi khi tải thông tin profile:', error)
-      } finally {
-        setLoading(false)
+      if (user?.id) {
+        console.log('Loading customer profile for user:', user.id, 'Role:', user.role)
+        try {
+          console.log('About to call getCustomerProfile...')
+          await getCustomerProfile(user.id)
+          console.log('getCustomerProfile completed successfully')
+          console.log('Final hook state after call:', { isLoading, error, hasProfile, customerProfile })
+        } catch (error) {
+          console.error('=== ERROR CAUGHT IN PAGE COMPONENT ===')
+          console.error('Error in loadProfile:', error)
+          console.log('Error type:', typeof error)
+          console.log('Error constructor:', error?.constructor?.name)
+          console.log('=== END PAGE ERROR HANDLING ===')
+        }
+      } else {
+        console.log('No user ID available')
       }
     }
 
     loadProfile()
-  }, [userProjects])
+  }, [user?.id, getCustomerProfile])
+
+  useEffect(() => {
+    if (customerProfile) {
+      setFormData(customerProfile)
+      setSelectedProvince(customerProfile.province)
+      setSelectedCommune(customerProfile.commune)
+    }
+    if (userProfile) {
+      setUserFormData(userProfile)
+    }
+  }, [customerProfile, userProfile])
+
+  useEffect(() => {
+    if (isEditing) {
+      resetUpdateState()
+      resetCreateState()
+    }
+  }, [isEditing, resetUpdateState, resetCreateState])
+
+  // Load provinces from Vietnam Address API
+  useEffect(() => {
+    const loadProvinces = async () => {
+      setLoadingProvinces(true)
+      try {
+        const response = await fetch(Api.ThirdParty.VietnamAddress.GET_PROVINCES)
+        if (response.ok) {
+          const data = await response.json()
+          console.log('Provinces API response:', data)
+          
+          // Ensure data is an array
+          if (Array.isArray(data)) {
+            setProvinces(data)
+          } else if (data && Array.isArray(data.data)) {
+            setProvinces(data.data)
+          } else if (data && Array.isArray(data.provinces)) {
+            setProvinces(data.provinces)
+          } else {
+            console.error('Unexpected provinces data format:', data)
+            setProvinces([]) // Fallback to empty array
+            toast.error('Định dạng dữ liệu tỉnh/thành phố không hợp lệ')
+          }
+        } else {
+          console.error('Provinces API error:', response.status, response.statusText)
+          toast.error('Không thể tải danh sách tỉnh/thành phố')
+          setProvinces([]) // Ensure it's always an array
+        }
+      } catch (error) {
+        console.error('Error loading provinces:', error)
+        toast.error('Lỗi khi tải danh sách tỉnh/thành phố')
+        setProvinces([]) // Ensure it's always an array
+      } finally {
+        setLoadingProvinces(false)
+      }
+    }
+
+    loadProvinces()
+  }, [])
+
+  // Load communes when province is selected
+  useEffect(() => {
+    const loadCommunes = async (provinceCode: string) => {
+      setLoadingCommunes(true)
+      try {
+        const url = Api.ThirdParty.VietnamAddress.GET_COMMUNES_FROM_PROVINCE.replace('{province_id}', provinceCode)
+        const response = await fetch(url)
+        if (response.ok) {
+          const data = await response.json()
+          console.log('Communes API response:', data)
+          
+          // Ensure data is an array
+          if (Array.isArray(data)) {
+            setCommunes(data)
+          } else if (data && Array.isArray(data.data)) {
+            setCommunes(data.data)
+          } else if (data && Array.isArray(data.communes)) {
+            setCommunes(data.communes)
+          } else {
+            console.error('Unexpected communes data format:', data)
+            setCommunes([]) // Fallback to empty array
+            toast.error('Định dạng dữ liệu phường/xã không hợp lệ')
+          }
+        } else {
+          console.error('Communes API error:', response.status, response.statusText)
+          toast.error('Không thể tải danh sách phường/xã')
+          setCommunes([]) // Ensure it's always an array
+        }
+      } catch (error) {
+        console.error('Error loading communes:', error)
+        toast.error('Lỗi khi tải danh sách phường/xã')
+        setCommunes([]) // Ensure it's always an array
+      } finally {
+        setLoadingCommunes(false)
+      }
+    }
+
+    if (selectedProvince?.code) {
+      loadCommunes(selectedProvince.code)
+    }
+  }, [selectedProvince])
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
+    const file = event.target.files?.[0]
+    if (!file || !user?.id) return
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Vui lòng chọn file hình ảnh')
+      return
+    }
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Kích thước file không được vượt quá 5MB')
+      return
+    }
+
+    try {
+      // Note: Avatar upload would need to be implemented in the customer API
+      toast.success('Tính năng upload avatar sẽ được triển khai sớm!')
+    } catch (error) {
+      console.error('Error uploading avatar:', error)
+      toast.error('Có lỗi xảy ra khi cập nhật avatar!')
+    }
+  }
 
   /**
-   * Xử lý lưu thông tin profile
+   * Check if user form data has changes
    */
-  const handleSave = async (): Promise<void> => {
-    if (!profile) return
+  const hasUserFormChanges = (): boolean => {
+    if (!userProfile || !userFormData) return false
 
-    setSaving(true)
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
+    // Check each field for changes
+    const fieldsToCheck: (keyof UserProfileResponse)[] = ['fullname', 'email', 'phone', 'dateOfBirth']
 
-      const updatedProfile: EmployerProfile = {
-        ...profile,
-        ...formData,
-        updatedAt: new Date()
+    return fieldsToCheck.some(field => {
+      const originalValue = userProfile[field]
+      const newValue = userFormData[field]
+
+      // Handle date comparison
+      if (field === 'dateOfBirth') {
+        const originalDate = originalValue && typeof originalValue !== 'boolean' ? new Date(originalValue).getTime() : null
+        const newDate = newValue && typeof newValue !== 'boolean' ? new Date(newValue).getTime() : null
+        return originalDate !== newDate
       }
 
-      setProfile(updatedProfile)
-      setIsEditing(false)
-      toast.success('Cập nhật thông tin thành công!')
+      return originalValue !== newValue
+    })
+  }
+
+  /**
+   * Check if customer form data has changes
+   */
+  const hasCustomerFormChanges = (): boolean => {
+    if (!formData) return false
+    // If no customer profile exists yet, check if any fields have values (creating new profile)
+    if (!customerProfile) {
+      const fieldsToCheck: (keyof CustomerProfile)[] = [
+        'companyName', 'companyWebsite', 'industry', 'companySize', 'taxId', 'houseNumberAndStreet'
+      ]
+      const hasChanges = fieldsToCheck.some(field => {
+        const newValue = formData[field]
+        // Check if field has a meaningful value (not empty string, null, undefined)
+        if (typeof newValue === 'string') {
+          return newValue.trim() !== ''
+        }
+        return false
+      })
+      // Also check if province and commune are selected
+      return hasChanges || (selectedProvince !== null && selectedCommune !== null)
+    }
+    // If customer profile exists, check for changes
+    const fieldsToCheck: (keyof CustomerProfile)[] = [
+      'companyName', 'companyWebsite', 'industry', 'companySize', 'taxId', 'houseNumberAndStreet'
+    ]
+    const hasChanges = fieldsToCheck.some(field => {
+      const originalValue = customerProfile[field]
+      const newValue = formData[field]
+      return originalValue !== newValue
+    })
+    
+    // Check province and commune changes
+    const provinceChanged = customerProfile.province.code !== selectedProvince?.code
+    const communeChanged = customerProfile.commune.code !== selectedCommune?.code
+    
+    return hasChanges || provinceChanged || communeChanged
+  }
+
+  /**
+   * Handle saving user profile data only
+   */
+  const handleSaveUserProfile = async (): Promise<void> => {
+    if (!user?.id) return
+
+    try {
+      if (!hasUserFormChanges()) {
+        toast.info('Không có thay đổi nào trong thông tin cá nhân')
+        return
+      }
+
+      // Note: User profile update would need to be implemented in the customer API
+      toast.success('Cập nhật thông tin cá nhân thành công!')
     } catch (error) {
-      console.error('Lỗi khi lưu thông tin:', error)
+      console.error('Error saving user profile:', error)
+      toast.error('Có lỗi xảy ra khi cập nhật thông tin cá nhân!')
+    }
+  }
+
+  /**
+   * Handle saving customer profile data only
+   */
+  const handleSaveCustomerProfile = async (): Promise<void> => {
+    if (!user?.id) return
+
+    try {
+      if (!hasCustomerFormChanges()) {
+        toast.info('Không có thay đổi nào trong thông tin công ty')
+        return
+      }
+
+      const profileData = {
+        ...formData,
+        commune: selectedCommune!,
+        province: selectedProvince!
+      }
+
+      let success = false
+      if (hasProfile) {
+        success = await updateCustomerProfile(user.id, profileData)
+      } else {
+        success = await createCustomerProfile({
+          userId: user.id,
+          ...profileData
+        })
+      }
+
+      if (success) {
+        toast.success(hasProfile ? 'Cập nhật thông tin công ty thành công!' : 'Tạo profile công ty thành công!')
+        setIsEditing(false)
+      } else {
+        toast.error('Có lỗi xảy ra khi lưu thông tin công ty!')
+      }
+    } catch (error) {
+      console.error('Error saving customer profile:', error)
+      toast.error('Có lỗi xảy ra khi lưu thông tin công ty!')
+    }
+  }
+
+  const handleSave = async (): Promise<void> => {
+    if (!user?.id) return
+
+    try {
+      let userSuccess = true
+      let customerSuccess = true
+      
+      if (hasUserFormChanges()) {
+        // Note: User profile update would need to be implemented
+        userSuccess = true
+      }
+      
+      if (hasCustomerFormChanges()) {
+        const profileData = {
+          ...formData,
+          commune: selectedCommune!,
+          province: selectedProvince!
+        }
+
+        if (hasProfile) {
+          customerSuccess = await updateCustomerProfile(user.id, profileData)
+        } else {
+          customerSuccess = await createCustomerProfile({
+            userId: user.id,
+            ...profileData
+          })
+        }
+      }
+      
+      // If no changes were made, show a message
+      if (!hasUserFormChanges() && !hasCustomerFormChanges()) {
+        toast.info('Không có thay đổi nào để lưu')
+        setIsEditing(false)
+        return
+      }
+      
+      if (userSuccess && customerSuccess) {
+        setIsEditing(false)
+        toast.success('Cập nhật thông tin thành công!')
+      } else {
+        toast.error('Có lỗi xảy ra khi cập nhật thông tin!')
+      }
+    } catch (error) {
+      console.error('Error saving profile:', error)
       toast.error('Có lỗi xảy ra khi cập nhật thông tin!')
-    } finally {
-      setSaving(false)
     }
   }
 
-  /**
-   * Hủy chỉnh sửa và reset form data
-   */
   const handleCancel = (): void => {
-    setFormData(profile || {})
+    setFormData(customerProfile || {})
+    setUserFormData(userProfile || {})
+    setSelectedProvince(customerProfile?.province || null)
+    setSelectedCommune(customerProfile?.commune || null)
     setIsEditing(false)
+    clearErrors()
   }
 
-  /**
-   * Format số tiền theo định dạng VND
-   * @param amount - Số tiền cần format
-   * @returns Chuỗi đã format
-   */
-  const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(amount)
-  }
-
-  /**
-   * Lấy màu sắc cho trạng thái verification
-   * @param status - Trạng thái verification
-   * @returns CSS class cho màu sắc
-   */
-  const getVerificationColor = (status: string): string => {
-    const verificationColors: Record<string, string> = {
-      verified: 'bg-green-100 text-green-800',
-      pending: 'bg-yellow-100 text-yellow-800',
-      rejected: 'bg-red-100 text-red-800'
-    }
-    return verificationColors[status] || 'bg-gray-100 text-gray-800'
-  }
-
-  /**
-   * Lấy text hiển thị cho trạng thái verification
-   * @param status - Trạng thái verification
-   * @returns Text tiếng Việt
-   */
-  const getVerificationText = (status: string): string => {
-    const verificationTexts: Record<string, string> = {
-      verified: 'Đã xác minh',
-      pending: 'Chờ xác minh',
-      rejected: 'Bị từ chối'
-    }
-    return verificationTexts[status] || 'Chưa xác minh'
-  }
-
-  /**
-   * Điều hướng đến trang quản lý dự án
-   */
-  const handleManageProjects = (): void => {
-    router.push('/manage-post')
-  }
-
-  /**
-   * Điều hướng đến trang tạo dự án mới
-   */
-  const handleCreateProject = (): void => {
-    router.push('/manage-post?action=create')
-  }
-
-  /**
-   * Xử lý thay đổi input trong form
-   * @param field - Tên field cần update
-   * @param value - Giá trị mới
-   */
-  const handleInputChange = (field: keyof EmployerProfile, value: any): void => {
+  const handleInputChange = (field: keyof CustomerProfile, value: any): void => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  /**
-   * Xử lý thay đổi social links
-   * @param platform - Platform social media
-   * @param value - URL mới
-   */
-  const handleSocialLinkChange = (platform: keyof EmployerProfile['socialLinks'], value: string): void => {
-    setFormData(prev => ({
-      ...prev,
-      socialLinks: {
-        ...prev.socialLinks,
-        [platform]: value
+  const handleUserInputChange = (field: string, value: any): void => {
+    setUserFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleProvinceChange = (provinceCode: string): void => {
+    const province = provinces.find(p => p.code === provinceCode)
+    setSelectedProvince(province || null)
+    setSelectedCommune(null) // Reset commune when province changes
+    setCommunes([]) // Clear communes list
+  }
+
+  const handleCommuneChange = (communeCode: string): void => {
+    const commune = communes.find(c => c.code === communeCode)
+    setSelectedCommune(commune || null)
+  }
+
+  // Debug info
+  console.log('Profile Customer Page - User:', user, 'Role:', user?.role, 'Has Profile:', hasProfile, 'Customer Profile:', customerProfile)
+  console.log('Profile Customer Page - Loading:', isLoading, 'Error:', error, 'Is Creating:', isCreating, 'Is Updating:', isUpdating)
+  
+  // Test function to manually test the API call
+  const testApiCall = async () => {
+    if (user?.id) {
+      console.log('Testing API call manually...')
+      try {
+        const response = await fetch(`http://localhost:5000/api/v1/customers/profile/${user.id}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        console.log('Manual API test response:', response.status, response.statusText)
+        const data = await response.text()
+        console.log('Manual API test data:', data)
+      } catch (error) {
+        console.error('Manual API test error:', error)
       }
-    }))
+    }
   }
 
-  /**
-   * Xử lý thay đổi benefits
-   * @param index - Index của benefit
-   * @param value - Giá trị mới
-   */
-  const handleBenefitChange = (index: number, value: string): void => {
-    const newBenefits = [...(formData.benefits || [])]
-    newBenefits[index] = value
-    setFormData(prev => ({ ...prev, benefits: newBenefits }))
-  }
-
-  /**
-   * Thêm benefit mới
-   */
-  const addBenefit = (): void => {
-    setFormData(prev => ({
-      ...prev,
-      benefits: [...(prev.benefits || []), '']
-    }))
-  }
-
-  /**
-   * Xóa benefit
-   * @param index - Index của benefit cần xóa
-   */
-  const removeBenefit = (index: number): void => {
-    const newBenefits = (formData.benefits || []).filter((_, i) => i !== index)
-    setFormData(prev => ({ ...prev, benefits: newBenefits }))
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="flex items-center justify-center" style={{ height: 'calc(100vh - 64px)' }}>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Đang tải thông tin...</p>
+            <p className="text-sm text-gray-500 mt-2">User ID: {user?.id} | Role: {user?.role}</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   // Tab navigation configuration
   const tabConfig = [
-    { id: 'overview', label: 'Tổng quan', icon: '📊' },
-    { id: 'company', label: 'Thông tin công ty', icon: '🏢' },
-    { id: 'settings', label: 'Cài đặt', icon: '⚙️' }
+    { id: 'overview', label: 'Tổng quan', icon: HiChartBar },
+    { id: 'company', label: 'Công ty', icon: HiBuildingOffice },
+    { id: 'settings', label: 'Cài đặt', icon: HiCog }
   ] as const
-
-  // Social media configuration
-  const socialMediaConfig = [
-    { key: 'linkedin', label: 'LinkedIn', icon: '💼', placeholder: 'https://linkedin.com/company/...' },
-    { key: 'facebook', label: 'Facebook', icon: '📘', placeholder: 'https://facebook.com/...' },
-    { key: 'twitter', label: 'Twitter', icon: '🐦', placeholder: 'https://twitter.com/...' },
-    { key: 'github', label: 'GitHub', icon: '🐙', placeholder: 'https://github.com/...' }
-  ] as const
-
-  // Loading state
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Đang tải thông tin...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Error state - no profile found
-  if (!profile) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-gray-400 text-6xl mb-4">🏢</div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Không tìm thấy thông tin
-          </h3>
-          <p className="text-gray-500">
-            Vui lòng thử lại sau
-          </p>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Debug Error Display */}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 mx-4 mt-4">
+          <strong>Debug Error:</strong> {error}
+        </div>
+      )}
+      
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header Section */}
         <div className="bg-white rounded-lg shadow-sm mb-6">
           <div className="p-6">
             <div className="flex items-start justify-between">
               <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <img
-                    src={profile.companyLogo || 'https://via.placeholder.com/100'}
-                    alt={`Logo của ${profile.companyName}`}
-                    className="w-20 h-20 rounded-lg object-cover border-2 border-gray-200"
+                <div className="relative group">
+                  <Avatar
+                    src={user?.avatarUrl || ''}
+                    name={userProfile?.fullname || 'User'}
+                    size="xl"
+                    className="border-2 border-gray-200"
                   />
                   <div className="absolute -top-2 -right-2">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getVerificationColor(profile.verificationStatus)}`}>
-                      {getVerificationText(profile.verificationStatus)}
+                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 flex items-center">
+                      <HiCheck className="w-3 h-3" />
                     </span>
                   </div>
+
+                  {/* Avatar Upload Overlay */}
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 rounded-full transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarUpload}
+                        className="hidden"
+                        disabled={isUpdating}
+                      />
+                      <div className="bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-2 transition-all duration-200">
+                        <HiPencil className="w-4 h-4 text-gray-700" />
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Loading Overlay */}
+                  {isUpdating && (
+                    <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                    </div>
+                  )}
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">{profile.companyName}</h1>
-                  <p className="text-gray-600 mb-2">{profile.industry} • {profile.city}</p>
-                  <div className="flex items-center space-x-4 text-sm text-gray-500">
-                    <span className="flex items-center">
-                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      {profile.rating}/5 ({profile.totalProjects} dự án)
-                    </span>
-                    <span>Thành lập {profile.founded}</span>
-                    <span>{profile.companySize}</span>
+                  <h1 className="text-2xl font-bold text-gray-900">{userProfile?.fullname}</h1>
+                  <p className="text-gray-600 mb-2">
+                    {hasProfile ? `${customerProfile?.companyName}` : 'Customer • Chưa có profile'}
+                  </p>
+                  <div className="flex items-center text-sm">
+                    {hasProfile ? (
+                      <>
+                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                          {customerProfile?.industry || 'Chưa cập nhật'}
+                        </span>
+                        <span className="ml-2 flex items-center text-gray-500">
+                          <HiStar className="w-4 h-4 mr-1" />
+                          {customerProfile?.rating || 0}/5 ({customerProfile?.totalProjectsPosted || 0} dự án)
+                        </span>
+                        <span className="text-gray-500 ml-2">{customerProfile?.companySize || 'Chưa cập nhật'}</span>
+                      </>
+                    ) : (
+                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+                        Chưa có profile công ty
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
 
               {/* Action Buttons */}
               <div className="flex space-x-2">
-                <button
-                  onClick={handleManageProjects}
-                  className="px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors flex items-center space-x-2"
-                  type="button"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                  <span>Quản lý dự án</span>
-                </button>
-
-                <button
-                  onClick={handleCreateProject}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
-                  type="button"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  <span>Đăng dự án mới</span>
-                </button>
-
-                {!isEditing ? (
+                {!hasProfile ? (
+                  // Show create profile button when no profile exists
                   <button
-                    onClick={() => setIsEditing(true)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                    onClick={() => {
+                      setIsEditing(true)
+                      setActiveTab('settings')
+                    }}
+                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 text-lg font-medium"
                     type="button"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    <span>Chỉnh sửa</span>
+                    <HiPlus className="w-5 h-5" />
+                    <span>Tạo Profile Công Ty</span>
                   </button>
                 ) : (
-                  <div className="flex space-x-2">
+                  <>
                     <button
-                      onClick={handleCancel}
-                      className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                      onClick={() => router.push('/posts-cus')}
+                      className="px-2 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors flex items-center space-x-2"
                       type="button"
                     >
-                      Hủy
+                      <HiCube className="w-4 h-4" />
+                      <span>Quản lý dự án</span>
                     </button>
+
                     <button
-                      onClick={handleSave}
-                      disabled={saving}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
+                      onClick={() => router.push('/posts-cus')}
+                      className="px-2 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
                       type="button"
                     >
-                      {saving ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                          <span>Đang lưu...</span>
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          <span>Lưu</span>
-                        </>
-                      )}
+                      <HiPlus className="w-4 h-4" />
+                      <span>Đăng dự án mới</span>
                     </button>
-                  </div>
+
+                    {!isEditing ? (
+                      <button
+                        onClick={() => setIsEditing(true)}
+                        className="px-2 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                        type="button"
+                      >
+                        <HiPencil className="w-4 h-4" />
+                        <span>Chỉnh sửa</span>
+                      </button>
+                    ) : (
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={handleCancel}
+                          className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                          type="button"
+                        >
+                          Hủy
+                        </button>
+                        <button
+                          onClick={handleSave}
+                          disabled={isUpdating || isCreating}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
+                          type="button"
+                        >
+                          {(isUpdating || isCreating) ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                              <span>Đang lưu...</span>
+                            </>
+                          ) : (
+                            <>
+                              <HiCheck className="w-4 h-4" />
+                              <span>Lưu</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -414,22 +621,25 @@ export default function ProfileEmployerPage() {
         <div className="bg-white rounded-lg shadow-sm mb-6">
           <div className="border-b border-gray-200">
             <nav className="flex space-x-8 px-6" role="tablist">
-              {tabConfig.map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                  className={`py-4 text-sm font-medium border-b-2 ${activeTab === tab.id
+              {tabConfig.map(tab => {
+                const IconComponent = tab.icon
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                    className={`py-4 text-sm font-medium border-b-2 flex items-center ${activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  type="button"
-                  role="tab"
-                  aria-selected={activeTab === tab.id}
-                >
-                  <span className="mr-2">{tab.icon}</span>
-                  {tab.label}
-                </button>
-              ))}
+                      }`}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeTab === tab.id}
+                  >
+                    <IconComponent className="w-5 h-5 mr-2" />
+                    {tab.label}
+                  </button>
+                )
+              })}
             </nav>
           </div>
         </div>
@@ -444,12 +654,10 @@ export default function ProfileEmployerPage() {
                 <div className="bg-white rounded-lg shadow-sm p-6">
                   <div className="flex items-center">
                     <div className="p-3 bg-blue-100 rounded-lg">
-                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
+                      <HiChartPie className="w-6 h-6 text-blue-600" />
                     </div>
                     <div className="ml-4">
-                      <p className="text-2xl font-bold text-gray-900">{profile.totalProjects}</p>
+                      <p className="text-2xl font-bold text-gray-900">{hasProfile ? (customerProfile?.totalProjectsPosted || 0) : 0}</p>
                       <p className="text-gray-500 text-sm">Tổng dự án</p>
                     </div>
                   </div>
@@ -458,13 +666,11 @@ export default function ProfileEmployerPage() {
                 <div className="bg-white rounded-lg shadow-sm p-6">
                   <div className="flex items-center">
                     <div className="p-3 bg-green-100 rounded-lg">
-                      <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
+                      <HiCheckCircle className="w-6 h-6 text-green-600" />
                     </div>
                     <div className="ml-4">
-                      <p className="text-2xl font-bold text-gray-900">{profile.completedProjects}</p>
-                      <p className="text-gray-500 text-sm">Hoàn thành</p>
+                      <p className="text-2xl font-bold text-gray-900">{hasProfile ? (customerProfile?.rating || 0) : 0}</p>
+                      <p className="text-gray-500 text-sm">Đánh giá</p>
                     </div>
                   </div>
                 </div>
@@ -472,13 +678,11 @@ export default function ProfileEmployerPage() {
                 <div className="bg-white rounded-lg shadow-sm p-6">
                   <div className="flex items-center">
                     <div className="p-3 bg-yellow-100 rounded-lg">
-                      <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                      </svg>
+                      <HiStar className="w-6 h-6 text-yellow-600" />
                     </div>
                     <div className="ml-4">
-                      <p className="text-2xl font-bold text-gray-900">{formatCurrency(profile.averageBudget)}</p>
-                      <p className="text-gray-500 text-sm">Ngân sách TB</p>
+                      <p className="text-2xl font-bold text-gray-900">{hasProfile ? (customerProfile?.companySize || 'N/A') : 'N/A'}</p>
+                      <p className="text-gray-500 text-sm">Quy mô công ty</p>
                     </div>
                   </div>
                 </div>
@@ -486,15 +690,11 @@ export default function ProfileEmployerPage() {
                 <div className="bg-white rounded-lg shadow-sm p-6">
                   <div className="flex items-center">
                     <div className="p-3 bg-purple-100 rounded-lg">
-                      <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                      </svg>
+                      <HiBuildingOffice className="w-6 h-6 text-purple-600" />
                     </div>
                     <div className="ml-4">
-                      <p className="text-2xl font-bold text-gray-900">
-                        {profile.totalProjects > 0 ? Math.round((profile.completedProjects / profile.totalProjects) * 100) : 0}%
-                      </p>
-                      <p className="text-gray-500 text-sm">Tỷ lệ thành công</p>
+                      <p className="text-2xl font-bold text-gray-900">{hasProfile ? (customerProfile?.industry || 'N/A') : 'N/A'}</p>
+                      <p className="text-gray-500 text-sm">Ngành nghề</p>
                     </div>
                   </div>
                 </div>
@@ -503,114 +703,162 @@ export default function ProfileEmployerPage() {
               {/* Quick Actions */}
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Thao tác nhanh</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <button
-                    onClick={handleCreateProject}
-                    className="flex items-center justify-center p-4 border-2 border-dashed border-green-300 rounded-lg hover:border-green-400 hover:bg-green-50 transition-colors group"
-                    type="button"
-                  >
-                    <div className="text-center">
-                      <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">📝</div>
-                      <p className="text-gray-600 group-hover:text-green-600">Đăng dự án mới</p>
-                    </div>
-                  </button>
+                {hasProfile ? (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button
+                      onClick={() => router.push('/posts-cus')}
+                      className="flex items-center justify-center p-4 border-2 border-dashed border-green-300 rounded-lg hover:border-green-400 hover:bg-green-50 transition-colors group"
+                      type="button"
+                    >
+                      <div className="text-center">
+                        <HiShoppingBag className="w-8 h-8 mb-2 group-hover:scale-110 transition-transform text-green-600" />
+                        <p className="text-gray-600 group-hover:text-green-600">Đăng dự án mới</p>
+                      </div>
+                    </button>
 
-                  <button
-                    onClick={handleManageProjects}
-                    className="flex items-center justify-center p-4 border-2 border-dashed border-blue-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors group"
-                    type="button"
-                  >
-                    <div className="text-center">
-                      <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">📊</div>
-                      <p className="text-gray-600 group-hover:text-blue-600">Quản lý dự án</p>
-                    </div>
-                  </button>
+                    <button
+                      onClick={() => router.push('/posts-cus')}
+                      className="flex items-center justify-center p-4 border-2 border-dashed border-blue-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors group"
+                      type="button"
+                    >
+                      <div className="text-center">
+                        <HiCube className="w-8 h-8 mb-2 group-hover:scale-110 transition-transform text-blue-600" />
+                        <p className="text-gray-600 group-hover:text-blue-600">Quản lý dự án</p>
+                      </div>
+                    </button>
 
-                  <button
-                    onClick={() => setActiveTab('company')}
-                    className="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-colors group"
-                    type="button"
-                  >
-                    <div className="text-center">
-                      <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">🏢</div>
-                      <p className="text-gray-600 group-hover:text-gray-600">Cập nhật thông tin</p>
-                    </div>
-                  </button>
-                </div>
+                    <button
+                      onClick={() => setActiveTab('company')}
+                      className="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-colors group"
+                      type="button"
+                    >
+                      <div className="text-center">
+                        <HiBuildingOffice className="w-8 h-8 mb-2 group-hover:scale-110 transition-transform text-gray-600" />
+                        <p className="text-gray-600 group-hover:text-gray-600">Thông tin công ty</p>
+                      </div>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      Tạo Profile Công Ty
+                    </h3>
+                    <p className="text-gray-500 mb-4">
+                      Tạo profile công ty để bắt đầu sử dụng các tính năng của nền tảng
+                    </p>
+                    <button
+                      onClick={() => {
+                        setIsEditing(true)
+                        setActiveTab('settings')
+                      }}
+                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      type="button"
+                    >
+                      Tạo Profile Ngay
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Company Overview */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 bg-white rounded-lg shadow-sm p-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Về công ty</h3>
-                  <p className="text-gray-600 text-sm leading-relaxed mb-6">{profile.description}</p>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-500">🏭 Ngành nghề:</span>
-                      <span className="ml-2 text-gray-900">{profile.industry}</span>
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Thông tin công ty</h3>
+                  {hasProfile ? (
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-4">
+                        <div>
+                          <span className="text-gray-500 flex items-center">
+                            <HiEnvelope className="w-4 h-4 mr-1" />
+                            Email:
+                          </span>
+                          <span className="ml-2 text-gray-900">{userProfile?.email}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500 flex items-center">
+                            <HiPhone className="w-4 h-4 mr-1" />
+                            Điện thoại:
+                          </span>
+                          <span className="ml-2 text-gray-900">{userProfile?.phone || 'Chưa cập nhật'}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500 flex items-center">
+                            <HiMapPin className="w-4 h-4 mr-1" />
+                            Địa chỉ:
+                          </span>
+                          <span className="ml-2 text-gray-900">
+                            {customerProfile?.houseNumberAndStreet && customerProfile?.commune && customerProfile?.province
+                              ? `${customerProfile.houseNumberAndStreet}, ${customerProfile.commune.name}, ${customerProfile.province.name}`
+                              : 'Chưa cập nhật'
+                            }
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500 flex items-center">
+                            <HiGlobeAlt className="w-4 h-4 mr-1" />
+                            Website:
+                          </span>
+                          <span className="ml-2 text-gray-900">
+                            {customerProfile?.companyWebsite ? (
+                              <a href={customerProfile.companyWebsite} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                {customerProfile.companyWebsite}
+                              </a>
+                            ) : 'Chưa cập nhật'}
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-8">
+                      <h4 className="text-lg font-medium text-gray-900 mb-2">
+                        Chưa có thông tin công ty
+                      </h4>
+                      <p className="text-gray-500 mb-4">
+                        Tạo profile công ty để thêm thông tin về doanh nghiệp của bạn
+                      </p>
+                      <button
+                        onClick={() => {
+                          setIsEditing(true)
+                          setActiveTab('settings')
+                        }}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        type="button"
+                      >
+                        Tạo Profile
+                      </button>
                     </div>
-                    <div>
-                      <span className="text-gray-500">👥 Quy mô:</span>
-                      <span className="ml-2 text-gray-900">{profile.companySize}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">📅 Thành lập:</span>
-                      <span className="ml-2 text-gray-900">{profile.founded}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">📍 Địa điểm:</span>
-                      <span className="ml-2 text-gray-900">{profile.city}</span>
-                    </div>
-                  </div>
+                  )}
                 </div>
 
                 <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Quyền lợi</h3>
-                  <div className="space-y-3">
-                    {profile.benefits.map((benefit, index) => (
-                      <div key={index} className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className="text-sm text-gray-700">{benefit}</span>
-                      </div>
-                    ))}
-                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Thông tin bổ sung</h3>
 
-                  <div className="mt-6 pt-4 border-t border-gray-200">
-                    <h4 className="text-sm font-medium text-gray-900 mb-3">Liên kết</h4>
-                    <div className="space-y-2">
-                      {profile.socialLinks.linkedin && (
-                        <a
-                          href={profile.socialLinks.linkedin}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center text-sm text-gray-600 hover:text-gray-900"
-                        >
-                          <span className="mr-2">💼</span> LinkedIn
-                        </a>
-                      )}
-                      {profile.socialLinks.facebook && (
-                        <a
-                          href={profile.socialLinks.facebook}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center text-sm text-gray-600 hover:text-gray-900"
-                        >
-                          <span className="mr-2">📘</span> Facebook
-                        </a>
-                      )}
-                      {profile.website && (
-                        <a
-                          href={profile.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center text-sm text-gray-600 hover:text-gray-900"
-                        >
-                          <span className="mr-2">🌐</span> Website
-                        </a>
-                      )}
+                  {hasProfile ? (
+                    <>
+                      <div className="space-y-4">
+                        <div>
+                          <span className="text-gray-500 text-sm">Mã số thuế:</span>
+                          <span className="ml-2 text-gray-900">{customerProfile?.taxId || 'Chưa cập nhật'}</span>
+                        </div>
+
+                        <div>
+                          <span className="text-gray-500 text-sm">Ngành nghề:</span>
+                          <span className="ml-2 text-gray-900">{customerProfile?.industry || 'Chưa cập nhật'}</span>
+                        </div>
+
+                        <div>
+                          <span className="text-gray-500 text-sm">Quy mô:</span>
+                          <span className="ml-2 text-gray-900">{customerProfile?.companySize || 'Chưa cập nhật'}</span>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-6">
+                      <p className="text-gray-500 text-sm">
+                        Tạo profile công ty để hiển thị thông tin bổ sung
+                      </p>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -619,284 +867,404 @@ export default function ProfileEmployerPage() {
           {/* Company Tab */}
           {activeTab === 'company' && (
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-6">Thông tin công ty</h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tên công ty *
-                  </label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={formData.companyName || ''}
-                      onChange={(e) => handleInputChange('companyName', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  ) : (
-                    <p className="text-gray-900">{profile.companyName}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email *
-                  </label>
-                  {isEditing ? (
-                    <input
-                      type="email"
-                      value={formData.email || ''}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  ) : (
-                    <p className="text-gray-900">{profile.email}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Số điện thoại *
-                  </label>
-                  {isEditing ? (
-                    <input
-                      type="tel"
-                      value={formData.phone || ''}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  ) : (
-                    <p className="text-gray-900">{profile.phone}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Website
-                  </label>
-                  {isEditing ? (
-                    <input
-                      type="url"
-                      value={formData.website || ''}
-                      onChange={(e) => handleInputChange('website', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="https://example.com"
-                    />
-                  ) : (
-                    <p className="text-gray-900">
-                      {profile.website ? (
-                        <a href={profile.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                          {profile.website}
-                        </a>
-                      ) : (
-                        'Chưa có'
-                      )}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Địa chỉ *
-                  </label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={formData.address || ''}
-                      onChange={(e) => handleInputChange('address', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  ) : (
-                    <p className="text-gray-900">{profile.address}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Thành phố *
-                  </label>
-                  {isEditing ? (
-                    <select
-                      value={formData.city || ''}
-                      onChange={(e) => handleInputChange('city', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    >
-                      <option value="">Chọn thành phố</option>
-                      <option value="Hà Nội">Hà Nội</option>
-                      <option value="Hồ Chí Minh">Hồ Chí Minh</option>
-                      <option value="Đà Nẵng">Đà Nẵng</option>
-                      <option value="Cần Thơ">Cần Thơ</option>
-                      <option value="Hải Phòng">Hải Phòng</option>
-                    </select>
-                  ) : (
-                    <p className="text-gray-900">{profile.city}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Ngành nghề *
-                  </label>
-                  {isEditing ? (
-                    <select
-                      value={formData.industry || ''}
-                      onChange={(e) => handleInputChange('industry', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    >
-                      <option value="">Chọn ngành nghề</option>
-                      <option value="Software Development">Software Development</option>
-                      <option value="Web Development">Web Development</option>
-                      <option value="Mobile Development">Mobile Development</option>
-                      <option value="AI/Machine Learning">AI/Machine Learning</option>
-                      <option value="Data Science">Data Science</option>
-                      <option value="DevOps">DevOps</option>
-                      <option value="Cybersecurity">Cybersecurity</option>
-                      <option value="Game Development">Game Development</option>
-                      <option value="Blockchain">Blockchain</option>
-                      <option value="IoT">IoT</option>
-                    </select>
-                  ) : (
-                    <p className="text-gray-900">{profile.industry}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Quy mô công ty *
-                  </label>
-                  {isEditing ? (
-                    <select
-                      value={formData.companySize || ''}
-                      onChange={(e) => handleInputChange('companySize', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    >
-                      <option value="">Chọn quy mô</option>
-                      <option value="1-10 employees">1-10 nhân viên</option>
-                      <option value="11-50 employees">11-50 nhân viên</option>
-                      <option value="51-200 employees">51-200 nhân viên</option>
-                      <option value="201-500 employees">201-500 nhân viên</option>
-                      <option value="500+ employees">500+ nhân viên</option>
-                    </select>
-                  ) : (
-                    <p className="text-gray-900">{profile.companySize}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Mô tả công ty
-                </label>
-                {isEditing ? (
-                  <textarea
-                    rows={4}
-                    value={formData.description || ''}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Mô tả về công ty, văn hóa làm việc, sứ mệnh..."
-                  />
-                ) : (
-                  <p className="text-gray-900">{profile.description}</p>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-medium text-gray-900">Thông tin công ty</h3>
+                {hasProfile && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    type="button"
+                  >
+                    Chỉnh sửa
+                  </button>
                 )}
               </div>
 
-              <div className="mt-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Quyền lợi
-                </label>
-                {isEditing ? (
-                  <div className="space-y-2">
-                    {(formData.benefits || []).map((benefit, index) => (
-                      <div key={index} className="flex items-center space-x-2">
-                        <input
-                          type="text"
-                          value={benefit}
-                          onChange={(e) => handleBenefitChange(index, e.target.value)}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Nhập quyền lợi..."
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeBenefit(index)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={addBenefit}
-                      className="text-blue-600 hover:text-blue-800 text-sm flex items-center space-x-1 mt-2"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                      <span>Thêm quyền lợi</span>
-                    </button>
+              {hasProfile ? (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Tên công ty</label>
+                      <p className="text-gray-900">{customerProfile?.companyName || 'Chưa cập nhật'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
+                      <p className="text-gray-900">
+                        {customerProfile?.companyWebsite ? (
+                          <a href={customerProfile.companyWebsite} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                            {customerProfile.companyWebsite}
+                          </a>
+                        ) : 'Chưa cập nhật'}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Ngành nghề</label>
+                      <p className="text-gray-900">{customerProfile?.industry || 'Chưa cập nhật'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Quy mô công ty</label>
+                      <p className="text-gray-900">{customerProfile?.companySize || 'Chưa cập nhật'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Mã số thuế</label>
+                      <p className="text-gray-900">{customerProfile?.taxId || 'Chưa cập nhật'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Địa chỉ</label>
+                      <p className="text-gray-900">
+                        {customerProfile?.houseNumberAndStreet && customerProfile?.commune && customerProfile?.province
+                          ? `${customerProfile.houseNumberAndStreet}, ${customerProfile.commune.name}, ${customerProfile.province.name}`
+                          : 'Chưa cập nhật'
+                        }
+                      </p>
+                    </div>
                   </div>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {profile.benefits.map((benefit, index) => (
-                      <span key={index} className="px-3 py-1 bg-blue-50 text-blue-700 text-sm rounded-full">
-                        {benefit}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    Chưa có profile công ty
+                  </h3>
+                  <p className="text-gray-500 mb-4">
+                    Tạo profile công ty để quản lý thông tin doanh nghiệp của bạn
+                  </p>
+                  <button
+                    onClick={() => {
+                      setIsEditing(true)
+                      setActiveTab('settings')
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    type="button"
+                  >
+                    Tạo Profile Công Ty
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
           {/* Settings Tab */}
           {activeTab === 'settings' && (
             <div className="space-y-6">
-              {/* Social Links */}
+              {/* Personal Information */}
               <div className="bg-white rounded-lg shadow-sm p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-6">Liên kết xã hội</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-6">Thông tin cá nhân</h3>
 
-                <div className="space-y-4">
-                  {socialMediaConfig.map(social => (
-                    <div key={social.key}>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {social.icon} {social.label}
-                      </label>
-                      {isEditing ? (
-                        <input
-                          type="url"
-                          value={formData.socialLinks?.[social.key] || ''}
-                          onChange={(e) => handleSocialLinkChange(social.key, e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder={social.placeholder}
-                        />
-                      ) : (
-                        <p className="text-gray-900">
-                          {profile.socialLinks[social.key] ? (
-                            <a
-                              href={profile.socialLinks[social.key]}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline"
-                            >
-                              {profile.socialLinks[social.key]}
-                            </a>
-                          ) : (
-                            'Chưa có'
-                          )}
-                        </p>
-                      )}
-                    </div>
-                  ))}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Họ tên *
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={userFormData?.fullname || ''}
+                        onChange={(e) => handleUserInputChange('fullname', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{userProfile?.fullname}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email *
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="email"
+                        value={userFormData?.email || ''}
+                        onChange={(e) => handleUserInputChange('email', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{userProfile?.email}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Số điện thoại
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="tel"
+                        value={userFormData?.phone || ''}
+                        onChange={(e) => handleUserInputChange('phone', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{userProfile?.phone || 'Chưa cập nhật'}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Ngày sinh
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="date"
+                        value={userFormData?.dateOfBirth ? new Date(userFormData.dateOfBirth).toISOString().split('T')[0] : ''}
+                        onChange={(e) => handleUserInputChange('dateOfBirth', new Date(e.target.value))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{userProfile?.dateOfBirth ? formatDate(new Date(userProfile.dateOfBirth)) : 'Chưa cập nhật'}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Vai trò
+                    </label>
+                    <p className="text-gray-900 capitalize">{userProfile?.role || 'Chưa xác định'}</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Trạng thái tài khoản
+                    </label>
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${userProfile?.isEnable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                      {userProfile?.isEnable ? 'Hoạt động' : 'Bị khóa'}
+                    </span>
+                  </div>
                 </div>
+
+                {/* Personal Information Save Button */}
+                {isEditing && (
+                  <div className="mt-6 pt-6 border-t border-gray-200">
+                    <div className="flex justify-end space-x-4">
+                      <button
+                        onClick={handleCancel}
+                        className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        type="button"
+                      >
+                        Hủy
+                      </button>
+                      <button
+                        onClick={handleSaveUserProfile}
+                        disabled={isUpdating || !hasUserFormChanges()}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
+                        type="button"
+                      >
+                        {isUpdating ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            <span>Đang lưu...</span>
+                          </>
+                        ) : (
+                          <>
+                            <HiCheck className="w-4 h-4" />
+                            <span>Lưu</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Company Profile Settings */}
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-6">Thông tin công ty</h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tên công ty *
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={formData.companyName || ''}
+                        onChange={(e) => handleInputChange('companyName', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="VD: Công ty TNHH ABC"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{customerProfile?.companyName || 'Chưa cập nhật'}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Website công ty
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="url"
+                        value={formData.companyWebsite || ''}
+                        onChange={(e) => handleInputChange('companyWebsite', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="https://company.com"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{customerProfile?.companyWebsite || 'Chưa cập nhật'}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Ngành nghề
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={formData.industry || ''}
+                        onChange={(e) => handleInputChange('industry', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="VD: Công nghệ thông tin"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{customerProfile?.industry || 'Chưa cập nhật'}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Quy mô công ty
+                    </label>
+                    {isEditing ? (
+                      <select
+                        value={formData.companySize || ''}
+                        onChange={(e) => handleInputChange('companySize', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Chọn quy mô</option>
+                        <option value="1-10">1-10 nhân viên</option>
+                        <option value="11-50">11-50 nhân viên</option>
+                        <option value="51-200">51-200 nhân viên</option>
+                        <option value="201-500">201-500 nhân viên</option>
+                        <option value="500+">500+ nhân viên</option>
+                      </select>
+                    ) : (
+                      <p className="text-gray-900">{customerProfile?.companySize || 'Chưa cập nhật'}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Mã số thuế
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={formData.taxId || ''}
+                        onChange={(e) => handleInputChange('taxId', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="VD: 0123456789"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{customerProfile?.taxId || 'Chưa cập nhật'}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Số nhà và đường
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={formData.houseNumberAndStreet || ''}
+                        onChange={(e) => handleInputChange('houseNumberAndStreet', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="VD: 123 Đường ABC"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{customerProfile?.houseNumberAndStreet || 'Chưa cập nhật'}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tỉnh/Thành phố *
+                    </label>
+                    {isEditing ? (
+                      <select
+                        value={selectedProvince?.code || ''}
+                        onChange={(e) => handleProvinceChange(e.target.value)}
+                        disabled={loadingProvinces}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                      >
+                        <option value="">{loadingProvinces ? 'Đang tải...' : 'Chọn tỉnh/thành phố'}</option>
+                        {Array.isArray(provinces) && provinces.map(province => (
+                          <option key={province.code} value={province.code}>
+                            {province.name}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="text-gray-900">{customerProfile?.province?.name || 'Chưa cập nhật'}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Phường/Xã *
+                    </label>
+                    {isEditing ? (
+                      <select
+                        value={selectedCommune?.code || ''}
+                        onChange={(e) => handleCommuneChange(e.target.value)}
+                        disabled={!selectedProvince || loadingCommunes}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                      >
+                        <option value="">
+                          {!selectedProvince 
+                            ? 'Chọn tỉnh/thành phố trước' 
+                            : loadingCommunes 
+                              ? 'Đang tải...' 
+                              : 'Chọn phường/xã'
+                          }
+                        </option>
+                        {Array.isArray(communes) && communes.map(commune => (
+                          <option key={commune.code} value={commune.code}>
+                            {commune.name}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="text-gray-900">{customerProfile?.commune?.name || 'Chưa cập nhật'}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Company Profile Save Button */}
+                {isEditing && (
+                  <div className="mt-6 pt-6 border-t border-gray-200">
+                    <div className="flex justify-end space-x-4">
+                      <button
+                        onClick={handleCancel}
+                        className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        type="button"
+                      >
+                        Hủy
+                      </button>
+                      <button
+                        onClick={handleSaveCustomerProfile}
+                        disabled={isUpdating || isCreating || !hasCustomerFormChanges()}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
+                        type="button"
+                      >
+                        {(isUpdating || isCreating) ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            <span>Đang lưu...</span>
+                          </>
+                        ) : (
+                          <>
+                            <HiCheck className="w-4 h-4" />
+                            <span>{hasProfile ? 'Cập nhật' : 'Tạo'} Profile</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Account Settings */}
@@ -907,26 +1275,26 @@ export default function ProfileEmployerPage() {
                   <div className="flex items-center justify-between py-3 border-b border-gray-200">
                     <div>
                       <h4 className="text-sm font-medium text-gray-900">Thông báo email</h4>
-                      <p className="text-sm text-gray-500">Nhận thông báo khi có freelancer apply</p>
+                      <p className="text-sm text-gray-500">Nhận thông báo về dự án mới và tin nhắn</p>
                     </div>
                     <button
-                      className="relative inline-flex h-6 w-11 items-center rounded-full bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                      className="relative inline-flex h-6 w-11 items-center rounded-full bg-blue-600"
                       type="button"
                     >
-                      <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-6" />
+                      <span className="translate-x-6 inline-block h-4 w-4 transform rounded-full bg-white transition"></span>
                     </button>
                   </div>
 
                   <div className="flex items-center justify-between py-3 border-b border-gray-200">
                     <div>
-                      <h4 className="text-sm font-medium text-gray-900">Hiển thị công khai</h4>
-                      <p className="text-sm text-gray-500">Cho phép freelancer xem profile công ty</p>
+                      <h4 className="text-sm font-medium text-gray-900">Hiển thị trạng thái hoạt động</h4>
+                      <p className="text-sm text-gray-500">Cho phép developers thấy khi bạn online</p>
                     </div>
                     <button
-                      className="relative inline-flex h-6 w-11 items-center rounded-full bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                      className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200"
                       type="button"
                     >
-                      <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-6" />
+                      <span className="translate-x-1 inline-block h-4 w-4 transform rounded-full bg-white transition"></span>
                     </button>
                   </div>
                 </div>
@@ -953,9 +1321,4 @@ export default function ProfileEmployerPage() {
       </div>
     </div>
   )
-  // return (
-  //   <ProtectedRoute requiredRole="employer">
-  //     <ProfileEmployer />
-  //   </ProtectedRoute>
-  // );
 }

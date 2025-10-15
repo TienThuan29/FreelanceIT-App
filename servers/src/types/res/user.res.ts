@@ -1,4 +1,4 @@
-import { DeveloperProfile } from "@/models/user.model";
+import { DeveloperProfile, CustomerProfile } from "@/models/user.model";
 
 export type UserProfileResponse = {
     id?: string;
@@ -17,4 +17,9 @@ export type UserProfileResponse = {
 export type DeveloperProfileResponse = {
     userProfile: UserProfileResponse;
     developerProfile: DeveloperProfile | null;
+}
+
+export type CustomerProfileResponse = {
+    userProfile: UserProfileResponse;
+    customerProfile: CustomerProfile | null;
 }

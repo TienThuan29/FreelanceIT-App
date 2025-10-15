@@ -4,10 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDeveloperProfile } from '@/hooks/useDeveloperProfile';
 import { useAuth } from '@/contexts/AuthContext';
-import Footer from '@/components/Footer';
 import Image from 'next/image';
 import performanceMonitor from '@/utils/performance';
-import SmartNavbar from '@/components/SmartNavbar';
 
 const DevelopersListPage: React.FC = () => {
     const router = useRouter();

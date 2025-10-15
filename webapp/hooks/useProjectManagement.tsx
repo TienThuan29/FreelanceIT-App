@@ -46,9 +46,34 @@ interface AddUserToProjectRequest {
   contractUrl?: string;
 }
 
+export interface ProjectTeamMember {
+  id: string;
+  projectId: string;
+  developerId: string;
+  developerName: string;
+  developerEmail: string;
+  developerAvatar?: string;
+  agreedRate?: number;
+  contractUrl?: string;
+  joinedDate?: Date | string;
+  leftDate?: Date | string;
+  isActive: boolean;
+  developerProfile?: {
+    skills: Array<{
+      id: string;
+      name: string;
+      proficiency: string;
+      yearsOfExperience: number;
+    }>;
+    experience: number;
+    bio?: string;
+  };
+}
+
 interface ProjectManagementState {
   projects: Project[];
   projectTypes: ProjectType[];
+  teamMembers: ProjectTeamMember[];
   isLoading: boolean;
   error: string | null;
 }
@@ -58,6 +83,7 @@ export const useProjectManagement = () => {
   const [state, setState] = useState<ProjectManagementState>({
     projects: [],
     projectTypes: [],
+    teamMembers: [],
     isLoading: false,
     error: null,
   });
@@ -363,7 +389,7 @@ export const useProjectManagement = () => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      const response = await axiosInstance.delete(`${Api.Project.REMOVE_USER_FROM_PROJECT}/${projectId}/${userId}`);
+      const response = await axiosInstance.delete(`${Api.ProjectTeam.REMOVE_MEMBER}/${projectId}/members/${userId}`);
       
       setState(prev => ({ ...prev, isLoading: false }));
       toast.success(response.data.message);
@@ -371,6 +397,97 @@ export const useProjectManagement = () => {
     } catch (error) {
       handleError(error, 'remove user from project');
       return false;
+    }
+  }, [axiosInstance, handleError]);
+
+  // Project Team Management Operations
+  const getProjectTeamMembers = useCallback(async (projectId: string): Promise<ProjectTeamMember[]> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      
+      const response = await axiosInstance.get(`${Api.ProjectTeam.GET_MEMBERS}/${projectId}/members`);
+      const teamMembers = response.data.dataResponse || [];
+      
+      setState(prev => ({
+        ...prev,
+        teamMembers,
+        isLoading: false,
+      }));
+
+      return teamMembers;
+    } catch (error) {
+      handleError(error, 'fetch project team members');
+      return [];
+    }
+  }, [axiosInstance, handleError]);
+
+  const addProjectTeamMember = useCallback(async (request: AddUserToProjectRequest): Promise<ProjectTeamMember | null> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      
+      const response = await axiosInstance.post(`${Api.ProjectTeam.ADD_MEMBER}/${request.projectId}/members`, {
+        developerId: request.userId,
+        agreedRate: request.agreedRate,
+        contractUrl: request.contractUrl,
+      });
+
+      const newTeamMember = response.data.dataResponse;
+      setState(prev => ({
+        ...prev,
+        teamMembers: [...prev.teamMembers, newTeamMember],
+        isLoading: false,
+      }));
+
+      toast.success(response.data.message);
+      return newTeamMember;
+    } catch (error) {
+      handleError(error, 'add team member');
+      return null;
+    }
+  }, [axiosInstance, handleError]);
+
+  const removeProjectTeamMember = useCallback(async (projectId: string, developerId: string): Promise<boolean> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      
+      const response = await axiosInstance.delete(`${Api.ProjectTeam.REMOVE_MEMBER}/${projectId}/members/${developerId}`);
+      
+      setState(prev => ({
+        ...prev,
+        teamMembers: prev.teamMembers.filter(member => 
+          !(member.projectId === projectId && member.developerId === developerId)
+        ),
+        isLoading: false,
+      }));
+
+      toast.success(response.data.message);
+      return true;
+    } catch (error) {
+      handleError(error, 'remove team member');
+      return false;
+    }
+  }, [axiosInstance, handleError]);
+
+  const updateProjectTeamMember = useCallback(async (teamMemberId: string, updates: Partial<ProjectTeamMember>): Promise<ProjectTeamMember | null> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      
+      const response = await axiosInstance.put(`${Api.ProjectTeam.UPDATE_MEMBER}/${teamMemberId}`, updates);
+
+      const updatedTeamMember = response.data.dataResponse;
+      setState(prev => ({
+        ...prev,
+        teamMembers: prev.teamMembers.map(member => 
+          member.id === teamMemberId ? updatedTeamMember : member
+        ),
+        isLoading: false,
+      }));
+
+      toast.success(response.data.message);
+      return updatedTeamMember;
+    } catch (error) {
+      handleError(error, 'update team member');
+      return null;
     }
   }, [axiosInstance, handleError]);
 
@@ -391,6 +508,7 @@ export const useProjectManagement = () => {
     // State
     projects: state.projects,
     projectTypes: state.projectTypes,
+    teamMembers: state.teamMembers,
     isLoading: state.isLoading,
     error: state.error,
 
@@ -411,6 +529,12 @@ export const useProjectManagement = () => {
     // Team Management
     addUserToProject,
     removeUserFromProject,
+
+    // Project Team Management
+    getProjectTeamMembers,
+    addProjectTeamMember,
+    removeProjectTeamMember,
+    updateProjectTeamMember,
 
     // Utilities
     clearError,

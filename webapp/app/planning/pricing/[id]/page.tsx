@@ -16,14 +16,20 @@ import {
   FaHeadset,
 } from "react-icons/fa";
 import { usePlanningManagement } from "@/hooks/usePlanningManagement";
+
+import { useMoMo, CreateMomoPaymentRequest } from "@/hooks/useMomo";
 import { Planning } from "@/types/planning.type";
+import { Planning, DurationType } from "@/types/planning.type";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+
 
 export default function PlanningPackageDetail() {
   const { user } = useAuth();
   const params = useParams();
   const router = useRouter();
   const { getPlanningById, purchasePlanning, isLoading, error } = usePlanningManagement();
+  const { createMomoPayment, isLoading: momoLoading, error: momoError } = useMoMo();
   const [planningData, setPlanningData] = useState<Planning | null>(null);
   const [purchaseLoading, setPurchaseLoading] = useState(false);
 
@@ -41,16 +47,16 @@ export default function PlanningPackageDetail() {
 
   const handleBackToPricing = () => {
     router.push("/planning/pricing");
-  };
-
-  const handlePurchasePackage = async () => {
-    if (!user || !planningData) {
+  };  const handlePurchasePackage = async (paymentMethod: 'momo' | 'paypal') => {
+    if (!planningData) {
+      console.log(planningData);
       console.error("User or planning data not available");
       return;
     }
 
     console.log("user ", user);
     console.log("Purchase planning:", planningData);
+    console.log("Payment method:", paymentMethod);
 
     try {
       setPurchaseLoading(true);
@@ -60,16 +66,49 @@ export default function PlanningPackageDetail() {
         price: planningData.price,
       };
 
-      const response = await purchasePlanning(purchaseRequest);
 
-      if (response) {
-        // Redirect to payment success page or handle payment flow
-        router.push(`/planning/pricing/success?planningId=${response.planningId}`);
-      } else {
-        console.error("Failed to purchase planning");
+      if (paymentMethod === 'momo') {
+        // Handle MoMo payment
+        const momoPaymentRequest: CreateMomoPaymentRequest = {
+          userId: user?.id || '',
+          planningId: planningData.id,
+          amount: planningData.price,
+          orderInfo: `Thanh toán gói Pro - 30 ngày`,
+        };
+
+        console.log("Momo payment request:", momoPaymentRequest);
+        const momoResponse = await createMomoPayment(momoPaymentRequest);
+
+
+        if (momoResponse && momoResponse.payUrl) {
+          // Redirect to MoMo payment page
+          window.open(momoResponse.payUrl);
+          toast.success('Redirecting to MoMo payment...');
+        } else {
+          throw new Error('Failed to create MoMo payment');
+        }
+      } else if (paymentMethod === 'paypal') {
+        // Handle PayPal payment (existing flow)
+        const purchaseRequest = {
+          planningId: planningData.id,
+          orderId: `ORDER-${Date.now()}`,
+          price: planningData.price,
+          paymentMethod: paymentMethod,
+        };
+
+        const response = await purchasePlanning(purchaseRequest);
+
+        if (response) {
+          // Redirect to payment success page or handle payment flow
+          console.log("response", response);
+          router.push(`/planning/pricing/success?planningId=${response.planningId}&paymentMethod=${paymentMethod}`);
+        } else {
+          console.error("Failed to purchase planning");
+        }
       }
     } catch (error) {
       console.error("Planning purchase failed:", error);
+      toast.error('Payment failed. Please try again.');
     } finally {
       setPurchaseLoading(false);
     }
@@ -264,44 +303,65 @@ export default function PlanningPackageDetail() {
                   ))
                 )}
               </div>
-            </div>
-
-            {/* Error Display */}
-            {error && (
+            </div>            {/* Error Display */}
+            {(error || momoError) && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-600 text-sm">{error}</p>
+                <p className="text-red-600 text-sm">{error || momoError}</p>
               </div>
-            )}
-
-            {/* Purchase Button */}
+            )}{/* Purchase Buttons */}
             <div className="text-center">
-              <button
-                onClick={handlePurchasePackage}
-                disabled={purchaseLoading}
-                className={`cursor-pointer inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-lg transition-colors shadow-lg hover:shadow-xl ${
-                  purchaseLoading
-                    ? "bg-gray-400 text-white cursor-not-allowed"
-                    : badgeInfo.color === 'purple'
-                    ? "bg-purple-600 hover:bg-purple-700 text-white"
-                    : badgeInfo.color === 'blue'
-                    ? "bg-blue-600 hover:bg-blue-700 text-white"
-                    : badgeInfo.color === 'orange'
-                    ? "bg-orange-600 hover:bg-orange-700 text-white"
-                    : "bg-green-600 hover:bg-green-700 text-white"
-                }`}
-              >
-                {purchaseLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white"></div>
-                    <span className="text-sm sm:text-base">Đang xử lý...</span>
-                  </>
-                ) : (
-                  <>
-                    <FaShoppingCart />
-                    <span className="text-sm sm:text-base">Mua gói ngay</span>
-                  </>
-                )}
-              </button>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-4">
+                {/* Momo Payment Button */}
+                <button
+                  onClick={() => handlePurchasePackage('momo')}
+                  disabled={purchaseLoading}
+                  className={`cursor-pointer inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-lg transition-colors shadow-lg hover:shadow-xl ${
+                    purchaseLoading
+                      ? "bg-gray-400 text-white cursor-not-allowed"
+                      : "bg-pink-600 hover:bg-pink-700 text-white"
+                  }`}
+                >
+                  {purchaseLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white"></div>
+                      <span className="text-sm sm:text-base">Đang xử lý...</span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
+                        <span className="text-pink-600 font-bold text-xs">M</span>
+                      </div>
+                      <span className="text-sm sm:text-base">Thanh toán MoMo</span>
+                    </>
+                  )}
+                </button>
+
+                {/* PayPal Payment Button */}
+                <button
+                  onClick={() => handlePurchasePackage('paypal')}
+                  disabled={purchaseLoading}
+                  className={`cursor-pointer inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-lg transition-colors shadow-lg hover:shadow-xl ${
+                    purchaseLoading
+                      ? "bg-gray-400 text-white cursor-not-allowed"
+                      : "bg-blue-600 hover:bg-blue-700 text-white"
+                  }`}
+                >
+                  {purchaseLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white"></div>
+                      <span className="text-sm sm:text-base">Đang xử lý...</span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
+                        <span className="text-blue-600 font-bold text-xs">P</span>
+                      </div>
+                      <span className="text-sm sm:text-base">Thanh toán PayPal</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
               <p className="text-xs sm:text-sm text-gray-500 mt-3">
                 Dùng thử miễn phí trong 7 ngày. Hủy bất cứ lúc nào.
               </p>

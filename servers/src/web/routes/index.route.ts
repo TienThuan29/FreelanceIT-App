@@ -6,7 +6,10 @@ import developerRouter from "./developer.route";
 import testDataRouter from "./test-data.route";
 import customerRouter from "./customer.route";
 import chatRouter from "./chat.route";
+import applicationRouter from "./application.route";
+import projectTeamRouter from "./project-team.route";
 import planningRoute from './planning.route';
+import momoRoute from './momo.route';
 
 const router = Router();
 
@@ -15,10 +18,13 @@ router.use('/auth/google', googleAuthRouter);
 router.use('/projects', projectRouter);
 router.use('/developers', developerRouter);
 router.use('/customers', customerRouter);
+router.use('/applications', applicationRouter);
+router.use('/project-teams', projectTeamRouter);
 
 router.use('/test-data', testDataRouter);
 router.use('/chat', chatRouter);
 router.use('/api', planningRoute);
+router.use('/momo', momoRoute);
 /**
  * @swagger
  * /health:

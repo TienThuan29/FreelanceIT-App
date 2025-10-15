@@ -27,6 +27,9 @@ export class ProjectApi {
         this.addUserToProject = this.addUserToProject.bind(this);
         this.removeUserFromProject = this.removeUserFromProject.bind(this);
         this.generateImageSignedUrl = this.generateImageSignedUrl.bind(this);
+        this.getAllProjects = this.getAllProjects.bind(this);
+        this.getAllProjectsPublic = this.getAllProjectsPublic.bind(this);
+        this.getProjectByIdPublic = this.getProjectByIdPublic.bind(this);
         this.getAccessToken = this.getAccessToken.bind(this);
     }
 
@@ -323,6 +326,50 @@ export class ProjectApi {
             
             const signedUrl = await this.projectService.generateImageSignedUrl(imageKey);
             ResponseUtil.success(response, { signedUrl }, 'Tạo signed URL thành công', 200);
+        }
+        catch (error) {
+            logger.error(error);
+            ResponseUtil.error(response, error instanceof Error ? error.message : 'Lỗi máy chủ nội bộ', 400);
+        }
+    }
+
+    public async getAllProjects(request: Request, response: Response) {
+        try {
+            const currentUser = await this.authService.getUserByToken(this.getAccessToken(request));
+            if (!currentUser) {
+                ResponseUtil.error(response, 'Không tìm thấy người dùng', 404);
+                return;
+            }
+            
+            const projects = await this.projectService.getAllProjects();
+            ResponseUtil.success(response, projects, 'Lấy danh sách tất cả dự án thành công', 200);
+        }
+        catch (error) {
+            logger.error(error);
+            ResponseUtil.error(response, error instanceof Error ? error.message : 'Lỗi máy chủ nội bộ', 400);
+        }
+    }
+
+    public async getAllProjectsPublic(request: Request, response: Response) {
+        try {
+            const projects = await this.projectService.getAllProjects();
+            ResponseUtil.success(response, projects, 'Lấy danh sách tất cả dự án thành công', 200);
+        }
+        catch (error) {
+            logger.error(error);
+            ResponseUtil.error(response, error instanceof Error ? error.message : 'Lỗi máy chủ nội bộ', 400);
+        }
+    }
+
+    public async getProjectByIdPublic(request: Request, response: Response) {
+        try {
+            const { id } = request.params;
+            const project = await this.projectService.getProjectById(id);
+            if (!project) {
+                ResponseUtil.error(response, 'Không tìm thấy dự án', 404);
+                return;
+            }
+            ResponseUtil.success(response, project, 'Lấy thông tin dự án thành công', 200);
         }
         catch (error) {
             logger.error(error);

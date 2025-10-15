@@ -2,7 +2,7 @@ import { Planning, UserPlanning } from '@/types/planning.type';
 
 export const mockPlannings: Planning[] = [
     {
-        id: "plan-1",
+        id: "PLAN_PRO",
         name: "Gói AI Basic",
         description: "Gói cơ bản cho người dùng cá nhân, phù hợp cho các tác vụ AI nhỏ và thử nghiệm.",
         price: 99000,

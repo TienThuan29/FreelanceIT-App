@@ -179,4 +179,41 @@ export class ProjectService {
     public async generateImageSignedUrl(imageKey: string): Promise<string> {
         return await this.s3Service.generateSignedUrl(imageKey);
     }
+
+    public async getAllProjects(): Promise<Project[]> {
+        const projects = await this.projectRepository.findAll();
+        
+        // Generate signed URLs for project images and populate projectType
+        const projectsWithSignedUrls = await Promise.all(
+            projects.map(async (project) => {
+                let updatedProject = { ...project };
+                
+                // Generate signed URL for image if it exists
+                if (project.imageUrl) {
+                    try {
+                        const signedUrl = await this.s3Service.generateSignedUrl(project.imageUrl);
+                        updatedProject.imageUrl = signedUrl;
+                    } catch (error) {
+                        logger.error(`Error generating signed URL for project ${project.id}:`, error);
+                    }
+                }
+                
+                // Populate projectType if it's just an ID string
+                if (typeof project.projectType === 'string') {
+                    try {
+                        const projectType = await this.projectTypeRepository.findById(project.projectType);
+                        if (projectType) {
+                            updatedProject.projectType = projectType;
+                        }
+                    } catch (error) {
+                        logger.error(`Error fetching project type for project ${project.id}:`, error);
+                    }
+                }
+                
+                return updatedProject;
+            })
+        );
+        
+        return projectsWithSignedUrls;
+    }
 }

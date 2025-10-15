@@ -2,6 +2,9 @@ import { ChatbotSession } from "@/models/chatbot.model";
 import { N8NChatbotRequest, N8NChatbotService } from "@/thirdparties/n8n.service";
 import { ChatbotSendMessageRequest } from "@/types/req/chatbot.req";
 import { ChatbotSessionRepository } from "@/repositories/chatbot.repo";
+import { CustomerProfileRepository } from "@/repositories/customer.repo";
+import { CustomerProfile } from "@/models/user.model";
+import { CreateCustomerProfileRequest, UpdateCustomerProfileRequest } from "@/types/req/user.req";
 import { v4 as uuidv4 } from 'uuid';
 import { ChatbotSessionResponse } from "@/types/res/chatbot.res";
 
@@ -9,16 +12,52 @@ export class CustomerService {
 
     private readonly n8nChatbotService: N8NChatbotService;
     private readonly chatbotSessionRepository: ChatbotSessionRepository;
+    private readonly customerProfileRepository: CustomerProfileRepository;
 
     constructor() {
         this.n8nChatbotService = new N8NChatbotService();
         this.chatbotSessionRepository = new ChatbotSessionRepository();
+        this.customerProfileRepository = new CustomerProfileRepository();
     }
 
+    // CustomerProfile CRUD operations
+    public async createCustomerProfile(request: CreateCustomerProfileRequest): Promise<CustomerProfile | null> {
+        const customerProfile: CustomerProfile = {
+            userId: request.userId,
+            companyName: request.companyName,
+            companyWebsite: request.companyWebsite,
+            industry: request.industry,
+            companySize: request.companySize,
+            taxId: request.taxId,
+            houseNumberAndStreet: request.houseNumberAndStreet,
+            commune: request.commune,
+            province: request.province,
+            rating: 0,
+            totalProjectsPosted: 0
+        };
+
+        return await this.customerProfileRepository.create(customerProfile);
+    }
+
+    public async getCustomerProfileByUserId(userId: string): Promise<CustomerProfile | null> {
+        return await this.customerProfileRepository.findByUserId(userId);
+    }
+
+    public async updateCustomerProfile(userId: string, request: UpdateCustomerProfileRequest): Promise<CustomerProfile | null> {
+        return await this.customerProfileRepository.update(userId, request);
+    }
+
+    public async deleteCustomerProfile(userId: string): Promise<boolean> {
+        return await this.customerProfileRepository.delete(userId);
+    }
+
+    public async getAllCustomerProfiles(): Promise<CustomerProfile[]> {
+        return await this.customerProfileRepository.findAll();
+    }
+
+    // Existing chatbot methods
     public async getChatbotSessionsByUserId(userId: string) : Promise<ChatbotSessionResponse[]> {
-        console.log('Getting chatbot sessions for userId:', userId);
         const chatbotSessions = await this.chatbotSessionRepository.findAllByUserId(userId);
-        console.log('Found chatbot sessions:', chatbotSessions);
         return chatbotSessions;
     }
 

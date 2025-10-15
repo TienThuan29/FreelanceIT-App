@@ -16,7 +16,6 @@ export class DynamoRepository {
     constructor(tableName: string) {
         this.tableName = dynamoDbInstance.getTableName(tableName);
         logger.info(`DynamoRepository initialized for table: ${this.tableName}`);
-        console.log(`DynamoRepository: Creating table name from '${tableName}' to '${this.tableName}'`);
     }
 
     public getTableName(): string {

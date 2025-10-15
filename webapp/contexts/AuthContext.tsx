@@ -62,9 +62,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               if (authData.refreshToken) {
                 try {
                   const response = await axios.post(Api.BASE_API + Api.Auth.REFRESH_TOKEN, {
-                    headers: {
-                      Authorization: `Bearer ${authData.refreshToken}`
-                    }
+                    refreshToken: authData.refreshToken
                   });
                   const newAuthData = {
                     ...authData,
@@ -83,20 +81,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                   setUser(profileResponse.data.dataResponse);
                 } catch (refreshError) {
                   // Both tokens are invalid, clear auth data
+                  console.error('Refresh token failed:', refreshError);
                   localStorage.removeItem(Constant.AUTH_TOKEN_KEY);
+                  setUser(null);
+                  setAccessToken(null);
+                  setRefreshToken(null);
                 }
               } else {
                 localStorage.removeItem(Constant.AUTH_TOKEN_KEY);
+                setUser(null);
+                setAccessToken(null);
+                setRefreshToken(null);
               }
             }
           } else {
             // Clear invalid auth data
             localStorage.removeItem(Constant.AUTH_TOKEN_KEY);
+            setUser(null);
+            setAccessToken(null);
+            setRefreshToken(null);
           }
         }
       } catch (error) {
         console.error('Error loading auth data:', error);
         localStorage.removeItem(Constant.AUTH_TOKEN_KEY);
+        setUser(null);
+        setAccessToken(null);
+        setRefreshToken(null);
       } finally {
         setIsLoading(false);
       }

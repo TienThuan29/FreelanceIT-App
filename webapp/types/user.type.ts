@@ -14,6 +14,7 @@ export type User = {
     province: Province;
     createdDate?: Date;
     updatedDate?: Date;
+    avatar?: string;
 }
 
 export type UserProfile = User;
@@ -115,8 +116,6 @@ export type DeveloperProfile = {
     languages?: string[];   
     timezone?: string;
     cvUrl?: string;
-    createdDate?: Date;
-    updatedDate?: Date;
 };
 
 export type CustomerProfile = {
@@ -126,10 +125,9 @@ export type CustomerProfile = {
     industry?: string;
     companySize?: string;
     taxId?: string;
-    address?: string;
-    city?: string;
-    state?: string;
-    countryName?: string;
+    houseNumberAndStreet?: string;
+    commune: Commune;
+    province: Province;
     rating?: number;
     totalProjectsPosted?: number;
 };

@@ -11,6 +11,7 @@ import {
 } from '@/types/chat.type';
 import { SOCKET_CONFIG } from '@/configs/socket.config';
 import { ChatService } from '@/services/chat.service';
+import { UserRepository } from '@/repositories/user.repo';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -48,9 +49,11 @@ export class SocketService {
   private readonly userOnlineOfflineTimestamps: Map<string, number> = new Map(); // userId -> last online/offline timestamp
   private readonly conversationJoinLeaveTimestamps: Map<string, number> = new Map(); // userId_conversationId -> timestamp
   private readonly chatService: ChatService;
+  private readonly userRepository: UserRepository;
 
   constructor(server: HTTPServer, chatService: ChatService) {
     this.chatService = chatService;
+    this.userRepository = new UserRepository();
     this.io = new SocketIOServer(server, {
       cors: {
         origin: config.CORS_ORIGIN,
@@ -230,9 +233,21 @@ export class SocketService {
           };
           const savedMessage = await this.chatService.createMessage(messageInput);
 
-          // Broadcast to conversation room with saved message data
+          // Get sender information
+          const sender = await this.userRepository.findById(socket.userId!);
+          const messageWithSender = {
+            ...savedMessage,
+            sender: sender ? {
+              id: sender.id,
+              name: sender.fullname || sender.email,
+              email: sender.email,
+              avatar: sender.avatar
+            } : undefined
+          };
+
+          // Broadcast to conversation room with saved message data including sender info
           const roomName = `conversation_${data.conversationId}`;
-          this.io.to(roomName).emit('new_message', savedMessage);
+          this.io.to(roomName).emit('new_message', messageWithSender);
 
           // Confirm message sent with real message ID
           socket.emit('message_sent', {

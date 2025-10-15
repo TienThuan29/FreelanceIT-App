@@ -14,6 +14,7 @@ export const PageUrl = {
 
     Dev: {
         AVAILABLE_PROJECTS_PAGE: '/posts-cus',
+        MANAGE_DEVELOPER_PROJECTS_PAGE: '/developer/dev-projects',
     }
 
 }

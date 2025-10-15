@@ -168,6 +168,27 @@ export const useApplicationManagement = () => {
     }
   }, [axiosInstance, handleError]);
 
+  // Get applications by developer (uses current authenticated user)
+  const getApplicationsByDeveloper = useCallback(async (): Promise<ProjectApplication[]> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      
+      const response = await axiosInstance.get(`${Api.Application.GET_BY_DEVELOPER}`);
+      const applications = response.data.dataResponse || [];
+      
+      setState(prev => ({
+        ...prev,
+        applications,
+        isLoading: false,
+      }));
+
+      return applications;
+    } catch (error) {
+      handleError(error, 'fetch applications by developer');
+      return [];
+    }
+  }, [axiosInstance, handleError]);
+
   // Get application by ID
   const getApplicationById = useCallback(async (applicationId: string): Promise<ProjectApplication | null> => {
     try {
@@ -197,6 +218,7 @@ export const useApplicationManagement = () => {
 
     // Actions
     getApplicationsByProject,
+    getApplicationsByDeveloper,
     updateApplicationStatus,
     deleteApplication,
     getApplicationById,

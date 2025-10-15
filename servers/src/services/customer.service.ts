@@ -7,21 +7,26 @@ import { CustomerProfile } from "@/models/user.model";
 import { CreateCustomerProfileRequest, UpdateCustomerProfileRequest } from "@/types/req/user.req";
 import { v4 as uuidv4 } from 'uuid';
 import { ChatbotSessionResponse } from "@/types/res/chatbot.res";
+import { CustomerProfileResponse, UserProfileResponse } from "@/types/res/user.res";
+import { UserRepository } from "@/repositories/user.repo";
+import { mapUserToUserProfileResponse } from "@/libs/mappers/user.mapper";
 
 export class CustomerService {
 
     private readonly n8nChatbotService: N8NChatbotService;
     private readonly chatbotSessionRepository: ChatbotSessionRepository;
     private readonly customerProfileRepository: CustomerProfileRepository;
+    private readonly userRepository: UserRepository;
 
     constructor() {
         this.n8nChatbotService = new N8NChatbotService();
         this.chatbotSessionRepository = new ChatbotSessionRepository();
         this.customerProfileRepository = new CustomerProfileRepository();
+        this.userRepository = new UserRepository();
     }
 
     // CustomerProfile CRUD operations
-    public async createCustomerProfile(request: CreateCustomerProfileRequest): Promise<CustomerProfile | null> {
+    public async createCustomerProfile(request: CreateCustomerProfileRequest): Promise<CustomerProfileResponse | null> {
         const customerProfile: CustomerProfile = {
             userId: request.userId,
             companyName: request.companyName,
@@ -36,15 +41,56 @@ export class CustomerService {
             totalProjectsPosted: 0
         };
 
-        return await this.customerProfileRepository.create(customerProfile);
+        const createdProfile = await this.customerProfileRepository.create(customerProfile);
+        if (!createdProfile) {
+            return null;
+        }
+        
+        const user = await this.userRepository.findById(request.userId);
+        if (!user) {
+            return null;
+        }
+        
+        const userProfile: UserProfileResponse = await mapUserToUserProfileResponse(user);
+        
+        return {
+            userProfile: userProfile,
+            customerProfile: createdProfile,
+        } as CustomerProfileResponse;
     }
 
-    public async getCustomerProfileByUserId(userId: string): Promise<CustomerProfile | null> {
-        return await this.customerProfileRepository.findByUserId(userId);
+    public async getCustomerProfileByUserId(userId: string): Promise<CustomerProfileResponse | null> {
+        const user = await this.userRepository.findById(userId);
+        if (!user) {
+            return null;
+        }
+        const customerProfile = await this.customerProfileRepository.findByUserId(userId);
+        const userProfile: UserProfileResponse = await mapUserToUserProfileResponse(user);
+        
+        // Return user profile even if customer profile doesn't exist yet
+        return {
+            userProfile: userProfile,
+            customerProfile: customerProfile || null,
+        } as CustomerProfileResponse;
     }
 
-    public async updateCustomerProfile(userId: string, request: UpdateCustomerProfileRequest): Promise<CustomerProfile | null> {
-        return await this.customerProfileRepository.update(userId, request);
+    public async updateCustomerProfile(userId: string, request: UpdateCustomerProfileRequest): Promise<CustomerProfileResponse | null> {
+        const updatedCustomerProfile = await this.customerProfileRepository.update(userId, request);
+        if (!updatedCustomerProfile) {
+            return null;
+        }
+        
+        const user = await this.userRepository.findById(userId);
+        if (!user) {
+            return null;
+        }
+        
+        const userProfile: UserProfileResponse = await mapUserToUserProfileResponse(user);
+        
+        return {
+            userProfile: userProfile,
+            customerProfile: updatedCustomerProfile,
+        } as CustomerProfileResponse;
     }
 
     public async deleteCustomerProfile(userId: string): Promise<boolean> {

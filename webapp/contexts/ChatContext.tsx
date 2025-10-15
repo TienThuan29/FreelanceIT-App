@@ -20,6 +20,12 @@ export interface ChatMessage {
   readDate?: string;
   editedDate?: string;
   isDeleted: boolean;
+  sender?: {
+    id: string;
+    name: string;
+    email: string;
+    avatar?: string;
+  };
 }
 
 export interface Conversation {
@@ -319,7 +325,11 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
 
     // Message events
     newSocket.on('new_message', (message: ChatMessage) => {
-      console.log('Received new_message event:', message);
+      console.log('=== RECEIVED NEW MESSAGE EVENT ===');
+      console.log('Message:', message);
+      console.log('Current conversation:', currentConversation?.id);
+      console.log('Message conversation:', message.conversationId);
+      console.log('Is current conversation:', currentConversation?.id === message.conversationId);
       
       // Update conversation state - mark as having messages
       setConversationHasMessages(prev => ({ ...prev, [message.conversationId]: true }));
@@ -396,6 +406,8 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     });
 
     newSocket.on('message_sent', (data: { messageId: string; realMessageId?: string; timestamp: string }) => {
+      console.log('=== MESSAGE SENT CONFIRMATION ===');
+      console.log('Data:', data);
       updateMessageTimestamp(data.messageId, data.timestamp);
       setIsSendingMessage(false);
       
@@ -428,6 +440,15 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       console.error('Failed to join conversation:', data.conversationId);
       console.error('Error:', data.error);
       toast.error(`Không thể tham gia cuộc trò chuyện: ${data.error}`);
+    });
+
+    // Handle user joined conversation event
+    newSocket.on('user_joined_conversation', (data: { userId: string; conversationId: string; timestamp: string }) => {
+      console.log('=== USER JOINED CONVERSATION ===');
+      console.log('User:', data.userId, 'joined conversation:', data.conversationId);
+      if (data.userId !== user?.id) {
+        console.log('Another user joined the conversation');
+      }
     });
 
     newSocket.on('message_read', (data: { messageId: string; readBy: string; timestamp: string }) => {
@@ -683,7 +704,13 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       isRead: false,
-      isDeleted: false
+      isDeleted: false,
+      sender: {
+        id: user.id,
+        name: user.fullname || user.email,
+        email: user.email,
+        avatar: user.avatar
+      }
     };
     
 
@@ -703,18 +730,20 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     // Send via socket if connected, otherwise add to offline queue
     if (socket && isConnected) {
       try {
-        // Ensure sender is in conversation room before sending
-        socket.emit('join_conversation', currentConversation.id);
+        console.log('Sending message via socket:', {
+          conversationId: currentConversation.id,
+          content,
+          messageId,
+          socketId: socket.id,
+          isConnected
+        });
         
-        // Small delay to ensure room joining is processed
-        setTimeout(() => {
-          socket.emit('send_message', {
-            conversationId: currentConversation.id,
-            content,
-            messageId,
-            timestamp: new Date().toISOString()
-          });
-        }, 100);
+        socket.emit('send_message', {
+          conversationId: currentConversation.id,
+          content,
+          messageId,
+          timestamp: new Date().toISOString()
+        });
         
         // Fallback: If no response in 3 seconds, keep temp message
         setTimeout(() => {

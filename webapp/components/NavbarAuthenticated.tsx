@@ -72,9 +72,9 @@ const NavbarAuthenticated: React.FC = () => {
                 <a href={PageUrl.Dev.AVAILABLE_PROJECTS_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Tuyển dụng
                 </a>
-                {/* <a href="/manage-developer-projects" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
-                  Quản lý dự án
-                </a> */}
+                <a href={PageUrl.Dev.MANAGE_DEVELOPER_PROJECTS_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                  Dự án của tôi
+                </a>
                 {/* <a href="/nda-contracts" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Hợp đồng NDA
                 </a>
@@ -187,7 +187,7 @@ const NavbarAuthenticated: React.FC = () => {
                   )}
 
                   <a
-                    href="/settings"
+                    href={PageUrl.Customer.PROFILE_CUSTOMER_PAGE}
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                   >
                     Cài đặt
@@ -314,7 +314,7 @@ const NavbarAuthenticated: React.FC = () => {
               )}
 
               <a
-                href="/settings"
+                href="#"
                 className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-300 font-medium"
               >
                 Cài đặt

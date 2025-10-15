@@ -85,8 +85,9 @@ export interface UseCustomerProfileReturn extends UseCustomerProfileState {
     getAllCustomerProfiles: (forceRefresh?: boolean) => Promise<void>;
     createCustomerProfile: (profileData: CreateCustomerProfileRequest) => Promise<boolean>;
     updateCustomerProfile: (userId: string, profileData: UpdateCustomerProfileRequest) => Promise<boolean>;
+    updateUserProfile: (userId: string, userData: Partial<UserProfileResponse>) => Promise<boolean>;
     deleteCustomerProfile: (userId: string) => Promise<boolean>;
-    refreshProfile: () => Promise<void>;
+    refreshProfile: (userId: string) => Promise<void>;
     clearErrors: () => void;
     resetUpdateState: () => void;
     resetCreateState: () => void;
@@ -214,23 +215,15 @@ export const useCustomerProfile = (): UseCustomerProfileReturn => {
             const response = await axiosInstance.get(url);
 
             if (response.data.success) {
-                const profileData: CustomerProfile = response.data.dataResponse;
+                const responseData: CustomerProfileResponse = response.data.dataResponse;
+                
                 // Cache the profile for 10 minutes
-                const responseData: CustomerProfileResponse = {
-                    userProfile: {
-                        id: userId,
-                        email: '',
-                        fullname: '',
-                        role: 'CUSTOMER',
-                        isEnable: true,
-                    },
-                    customerProfile: profileData,
-                };
                 cacheService.set(cacheKey, responseData, 10 * 60 * 1000);
                 
                 setState(prev => ({
                     ...prev,
-                    customerProfile: profileData,
+                    userProfile: responseData.userProfile,
+                    customerProfile: responseData.customerProfile,
                     isLoading: false,
                     error: null,
                     isFromCache: false,
@@ -382,10 +375,12 @@ export const useCustomerProfile = (): UseCustomerProfileReturn => {
             );
 
             if (response.data.success) {
-                const createdProfile: CustomerProfile = response.data.dataResponse;
+                console.log('Create customer profile API response:', response.data.dataResponse);
+                const responseData: CustomerProfileResponse = response.data.dataResponse;
                 setState(prev => ({
                     ...prev,
-                    customerProfile: createdProfile,
+                    userProfile: responseData.userProfile,
+                    customerProfile: responseData.customerProfile,
                     isCreating: false,
                     createError: null,
                     isCreated: true,
@@ -442,10 +437,12 @@ export const useCustomerProfile = (): UseCustomerProfileReturn => {
             );
 
             if (response.data.success) {
-                const updatedProfile: CustomerProfile = response.data.dataResponse;
+                console.log('Update customer profile API response:', response.data.dataResponse);
+                const responseData: CustomerProfileResponse = response.data.dataResponse;
                 setState(prev => ({
                     ...prev,
-                    customerProfile: updatedProfile,
+                    userProfile: responseData.userProfile,
+                    customerProfile: responseData.customerProfile,
                     isUpdating: false,
                     updateError: null,
                     isUpdated: true,
@@ -467,6 +464,73 @@ export const useCustomerProfile = (): UseCustomerProfileReturn => {
                 updateError: error.response?.data?.message || 
                            error.message || 
                            'Failed to update customer profile',
+            }));
+            return false;
+        }
+    }, [axiosInstance]);
+
+    /**
+     * Update user profile
+     */
+    const updateUserProfile = useCallback(async (
+        userId: string, 
+        userData: Partial<UserProfileResponse>
+    ): Promise<boolean> => {
+        if (!userId) {
+            setState(prev => ({
+                ...prev,
+                updateError: 'User ID is required',
+                isUpdating: false,
+            }));
+            return false;
+        }
+
+        setState(prev => ({
+            ...prev,
+            isUpdating: true,
+            updateError: null,
+            isUpdated: false,
+        }));
+
+        try {
+            const response = await axiosInstance.put(
+                `${Api.Developer.UPDATE_USER}/${userId}`,
+                userData
+            );
+
+            if (response.data.success) {
+                console.log('Update user profile API response:', response.data.dataResponse);
+                const responseData: { userProfile: UserProfileResponse, developerProfile: any } = response.data.dataResponse;
+                console.log('Extracted user profile:', responseData.userProfile);
+                setState(prev => ({
+                    ...prev,
+                    userProfile: responseData.userProfile,
+                    isUpdating: false,
+                    updateError: null,
+                    isUpdated: true,
+                }));
+                
+                // Clear cache to force refresh
+                const cacheKey = `customer_profile_${userId}`;
+                cacheService.delete(cacheKey);
+                
+                return true;
+            } else {
+                setState(prev => ({
+                    ...prev,
+                    isUpdating: false,
+                    updateError: response.data.message || 'Failed to update user profile',
+                }));
+                return false;
+            }
+        } catch (error: any) {
+            console.error('Error updating user profile:', error);
+            setState(prev => ({
+                ...prev,
+                isUpdating: false,
+                updateError: error.response?.data?.message || 
+                           error.message || 
+                           'Failed to update user profile',
             }));
             return false;
         }
@@ -528,11 +592,11 @@ export const useCustomerProfile = (): UseCustomerProfileReturn => {
     }, [axiosInstance]);
 
 
-    const refreshProfile = useCallback(async (): Promise<void> => {
-        if (state.customerProfile?.userId) {
-            await getCustomerProfile(state.customerProfile.userId);
+    const refreshProfile = useCallback(async (userId: string): Promise<void> => {
+        if (userId) {
+            await getCustomerProfile(userId);
         }
-    }, [state.customerProfile?.userId, getCustomerProfile]);
+    }, [getCustomerProfile]);
 
     const clearCache = useCallback((): void => {
         cacheService.clear();
@@ -579,6 +643,7 @@ export const useCustomerProfile = (): UseCustomerProfileReturn => {
         getAllCustomerProfiles,
         createCustomerProfile,
         updateCustomerProfile,
+        updateUserProfile,
         deleteCustomerProfile,
         refreshProfile,
         clearErrors,

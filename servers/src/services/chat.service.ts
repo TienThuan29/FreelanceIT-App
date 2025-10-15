@@ -9,13 +9,16 @@ import {
   GetUnreadCountInput
 } from '../types/chat.type';
 import { ChatRepository } from '@/repositories/chat.repo';
+import { UserRepository } from '@/repositories/user.repo';
 import logger from '@/libs/logger';
 
 export class ChatService {
   private readonly chatRepository: ChatRepository;
+  private readonly userRepository: UserRepository;
 
   constructor() {
     this.chatRepository = new ChatRepository();
+    this.userRepository = new UserRepository();
   }
 
   // Create new conversation
@@ -104,7 +107,30 @@ export class ChatService {
   async getConversationMessages(input: GetConversationMessagesInput): Promise<Message[]> {
     try {
       const { conversationId, page = 1, limit = 50 } = input;
-      return await this.chatRepository.getConversationMessages(conversationId, page, limit);
+      const messages = await this.chatRepository.getConversationMessages(conversationId, page, limit);
+      
+      // Populate sender information for each message
+      const messagesWithSenders = await Promise.all(
+        messages.map(async (message) => {
+          try {
+            const sender = await this.userRepository.findById(message.senderId);
+            return {
+              ...message,
+              sender: sender ? {
+                id: sender.id,
+                name: sender.fullname || sender.email,
+                email: sender.email,
+                avatar: sender.avatar
+              } : undefined
+            };
+          } catch (error) {
+            logger.error(`Error populating sender info for message ${message.id}:`, error);
+            return message;
+          }
+        })
+      );
+      
+      return messagesWithSenders;
     } catch (error) {
       logger.error('Lỗi khi lấy tin nhắn cuộc trò chuyện:', error);
       return [];

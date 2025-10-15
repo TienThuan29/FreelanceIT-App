@@ -49,6 +49,8 @@ export default function ProfileCustomerPage() {
     getCustomerProfile,
     createCustomerProfile,
     updateCustomerProfile,
+    updateUserProfile,
+    refreshProfile,
     clearErrors,
     resetUpdateState,
     resetCreateState,
@@ -100,6 +102,7 @@ export default function ProfileCustomerPage() {
       setSelectedCommune(customerProfile.commune)
     }
     if (userProfile) {
+      console.log('User profile updated:', userProfile)
       setUserFormData(userProfile)
     }
   }, [customerProfile, userProfile])
@@ -289,8 +292,18 @@ export default function ProfileCustomerPage() {
         return
       }
 
-      // Note: User profile update would need to be implemented in the customer API
-      toast.success('Cập nhật thông tin cá nhân thành công!')
+      console.log('Updating user profile with changes:', userFormData)
+      const success = await updateUserProfile(user.id, userFormData)
+
+      if (success) {
+        console.log('User profile update successful, refreshing profile...')
+        toast.success('Cập nhật thông tin cá nhân thành công!')
+        // Refresh profile data to ensure we have the latest information
+        await refreshProfile(user.id)
+        setIsEditing(false)
+      } else {
+        toast.error('Có lỗi xảy ra khi cập nhật thông tin cá nhân!')
+      }
     } catch (error) {
       console.error('Error saving user profile:', error)
       toast.error('Có lỗi xảy ra khi cập nhật thông tin cá nhân!')
@@ -327,6 +340,8 @@ export default function ProfileCustomerPage() {
 
       if (success) {
         toast.success(hasProfile ? 'Cập nhật thông tin công ty thành công!' : 'Tạo profile công ty thành công!')
+        // Refresh profile data to ensure we have the latest information
+        await refreshProfile(user.id)
         setIsEditing(false)
       } else {
         toast.error('Có lỗi xảy ra khi lưu thông tin công ty!')
@@ -345,8 +360,7 @@ export default function ProfileCustomerPage() {
       let customerSuccess = true
       
       if (hasUserFormChanges()) {
-        // Note: User profile update would need to be implemented
-        userSuccess = true
+        userSuccess = await updateUserProfile(user.id, userFormData)
       }
       
       if (hasCustomerFormChanges()) {
@@ -374,6 +388,8 @@ export default function ProfileCustomerPage() {
       }
       
       if (userSuccess && customerSuccess) {
+        // Refresh profile data to ensure we have the latest information
+        await refreshProfile(user.id)
         setIsEditing(false)
         toast.success('Cập nhật thông tin thành công!')
       } else {
@@ -445,8 +461,8 @@ export default function ProfileCustomerPage() {
         <div className="flex items-center justify-center" style={{ height: 'calc(100vh - 64px)' }}>
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Đang tải thông tin...</p>
-            <p className="text-sm text-gray-500 mt-2">User ID: {user?.id} | Role: {user?.role}</p>
+            {/* <p className="text-gray-600">Đang tải thông tin...</p> */}
+            {/* <p className="text-sm text-gray-500 mt-2">User ID: {user?.id} | Role: {user?.role}</p> */}
           </div>
         </div>
       </div>
@@ -462,13 +478,6 @@ export default function ProfileCustomerPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Debug Error Display */}
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 mx-4 mt-4">
-          <strong>Debug Error:</strong> {error}
-        </div>
-      )}
-      
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header Section */}
         <div className="bg-white rounded-lg shadow-sm mb-6">
@@ -506,7 +515,7 @@ export default function ProfileCustomerPage() {
 
                   {/* Loading Overlay */}
                   {isUpdating && (
-                    <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                    <div className="absolute inset-0  bg-opacity-50 rounded-full flex items-center justify-center">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
                     </div>
                   )}

@@ -504,6 +504,27 @@ export const useProjectManagement = () => {
     return getProjectTypes();
   }, [getProjectTypes]);
 
+  // Get projects by developer (team memberships) - uses current authenticated user
+  const getDeveloperProjects = useCallback(async (): Promise<ProjectTeamMember[]> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      
+      const response = await axiosInstance.get(`${Api.ProjectTeam.GET_DEVELOPER_PROJECTS}`);
+      const projects = response.data.dataResponse || [];
+      
+      setState(prev => ({
+        ...prev,
+        teamMembers: projects,
+        isLoading: false,
+      }));
+
+      return projects;
+    } catch (error) {
+      handleError(error, 'fetch projects by developer');
+      return [];
+    }
+  }, [axiosInstance, handleError]);
+
   return {
     // State
     projects: state.projects,
@@ -535,6 +556,7 @@ export const useProjectManagement = () => {
     addProjectTeamMember,
     removeProjectTeamMember,
     updateProjectTeamMember,
+    getDeveloperProjects,
 
     // Utilities
     clearError,

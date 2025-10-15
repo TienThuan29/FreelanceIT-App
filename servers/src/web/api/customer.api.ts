@@ -24,12 +24,12 @@ export class CustomerApi {
     public async createCustomerProfile(request: Request, response: Response): Promise<void> {
         try {
             const customerProfileRequest: CreateCustomerProfileRequest = request.body;
-            const customerProfile = await this.customerService.createCustomerProfile(customerProfileRequest);
-            if (!customerProfile) {
+            const customerProfileResponse = await this.customerService.createCustomerProfile(customerProfileRequest);
+            if (!customerProfileResponse) {
                 ResponseUtil.error(response, 'Failed to create customer profile', 400);
                 return;
             }
-            ResponseUtil.success(response, customerProfile, 'Customer profile created successfully', 201);
+            ResponseUtil.success(response, customerProfileResponse, 'Customer profile created successfully', 201);
         }
         catch (error) {
             const message = error instanceof Error ? error.message : String(error);
@@ -40,12 +40,12 @@ export class CustomerApi {
     public async getCustomerProfile(request: Request, response: Response): Promise<void> {
         try {
             const { userId } = request.params;
-            const customerProfile = await this.customerService.getCustomerProfileByUserId(userId);
-            if (!customerProfile) {
+            const customerProfileResponse = await this.customerService.getCustomerProfileByUserId(userId);
+            if (!customerProfileResponse) {
                 ResponseUtil.error(response, 'Customer profile not found', 404);
                 return;
             }
-            ResponseUtil.success(response, customerProfile, 'Customer profile retrieved successfully', 200);
+            ResponseUtil.success(response, customerProfileResponse, 'Customer profile retrieved successfully', 200);
         }
         catch (error) {
             const message = error instanceof Error ? error.message : String(error);
@@ -57,12 +57,12 @@ export class CustomerApi {
         try {
             const { userId } = request.params;
             const updateRequest: UpdateCustomerProfileRequest = request.body;
-            const customerProfile = await this.customerService.updateCustomerProfile(userId, updateRequest);
-            if (!customerProfile) {
+            const customerProfileResponse = await this.customerService.updateCustomerProfile(userId, updateRequest);
+            if (!customerProfileResponse) {
                 ResponseUtil.error(response, 'Customer profile not found or update failed', 404);
                 return;
             }
-            ResponseUtil.success(response, customerProfile, 'Customer profile updated successfully', 200);
+            ResponseUtil.success(response, customerProfileResponse, 'Customer profile updated successfully', 200);
         }
         catch (error) {
             const message = error instanceof Error ? error.message : String(error);

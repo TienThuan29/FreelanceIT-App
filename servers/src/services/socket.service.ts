@@ -12,6 +12,7 @@ import {
 import { SOCKET_CONFIG } from '@/configs/socket.config';
 import { ChatService } from '@/services/chat.service';
 import { UserRepository } from '@/repositories/user.repo';
+import { ProjectTeamRepository } from '@/repositories/project-team.repo';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -50,10 +51,12 @@ export class SocketService {
   private readonly conversationJoinLeaveTimestamps: Map<string, number> = new Map(); // userId_conversationId -> timestamp
   private readonly chatService: ChatService;
   private readonly userRepository: UserRepository;
+  private readonly projectTeamRepository: ProjectTeamRepository;
 
   constructor(server: HTTPServer, chatService: ChatService) {
     this.chatService = chatService;
     this.userRepository = new UserRepository();
+    this.projectTeamRepository = new ProjectTeamRepository();
     this.io = new SocketIOServer(server, {
       cors: {
         origin: config.CORS_ORIGIN,
@@ -166,14 +169,37 @@ export class SocketService {
         // Verify user is participant in conversation
         try {
           const conversation = await this.chatService.getConversation(conversationId);
-          if (!conversation || !conversation.participants.includes(userId)) {
+          if (!conversation) {
             socket.emit('join_conversation_error', {
               conversationId,
-              error: 'User is not a participant in this conversation'
+              error: 'Conversation not found'
             });
             return;
           }
+          
+          // For project conversations, allow joining if user is part of the project team
+          if (conversation.projectId) {
+            // Check if user is a team member of the project
+            const isTeamMember = await this.checkUserIsProjectTeamMember(userId, conversation.projectId);
+            if (!conversation.participants.includes(userId) && !isTeamMember) {
+              socket.emit('join_conversation_error', {
+                conversationId,
+                error: 'User is not a participant in this conversation'
+              });
+              return;
+            }
+          } else {
+            // For non-project conversations, strict participant check
+            if (!conversation.participants.includes(userId)) {
+              socket.emit('join_conversation_error', {
+                conversationId,
+                error: 'User is not a participant in this conversation'
+              });
+              return;
+            }
+          }
         } catch (error) {
+          logger.error('Error verifying conversation access:', error);
           return;
         }
 
@@ -547,6 +573,16 @@ export class SocketService {
       if (now - timestamp > maxAge) {
         this.conversationJoinLeaveTimestamps.delete(key);
       }
+    }
+  }
+
+  private async checkUserIsProjectTeamMember(userId: string, projectId: string): Promise<boolean> {
+    try {
+      const teamMember = await this.projectTeamRepository.findByProjectAndDeveloper(projectId, userId);
+      return teamMember !== null && teamMember.isActive;
+    } catch (error) {
+      logger.error('Error checking project team membership:', error);
+      return false;
     }
   }
 }

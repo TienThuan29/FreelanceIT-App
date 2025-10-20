@@ -46,6 +46,7 @@ export const config = {
     MESSAGE_TABLE: process.env.MESSAGE_TABLE || '',
     PLANNING_TABLE: process.env.PLANNING_TABLE || '',
     USER_PLANNING_TABLE: process.env.USER_PLANNING_TABLE || '',
+    PROJECT_FILE_TABLE: process.env.PROJECT_FILE_TABLE || '',
 
     // redis
     REDIS_HOST: process.env.REDIS_HOST || 'localhost',
@@ -79,6 +80,7 @@ export const config = {
     N8N_WEBHOOK_URL: process.env.N8N_WEBHOOK_URL || 'http://localhost:5678/webhook/4091fa09-fb9a-4039-9411-7104d213f601/chat',
 
     // planning
-
+    PLANNING_TABLE: process.env.PLANNING_TABLE || 'plannings',
+    USER_PLANNING_TABLE: process.env.USER_PLANNING_TABLE || 'user-plannings',
 
 } as const;

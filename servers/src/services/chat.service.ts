@@ -67,6 +67,16 @@ export class ChatService {
     }
   }
 
+  // Find conversation by project ID
+  async findConversationByProjectId(projectId: string): Promise<Conversation | null> {
+    try {
+      return await this.chatRepository.findConversationByProjectId(projectId);
+    } catch (error) {
+      logger.error('Error finding conversation by project ID:', error);
+      return null;
+    }
+  }
+
   // Get user conversations
   async getUserConversations(userId: string): Promise<Conversation[]> {
     try {

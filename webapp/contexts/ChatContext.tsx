@@ -451,6 +451,61 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       }
     });
 
+    // Handle conversation updated event
+    newSocket.on('conversation_updated', (data: { conversationId: string; name?: string; participants?: string[]; updatedAt: string }) => {
+      console.log('=== CONVERSATION UPDATED ===');
+      console.log('Conversation:', data.conversationId, 'updated');
+      console.log('New participants:', data.participants);
+      console.log('Current user ID:', user?.id);
+      console.log('Current conversation ID:', currentConversation?.id);
+      
+      // Update the conversation in the conversations list
+      setConversations(prev => {
+        return prev.map(conv => {
+          if (conv.id === data.conversationId) {
+            return {
+              ...conv,
+              name: data.name || conv.name,
+              participants: data.participants || conv.participants,
+              updatedAt: data.updatedAt
+            };
+          }
+          return conv;
+        });
+      });
+      
+      // If this is the current conversation, update it as well
+      if (currentConversation?.id === data.conversationId) {
+        console.log('Updating current conversation with new participants');
+        setCurrentConversation(prev => {
+          if (prev) {
+            return {
+              ...prev,
+              name: data.name || prev.name,
+              participants: data.participants || prev.participants,
+              updatedAt: data.updatedAt
+            };
+          }
+          return prev;
+        });
+      }
+      
+      // If user is in the updated participants list and doesn't have current conversation set, set it
+      if (user?.id && data.participants?.includes(user.id) && !currentConversation) {
+        console.log('User is in updated participants, setting as current conversation');
+        const updatedConversation = {
+          id: data.conversationId,
+          name: data.name || 'Conversation',
+          participants: data.participants,
+          createdAt: data.updatedAt, // Use updatedAt as fallback
+          updatedAt: data.updatedAt,
+          isArchived: false
+        };
+        setCurrentConversation(updatedConversation);
+        joinConversation(data.conversationId);
+      }
+    });
+
     newSocket.on('message_read', (data: { messageId: string; readBy: string; timestamp: string }) => {
       updateMessageReadStatus(data.messageId, data.timestamp);
     });
@@ -578,6 +633,16 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
         // Auto-join the conversation room for real-time messaging
         console.log('Auto-joining conversation room:', conversation.id);
         newSocket.emit('join_conversation', conversation.id);
+        
+        // If user doesn't have a current conversation set, set this one as current
+        if (!currentConversation) {
+          console.log('Setting new conversation as current conversation');
+          setCurrentConversation(conversation);
+        }
+        
+        // Reload conversations to ensure we have the latest data
+        console.log('Reloading conversations after receiving conversation_created event');
+        loadConversations();
         
         // Show notification for the receiver (not the creator)
         if (currentConversation?.id !== conversation.id) {

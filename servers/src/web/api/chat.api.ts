@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { ChatService } from '@/services/chat.service';
 import logger from '@/libs/logger';
 import { ResponseUtil } from '@/libs/response';
-import { 
+import {
   CreateConversationInput,
   GetConversationMessagesInput,
   MarkMessagesReadInput
@@ -56,7 +56,7 @@ export class ChatApi {
       // Verify user is participant in conversation
       const conversation = await this.chatService.getConversation(conversationId);
       console.log('Tìm thấy cuộc trò chuyện:', conversation);
-      
+
       if (!conversation) {
         console.log('Không tìm thấy cuộc trò chuyện:', conversationId);
         ResponseUtil.error(res, 'Không tìm thấy cuộc trò chuyện', 404);
@@ -93,7 +93,7 @@ export class ChatApi {
       console.log('API tạo cuộc trò chuyện được gọi');
       console.log('Request body:', req.body);
       console.log('Request headers:', req.headers);
-      
+
       const userId = (req as any).user?.id;
       const { participantId, participantIds, projectId, name } = req.body;
 
@@ -123,17 +123,77 @@ export class ChatApi {
 
       console.log('Mảng người tham gia cuối cùng:', participants);
 
-      // Check if conversation already exists
-      console.log('Đang kiểm tra cuộc trò chuyện đã tồn tại...');
-      const existingConversation = await this.chatService.findConversationByParticipants(
-        participants,
-        projectId
-      );
+      // For project conversations, check if conversation already exists by projectId
+      let existingConversation: any = null;
+      if (projectId) {
+        console.log('Đang kiểm tra cuộc trò chuyện dự án đã tồn tại...');
+        existingConversation = await this.chatService.findConversationByProjectId(projectId);
 
-      if (existingConversation) {
-        console.log('Tìm thấy cuộc trò chuyện đã tồn tại:', existingConversation.id);
-        ResponseUtil.success(res, existingConversation, 'Tìm thấy cuộc trò chuyện đã tồn tại');
-        return;
+        if (existingConversation) {
+          console.log('Tìm thấy cuộc trò chuyện dự án đã tồn tại:', existingConversation.id);
+
+          // Check if all current participants are in the conversation
+          const missingParticipants = participants.filter(pid => !existingConversation.participants.includes(pid));
+
+          if (missingParticipants.length > 0) {
+            console.log('Thêm thành viên mới vào cuộc trò chuyện:', missingParticipants);
+
+            // Add missing participants to the conversation
+            const updatedParticipants = [...existingConversation.participants, ...missingParticipants];
+            const updatedConversation = await this.chatService.updateConversation(existingConversation.id, {
+              participants: updatedParticipants,
+              updatedAt: new Date().toISOString()
+            });
+
+            if (updatedConversation) {
+              // Notify all participants about the conversation update
+              const io = (global as any).io;
+              if (io) {
+                // Notify new participants about the conversation
+                missingParticipants.forEach(participantId => {
+                  console.log(`Đang gửi sự kiện conversation_created đến user_${participantId}`);
+                  io.to(`user_${participantId}`).emit('conversation_created', updatedConversation);
+                });
+
+                // Notify existing participants about the update
+                const roomName = `conversation_${updatedConversation.id}`;
+                io.to(roomName).emit('conversation_updated', {
+                  conversationId: updatedConversation.id,
+                  participants: updatedConversation.participants,
+                  updatedAt: updatedConversation.updatedAt
+                });
+
+                // Also notify all existing participants individually
+                existingConversation.participants.forEach((participantId: string) => {
+                  if (!missingParticipants.includes(participantId)) {
+                    io.to(`user_${participantId}`).emit('conversation_updated', {
+                      conversationId: updatedConversation.id,
+                      participants: updatedConversation.participants,
+                      updatedAt: updatedConversation.updatedAt
+                    });
+                  }
+                });
+              }
+
+              ResponseUtil.success(res, updatedConversation, 'Đã cập nhật cuộc trò chuyện với thành viên mới');
+              return;
+            }
+          } else {
+            console.log('Tất cả thành viên đã có trong cuộc trò chuyện');
+            ResponseUtil.success(res, existingConversation, 'Tìm thấy cuộc trò chuyện đã tồn tại');
+            return;
+          }
+        }
+      } else {
+        // For non-project conversations, use the original logic
+        console.log('Đang kiểm tra cuộc trò chuyện đã tồn tại...');
+        existingConversation = await this.chatService.findConversationByParticipants(participants, projectId);
+
+        if (existingConversation) {
+          console.log('Tìm thấy cuộc trò chuyện đã tồn tại:', existingConversation.id);
+          ResponseUtil.success(res, existingConversation, 'Tìm thấy cuộc trò chuyện đã tồn tại');
+          return;
+        }
       }
 
       console.log('Đang tạo cuộc trò chuyện mới...');
@@ -145,7 +205,7 @@ export class ChatApi {
       const conversation = await this.chatService.createConversation(input);
 
       console.log('Tạo cuộc trò chuyện thành công:', conversation.id);
-      
+
       // Emit conversation_created event to all participants
       const io = (global as any).io;
       if (io) {
@@ -156,14 +216,14 @@ export class ChatApi {
             io.to(`user_${participantId}`).emit('conversation_created', conversation);
           });
           console.log('Đã gửi sự kiện conversation_created đến các người tham gia:', participants);
-          
+
           // Also emit to conversation room so all participants can join
           const roomName = `conversation_${conversation.id}`;
           console.log(`Đang gửi sự kiện conversation_created đến room: ${roomName}`);
           io.to(roomName).emit('conversation_created', conversation);
         }, 100);
       }
-      
+
       ResponseUtil.success(res, conversation, 'Tạo cuộc trò chuyện thành công', 201);
     } catch (error) {
       logger.error('Lỗi khi tạo cuộc trò chuyện:', error);
@@ -207,7 +267,7 @@ export class ChatApi {
       }
 
       const conversation = await this.chatService.getConversation(conversationId);
-      
+
       if (!conversation?.participants.includes(userId)) {
         ResponseUtil.error(res, 'Truy cập bị từ chối', 403);
         return;
@@ -238,7 +298,7 @@ export class ChatApi {
       }
 
       const conversation = await this.chatService.getConversation(conversationId);
-      
+
       if (!conversation?.participants.includes(userId)) {
         ResponseUtil.error(res, 'Truy cập bị từ chối', 403);
         return;
@@ -264,7 +324,7 @@ export class ChatApi {
       }
 
       const conversation = await this.chatService.getConversation(conversationId);
-      
+
       if (!conversation?.participants.includes(userId)) {
         ResponseUtil.error(res, 'Truy cập bị từ chối', 403);
         return;

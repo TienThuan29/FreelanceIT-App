@@ -10,6 +10,13 @@ import { formatCurrency } from '@/lib/curency'
 import { formatDate } from '@/lib/date'
 import { toast } from 'sonner'
 import { ProjectStatus } from '@/types/shared.type'
+import { 
+    FiBarChart, 
+    FiUsers, 
+    FiMessageCircle, 
+    FiFolder, 
+    FiCalendar 
+} from 'react-icons/fi'
 
 export default function ProjectRoomPage() {
     const params = useParams()
@@ -306,11 +313,11 @@ export default function ProjectRoomPage() {
                     <div className="border-b border-gray-200">
                         <nav className="-mb-px flex space-x-8">
                             {[
-                                { id: 'overview', label: 'Tổng quan', icon: '📊' },
-                                { id: 'team', label: 'Đội ngũ', icon: '👥' },
-                                { id: 'chat', label: 'Trò chuyện', icon: '💬' },
-                                { id: 'files', label: 'Tài liệu', icon: '📁' },
-                                { id: 'timeline', label: 'Timeline', icon: '📅' }
+                                { id: 'overview', label: 'Tổng quan', icon: FiBarChart },
+                                { id: 'team', label: 'Đội ngũ', icon: FiUsers },
+                                { id: 'chat', label: 'Trò chuyện', icon: FiMessageCircle },
+                                { id: 'files', label: 'Tài liệu', icon: FiFolder },
+                                { id: 'timeline', label: 'Timeline', icon: FiCalendar }
                             ].map((tab) => (
                                 <button
                                     key={tab.id}
@@ -321,7 +328,7 @@ export default function ProjectRoomPage() {
                                             : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                     }`}
                                 >
-                                    <span>{tab.icon}</span>
+                                    <tab.icon className="w-4 h-4" />
                                     {tab.label}
                                 </button>
                             ))}

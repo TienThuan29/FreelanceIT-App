@@ -15,4 +15,8 @@ export type ChatItem = {
     content: string;
     isBot: boolean;
     createdDate: string;
+    // Optional fields for structured bot responses
+    fullAnswer?: string;
+    devIds?: string[];
+    developerProfiles?: any[];
 }

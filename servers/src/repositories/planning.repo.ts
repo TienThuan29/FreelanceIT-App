@@ -73,6 +73,7 @@ export class PlanningRepository extends DynamoRepository {
 
         const planningForDynamo = {
             ...updatedPlanning,
+            createdDate: this.convertDateToISOString(updatedPlanning.createdDate),
             updateDate: this.convertDateToISOString(updatedPlanning.updateDate)
         };
 
@@ -99,6 +100,7 @@ export class PlanningRepository extends DynamoRepository {
 
             const planningForDynamo = {
                 ...updatedPlanning,
+                createdDate: this.convertDateToISOString(updatedPlanning.createdDate),
                 updateDate: this.convertDateToISOString(updatedPlanning.updateDate)
             };
 

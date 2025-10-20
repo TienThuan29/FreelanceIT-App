@@ -88,11 +88,12 @@ export class CustomerApi {
 
     public async getAllCustomerProfiles(request: Request, response: Response): Promise<void> {
         try {
-            const customerProfiles = await this.customerService.getAllCustomerProfiles();
-            ResponseUtil.success(response, customerProfiles, 'Customer profiles retrieved successfully', 200);
+            const customersWithProfiles = await this.customerService.getAllCustomersWithProfiles();
+            ResponseUtil.success(response, customersWithProfiles, 'Customers retrieved successfully', 200);
         }
         catch (error) {
             const message = error instanceof Error ? error.message : String(error);
+            console.error('Error in getAllCustomerProfiles API:', error);
             ResponseUtil.error(response, message, 500);
         }
     }

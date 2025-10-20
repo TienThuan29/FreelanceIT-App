@@ -7,17 +7,20 @@ import { CustomerProfile } from "@/models/user.model";
 import { CreateCustomerProfileRequest, UpdateCustomerProfileRequest } from "@/types/req/user.req";
 import { v4 as uuidv4 } from 'uuid';
 import { ChatbotSessionResponse } from "@/types/res/chatbot.res";
+import { UserRepository } from "@/repositories/user.repo";
 
 export class CustomerService {
 
     private readonly n8nChatbotService: N8NChatbotService;
     private readonly chatbotSessionRepository: ChatbotSessionRepository;
     private readonly customerProfileRepository: CustomerProfileRepository;
+    private readonly userRepository: UserRepository;
 
     constructor() {
         this.n8nChatbotService = new N8NChatbotService();
         this.chatbotSessionRepository = new ChatbotSessionRepository();
         this.customerProfileRepository = new CustomerProfileRepository();
+        this.userRepository = new UserRepository();
     }
 
     // CustomerProfile CRUD operations
@@ -53,6 +56,29 @@ export class CustomerService {
 
     public async getAllCustomerProfiles(): Promise<CustomerProfile[]> {
         return await this.customerProfileRepository.findAll();
+    }
+
+    public async getAllCustomersWithProfiles(): Promise<any[]> {
+        try {
+            // Get all users with CUSTOMER role
+            const customers = await this.userRepository.findByRole('CUSTOMER');
+            
+            // Get customer profiles for each user
+            const customersWithProfiles = await Promise.all(
+                customers.map(async (user) => {
+                    const customerProfile = await this.customerProfileRepository.findByUserId(user.id);
+                    return {
+                        ...user,
+                        customerProfile: customerProfile || null
+                    };
+                })
+            );
+            
+            return customersWithProfiles;
+        } catch (error) {
+            console.error('Error in getAllCustomersWithProfiles:', error);
+            throw error;
+        }
     }
 
     // Existing chatbot methods

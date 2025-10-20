@@ -5,6 +5,10 @@ export const PageUrl = {
     LOGIN_PAGE: '/login',
 
     SYSTEM_DASHBOARD_PAGE: '/system',
+    ADMIN_DASHBOARD_PAGE: '/admin',
+    ADMIN_USERS_PAGE: '/admin/users',
+    ADMIN_PLANNING_PAGE: '/admin/planning',
+    ADMIN_PROJECTS_PAGE: '/admin/projects',
 
     Customer: {
         PROJECTS_PAGE: '/projects',

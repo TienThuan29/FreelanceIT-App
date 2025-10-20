@@ -14,6 +14,9 @@ router.put('/profile/:userId', authorize(['CUSTOMER']), customerApi.updateCustom
 router.delete('/profile/:userId', authorize(['CUSTOMER']), customerApi.deleteCustomerProfile);
 router.get('/profiles', authorize(['CUSTOMER']), customerApi.getAllCustomerProfiles);
 
+// Admin routes for customer management
+router.get('/admin/list', authorize(['ADMIN']), customerApi.getAllCustomerProfiles);
+
 // Chatbot routes
 router.post('/chatbot/send-message', authorize(['CUSTOMER']), customerApi.sendMessage);
 router.post('/chatbot/get-sessions', authorize(['CUSTOMER']), customerApi.getChatbotSessionsByUserId);

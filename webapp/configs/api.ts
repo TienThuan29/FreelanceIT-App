@@ -50,6 +50,8 @@ export const Api = {
         UPDATE_SKILL: '/api/v1/developers/skills/update',
         REMOVE_SKILL: '/api/v1/developers/skills/remove',
         GET_SKILLS: '/api/v1/developers/skills',
+        // Admin endpoints
+        ADMIN_GET_LIST: '/api/v1/developers/admin/list',
     },
 
     Customer: {
@@ -64,6 +66,9 @@ export const Api = {
         SEND_MESSAGE: '/api/v1/customers/chatbot/send-message',
         GET_SESSIONS: '/api/v1/customers/chatbot/get-sessions',
         GET_SESSION: '/api/v1/customers/chatbot/session',
+
+        // Admin endpoints
+        ADMIN_GET_LIST: '/api/v1/customers/admin/list',
     },
 
     Chat: {
@@ -98,20 +103,18 @@ export const Api = {
         }
     },
     Planning: {
-        // Public endpoints
-        GET_ALL_PLANNINGS: '/api/plannings',
-        GET_PLANNING_BY_ID: '/api/plannings',
+        // Public endpoints (mounted under /planning)
+        GET_ALL_PLANNINGS: '/api/v1/planning/plannings',
+        GET_PLANNING_BY_ID: '/api/v1/planning/plannings', // append /:id when used
 
         // User endpoints
-        GET_USER_PLANNINGS: '/api/user/plannings',
-        GET_ACTIVE_USER_PLANNING: '/api/user/plannings/active',
-        PURCHASE_PLANNING: '/api/plannings/purchase',
-        CONFIRM_PAYMENT: '/api/plannings',
+        GET_USER_PLANNINGS: '/api/v1/planning/user/plannings',
+        GET_ACTIVE_USER_PLANNING: '/api/v1/planning/user/plannings/active',
+        PURCHASE_PLANNING: '/api/v1/planning/plannings/purchase',
+        CONFIRM_PAYMENT: '/api/v1/planning/plannings', // append /:orderId/confirm-payment when used
 
-        // Admin endpoints
-        CREATE_PLANNING: '/api/admin/plannings',
-        UPDATE_PLANNING: '/api/admin/plannings',
-        DELETE_PLANNING: '/api/admin/plannings',
+        // Admin endpoints (protected)
+        ADMIN_PLANNINGS: '/api/v1/planning/admin/plannings', // GET (list), POST (create)
     },
     Momo: {
         CREATE_PAYMENT: '/api/v1/momo/payment',

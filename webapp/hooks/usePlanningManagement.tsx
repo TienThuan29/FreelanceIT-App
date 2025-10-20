@@ -21,6 +21,10 @@ interface UsePlanningManagementReturn {
   refreshPlannings: () => Promise<void>;
   refreshUserPlannings: (userId?: string) => Promise<void>;
   clearError: () => void;
+  // Admin CRUD operations
+  createPlanning: (planningData: Partial<Planning>) => Promise<Planning | null>;
+  updatePlanning: (id: string, planningData: Partial<Planning>) => Promise<Planning | null>;
+  deletePlanning: (id: string) => Promise<boolean>;
 }
 
 export const usePlanningManagement = (): UsePlanningManagementReturn => {
@@ -41,13 +45,14 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
     console.error(`Error ${operation}:`, error);
   }, []);
 
-  // Get all plannings (using mock data)
+  // Get all plannings (ADMIN scope)
   const getAllPlannings = useCallback(async (): Promise<Planning[]> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
-      
-      const plannings = await mockPlanningAPI.getAllPlannings();
-      
+      // Admin list requires auth; returns full list
+      const response = await axiosInstance.get(Api.Planning.ADMIN_PLANNINGS);
+      const plannings: Planning[] = response.data.dataResponse || [];
+
       setState(prev => ({
         ...prev,
         plannings,
@@ -61,13 +66,13 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
     }
   }, [handleError]);
 
-  // Get planning by ID
+  // Get planning by ID (ADMIN scope)
   const getPlanningById = useCallback(async (id: string): Promise<Planning | null> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
-      
-      const planning = await mockPlanningAPI.getPlanningById(id);
-      
+      const response = await axiosInstance.get(`${Api.Planning.ADMIN_PLANNINGS}/${id}`);
+      const planning: Planning | null = response.data.dataResponse || null;
+
       setState(prev => ({
         ...prev,
         isLoading: false,
@@ -85,9 +90,9 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      // Use mock user ID if not provided
-      const mockUserId = userId || 'user-1';
-      const userPlannings = await mockPlanningAPI.getUserPlannings(mockUserId);
+      // ✅ Gọi API thực tế
+      const response = await axiosInstance.get(Api.Planning.GET_USER_PLANNINGS);
+      const userPlannings = response.data.dataResponse || [];
       
       setState(prev => ({
         ...prev,
@@ -100,16 +105,16 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
       handleError(error, 'fetch user plannings');
       return [];
     }
-  }, [handleError]);
+  }, [axiosInstance, handleError]);
 
   // Get active user planning
   const getActiveUserPlanning = useCallback(async (userId?: string): Promise<UserPlanning | null> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      // Use mock user ID if not provided
-      const mockUserId = userId || 'user-1';
-      const activeUserPlanning = await mockPlanningAPI.getActiveUserPlanning(mockUserId);
+      // ✅ Gọi API thực tế
+      const response = await axiosInstance.get(Api.Planning.GET_ACTIVE_USER_PLANNING);
+      const activeUserPlanning = response.data.dataResponse;
       
       setState(prev => ({
         ...prev,
@@ -122,7 +127,7 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
       handleError(error, 'fetch active user planning');
       return null;
     }
-  }, [handleError]);
+  }, [axiosInstance, handleError]);
 
   // Purchase planning
   const purchasePlanning = useCallback(async (purchaseRequest: PlanningPurchaseRequest): Promise<UserPlanning | null> => {
@@ -182,16 +187,73 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
     await Promise.all([getUserPlannings(userId), getActiveUserPlanning(userId)]);
   }, [getUserPlannings, getActiveUserPlanning]);
 
+  // Admin CRUD operations
+  const createPlanning = useCallback(async (planningData: Partial<Planning>): Promise<Planning | null> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      
+      const response = await axiosInstance.post(Api.Planning.ADMIN_PLANNINGS, planningData);
+      const newPlanning: Planning = response.data.dataResponse;
+      
+      setState(prev => ({
+        ...prev,
+        plannings: [...prev.plannings, newPlanning],
+        isLoading: false,
+      }));
+
+      toast.success('Tạo gói planning thành công');
+      return newPlanning;
+    } catch (error) {
+      handleError(error, 'create planning');
+      return null;
+    }
+  }, [axiosInstance, handleError]);
+
+  const updatePlanning = useCallback(async (id: string, planningData: Partial<Planning>): Promise<Planning | null> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      
+      const response = await axiosInstance.put(`${Api.Planning.ADMIN_PLANNINGS}/${id}`, planningData);
+      const updatedPlanning: Planning = response.data.dataResponse;
+      
+      setState(prev => ({
+        ...prev,
+        plannings: prev.plannings.map(p => p.id === id ? updatedPlanning : p),
+        isLoading: false,
+      }));
+
+      toast.success('Cập nhật gói planning thành công');
+      return updatedPlanning;
+    } catch (error) {
+      handleError(error, 'update planning');
+      return null;
+    }
+  }, [axiosInstance, handleError]);
+
+  const deletePlanning = useCallback(async (id: string): Promise<boolean> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      
+      await axiosInstance.delete(`${Api.Planning.ADMIN_PLANNINGS}/${id}`);
+      
+      setState(prev => ({
+        ...prev,
+        plannings: prev.plannings.filter(p => p.id !== id),
+        isLoading: false,
+      }));
+
+      toast.success('Xóa gói planning thành công');
+      return true;
+    } catch (error) {
+      handleError(error, 'delete planning');
+      return false;
+    }
+  }, [axiosInstance, handleError]);
+
   // Clear error
   const clearError = useCallback(() => {
     setState(prev => ({ ...prev, error: null }));
   }, []);
-
-
-
-
-  
-
 
   return {
     plannings: state.plannings,
@@ -208,5 +270,8 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
     refreshPlannings,
     refreshUserPlannings,
     clearError,
+    createPlanning,
+    updatePlanning,
+    deletePlanning,
   };
 };

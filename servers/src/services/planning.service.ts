@@ -1,4 +1,4 @@
-import { Planning, UserPlanning, PlanningPurchaseRequest } from '@/models/planning.model';
+import { Planning, UserPlanning, PlanningPurchaseRequest, UserPlanningWithDetails } from '@/models/planning.model';
 import { PlanningRepository, UserPlanningRepository } from '@/repositories/planning.repo';
 import { UserRepository } from '@/repositories/user.repo';
 import logger from '@/libs/logger';
@@ -75,11 +75,32 @@ export class PlanningService {
     }
 
     public async getUserPlannings(userId: string): Promise<UserPlanning[]> {
-        return await this.userPlanningRepository.findByUserId(userId);
+        const userPlannings = await this.userPlanningRepository.findByUserId(userId);
+
+        // Populate planning details khi cần thiết
+        const populatedPlannings = await Promise.all(
+            userPlannings.map(async (userPlanning) => {
+                const planning = await this.planningRepository.findById(userPlanning.planningId);
+                return {
+                    ...userPlanning,
+                    planning: planning  // Chỉ populate khi cần
+                };
+            })
+        );
+
+        return populatedPlannings;
     }
 
-    public async getActiveUserPlanning(userId: string): Promise<UserPlanning | null> {
-        return await this.userPlanningRepository.findActiveByUserId(userId);
+    public async getActiveUserPlanning(userId: string): Promise<UserPlanningWithDetails | null> {
+        const activeUserPlanning = await this.userPlanningRepository.findActiveByUserId(userId);
+        if (!activeUserPlanning) return null;
+
+        // ✅ Populate planning details
+        const planning = await this.planningRepository.findById(activeUserPlanning.planningId);
+        return {
+            ...activeUserPlanning,
+            planning: planning
+        } as UserPlanningWithDetails;
     }
 
     public async confirmPayment(orderId: string): Promise<UserPlanning | null> {

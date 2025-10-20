@@ -1,7 +1,8 @@
 import { CheckMomo, CreateMomoPaymentRequest } from "../types/req/momo.req.js";
 import axios from "axios";
 import crypto from "crypto";import { UserPlanningRepository } from "@/repositories/userplanning.repo";
-
+import { TransactionHistoryRepository } from "@/repositories/transaction-history.repo";
+import { v4 as uuidv4 } from 'uuid';
 
 
 export class MomoService {
@@ -79,6 +80,20 @@ export class MomoService {
       const { orderId, amount, extraData } = payload;
       const { userId, planningId } = JSON.parse(extraData);
 
+
+       const now = new Date();
+        const transactionHistoryRepo = new TransactionHistoryRepository();
+          await transactionHistoryRepo.create({
+      id: uuidv4(),
+      orderId,
+      userId,
+      amount,
+      status: 'SUCCESS',
+      paymentTransId: payload.transId || null,
+      payType: payload.payType || null,
+      message: "Đã Thanh Toán",
+      paidAt: now,
+    });
 
       console.log(payload.body);
       const userPlanningRepo = new UserPlanningRepository();

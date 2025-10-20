@@ -59,7 +59,7 @@ export const Api = {
         UPDATE_PROFILE: '/api/v1/customers/profile',
         DELETE_PROFILE: '/api/v1/customers/profile',
         GET_ALL_PROFILES: '/api/v1/customers/profiles',
-        
+
         // Chatbot endpoints
         SEND_MESSAGE: '/api/v1/customers/chatbot/send-message',
         GET_SESSIONS: '/api/v1/customers/chatbot/get-sessions',
@@ -105,5 +105,28 @@ export const Api = {
             GET_PROVINCES: 'https://production.cas.so/address-kit/2025-07-01/provinces',
             GET_COMMUNES_FROM_PROVINCE: 'https://production.cas.so/address-kit/2025-07-01/provinces/{province_id}/communes',
         }
+    },
+    Planning: {
+        // Public endpoints
+        GET_ALL_PLANNINGS: '/api/plannings',
+        GET_PLANNING_BY_ID: '/api/plannings',
+
+        // User endpoints
+        GET_USER_PLANNINGS: '/api/user/plannings',
+        GET_ACTIVE_USER_PLANNING: '/api/user/plannings/active',
+        PURCHASE_PLANNING: '/api/plannings/purchase',
+        CONFIRM_PAYMENT: '/api/plannings',
+
+        // Admin endpoints
+        CREATE_PLANNING: '/api/admin/plannings',
+        UPDATE_PLANNING: '/api/admin/plannings',
+        DELETE_PLANNING: '/api/admin/plannings',
+    },
+    Momo: {
+        CREATE_PAYMENT: '/api/v1/momo/payment',
+        CONFIRM_PAYMENT: '/api/momo/confirm-payment',
+        CHECK_STATUS: '/api/v1/payment/momo/status',
+        VERIFY_CALLBACK: '/api/v1/payment/momo/verify',
+        REFUND: '/api/v1/payment/momo/refund',
     }
 }

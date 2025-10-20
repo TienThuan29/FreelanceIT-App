@@ -1,64 +1,45 @@
 export type Planning = {
-    id: string;
-    name: string;
-    description: string;
-    price: number;
-    currency: string;
-    duration: number; // in days
-    durationType: DurationType;
-    features: PlanningFeature[];
-    isActive: boolean;
-    maxProjects?: number;
-    maxStorage?: number; // in MB
-    prioritySupport: boolean;
-    createdBy: string; // ADMIN user ID
-    createdDate: Date;
-    updatedDate: Date;
+    id: string; // UUID
+    name: string; // varchar(60)
+    description: string; // Text
+    price: number; // numeric(38,2)
+    dailyLimit: number; // integer - số requests per day
+    daysLimit: number; // integer - thời hạn gói (days)
+    aiModel: AiModelConfig; // object - AI model configuration
+    isDeleted: boolean; // boolean - soft delete flag
+    createdDate: Date; // timestamp
+    updateDate: Date; // timestamp
 }
 
-export type PlanningFeature = {
-    id: string;
-    name: string;
-    description?: string;
-    isIncluded: boolean;
-}
-
-export enum DurationType {
-    DAYS = 'DAYS',
-    MONTHS = 'MONTHS',
-    YEARS = 'YEARS'
+export type AiModelConfig = {
+    modelType: 'basic' | 'pro' | 'enterprise' | 'developer';
+    features: string[];
+    maxTokens: number;
+    responseTime: 'standard' | 'fast' | 'ultra-fast';
+    integrations?: string[];
+    languages?: string[];
+    customTraining?: boolean;
+    sla?: string;
 }
 
 export type UserPlanning = {
-    id: string;
-    userId: string;
-    planningId: string;
-    planning: Planning;
-    startDate: Date;
-    endDate: Date;
-    isActive: boolean;
-    paymentStatus: PaymentStatus;
-    paymentMethod?: string;
-    transactionId?: string;
-    createdDate: Date;
-    updatedDate: Date;
-}
-
-export enum PaymentStatus {
-    PENDING = 'PENDING',
-    COMPLETED = 'COMPLETED',
-    FAILED = 'FAILED',
-    REFUNDED = 'REFUNDED'
+    userId: string; // string (FK to User.id)
+    planningId: string; // string (FK to Planning.id)
+    planning?: Planning;
+    orderId: string; // varchar(255) - unique order identifier
+    transactionDate: Date; // timestamp - when plan was purchased
+    price: number; // numeric(38,2) - actual price paid
+    isEnable: boolean; // boolean - if this subscription is active
 }
 
 export type PlanningPurchaseRequest = {
     planningId: string;
-    paymentMethod: string;
-    transactionId?: string;
+    orderId: string;
+    price: number;
 }
 
 export type PlanningPaymentResponse = {
-    userPlanningId: string;
+    orderId: string;
     payUrl?: string;
     status: string;
     message: string;

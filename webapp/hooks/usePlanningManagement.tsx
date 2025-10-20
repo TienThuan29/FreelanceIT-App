@@ -3,7 +3,8 @@ import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import useAxios from './useAxios';
 import { Api } from '@/configs/api';
-import { Planning, UserPlanning, PlanningPurchaseRequest, PaymentStatus } from '@/types/planning.type';
+import { Planning, UserPlanning, PlanningPurchaseRequest } from '@/types/planning.type';
+import { mockPlanningAPI } from '@/data/mockPlanningData';
 
 interface UsePlanningManagementReturn {
   plannings: Planning[];
@@ -13,12 +14,12 @@ interface UsePlanningManagementReturn {
   error: string | null;
   getAllPlannings: () => Promise<Planning[]>;
   getPlanningById: (id: string) => Promise<Planning | null>;
-  getUserPlannings: () => Promise<UserPlanning[]>;
-  getActiveUserPlanning: () => Promise<UserPlanning | null>;
+  getUserPlannings: (userId?: string) => Promise<UserPlanning[]>;
+  getActiveUserPlanning: (userId?: string) => Promise<UserPlanning | null>;
   purchasePlanning: (purchaseRequest: PlanningPurchaseRequest) => Promise<UserPlanning | null>;
-  confirmPayment: (userPlanningId: string, transactionId: string) => Promise<UserPlanning | null>;
+  confirmPayment: (orderId: string) => Promise<UserPlanning | null>;
   refreshPlannings: () => Promise<void>;
-  refreshUserPlannings: () => Promise<void>;
+  refreshUserPlannings: (userId?: string) => Promise<void>;
   clearError: () => void;
 }
 
@@ -40,13 +41,12 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
     console.error(`Error ${operation}:`, error);
   }, []);
 
-  // Get all plannings (public endpoint)
+  // Get all plannings (using mock data)
   const getAllPlannings = useCallback(async (): Promise<Planning[]> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      const response = await axiosInstance.get(Api.Planning.GET_ALL_PLANNINGS);
-      const plannings = response.data.dataResponse || [];
+      const plannings = await mockPlanningAPI.getAllPlannings();
       
       setState(prev => ({
         ...prev,
@@ -59,15 +59,14 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
       handleError(error, 'fetch plannings');
       return [];
     }
-  }, [axiosInstance, handleError]);
+  }, [handleError]);
 
   // Get planning by ID
   const getPlanningById = useCallback(async (id: string): Promise<Planning | null> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      const response = await axiosInstance.get(`${Api.Planning.GET_PLANNING_BY_ID}/${id}`);
-      const planning = response.data.dataResponse;
+      const planning = await mockPlanningAPI.getPlanningById(id);
       
       setState(prev => ({
         ...prev,
@@ -79,15 +78,16 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
       handleError(error, 'fetch planning by id');
       return null;
     }
-  }, [axiosInstance, handleError]);
+  }, [handleError]);
 
   // Get user plannings
-  const getUserPlannings = useCallback(async (): Promise<UserPlanning[]> => {
+  const getUserPlannings = useCallback(async (userId?: string): Promise<UserPlanning[]> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      const response = await axiosInstance.get(Api.Planning.GET_USER_PLANNINGS);
-      const userPlannings = response.data.dataResponse || [];
+      // Use mock user ID if not provided
+      const mockUserId = userId || 'user-1';
+      const userPlannings = await mockPlanningAPI.getUserPlannings(mockUserId);
       
       setState(prev => ({
         ...prev,
@@ -100,15 +100,16 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
       handleError(error, 'fetch user plannings');
       return [];
     }
-  }, [axiosInstance, handleError]);
+  }, [handleError]);
 
   // Get active user planning
-  const getActiveUserPlanning = useCallback(async (): Promise<UserPlanning | null> => {
+  const getActiveUserPlanning = useCallback(async (userId?: string): Promise<UserPlanning | null> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      const response = await axiosInstance.get(Api.Planning.GET_ACTIVE_USER_PLANNING);
-      const activeUserPlanning = response.data.dataResponse;
+      // Use mock user ID if not provided
+      const mockUserId = userId || 'user-1';
+      const activeUserPlanning = await mockPlanningAPI.getActiveUserPlanning(mockUserId);
       
       setState(prev => ({
         ...prev,
@@ -121,19 +122,21 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
       handleError(error, 'fetch active user planning');
       return null;
     }
-  }, [axiosInstance, handleError]);
+  }, [handleError]);
 
   // Purchase planning
   const purchasePlanning = useCallback(async (purchaseRequest: PlanningPurchaseRequest): Promise<UserPlanning | null> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      const response = await axiosInstance.post(Api.Planning.PURCHASE_PLANNING, purchaseRequest);
-      const userPlanning = response.data.dataResponse;
+      // Use mock user ID
+      const mockUserId = 'user-1';
+      const userPlanning = await mockPlanningAPI.purchasePlanning(mockUserId, purchaseRequest);
       
       setState(prev => ({
         ...prev,
         userPlannings: [...prev.userPlannings, userPlanning],
+        activeUserPlanning: userPlanning,
         isLoading: false,
       }));
 
@@ -143,24 +146,21 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
       handleError(error, 'purchase planning');
       return null;
     }
-  }, [axiosInstance, handleError]);
+  }, [handleError]);
 
   // Confirm payment
-  const confirmPayment = useCallback(async (userPlanningId: string, transactionId: string): Promise<UserPlanning | null> => {
+  const confirmPayment = useCallback(async (orderId: string): Promise<UserPlanning | null> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      const response = await axiosInstance.post(`${Api.Planning.CONFIRM_PAYMENT}/${userPlanningId}`, {
-        transactionId
-      });
-      const userPlanning = response.data.dataResponse;
+      const userPlanning = await mockPlanningAPI.confirmPayment(orderId);
       
       setState(prev => ({
         ...prev,
         userPlannings: prev.userPlannings.map(up => 
-          up.id === userPlanningId ? userPlanning : up
+          up.orderId === orderId ? userPlanning : up
         ),
-        activeUserPlanning: userPlanning.isActive ? userPlanning : prev.activeUserPlanning,
+        activeUserPlanning: userPlanning.isEnable ? userPlanning : prev.activeUserPlanning,
         isLoading: false,
       }));
 
@@ -170,7 +170,7 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
       handleError(error, 'confirm payment');
       return null;
     }
-  }, [axiosInstance, handleError]);
+  }, [handleError]);
 
   // Refresh plannings
   const refreshPlannings = useCallback(async () => {
@@ -178,14 +178,20 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
   }, [getAllPlannings]);
 
   // Refresh user plannings
-  const refreshUserPlannings = useCallback(async () => {
-    await Promise.all([getUserPlannings(), getActiveUserPlanning()]);
+  const refreshUserPlannings = useCallback(async (userId?: string) => {
+    await Promise.all([getUserPlannings(userId), getActiveUserPlanning(userId)]);
   }, [getUserPlannings, getActiveUserPlanning]);
 
   // Clear error
   const clearError = useCallback(() => {
     setState(prev => ({ ...prev, error: null }));
   }, []);
+
+
+
+
+  
+
 
   return {
     plannings: state.plannings,

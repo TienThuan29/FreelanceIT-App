@@ -153,3 +153,5 @@ export class UserRepository extends DynamoRepository {
         return await this.update(userId, { isEnable });
     }
 }
+
+export const userRepositoryInstance = new UserRepository();

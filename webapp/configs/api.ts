@@ -64,6 +64,8 @@ export const Api = {
         SEND_MESSAGE: '/api/v1/customers/chatbot/send-message',
         GET_SESSIONS: '/api/v1/customers/chatbot/get-sessions',
         GET_SESSION: '/api/v1/customers/chatbot/session',
+        RENAME_SESSION: '/api/v1/customers/chatbot/session',
+        DELETE_SESSION: '/api/v1/customers/chatbot/session',
     },
 
     Chat: {
@@ -89,6 +91,13 @@ export const Api = {
         UPDATE_MEMBER: '/api/v1/project-teams/member',
         GET_MEMBER_BY_ID: '/api/v1/project-teams/member',
         GET_DEVELOPER_PROJECTS: '/api/v1/project-teams/developer/projects',
+    },
+
+    File: {
+        UPLOAD_PROJECT_FILE: '/api/v1/projects',
+        GET_PROJECT_FILES: '/api/v1/projects',
+        GET_FILE_BY_ID: '/api/v1/files',
+        DELETE_FILE: '/api/v1/files',
     },
 
     ThirdParty: {

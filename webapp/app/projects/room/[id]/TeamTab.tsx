@@ -60,11 +60,11 @@ export default function TeamTab({
                                         <h3 className="font-semibold text-gray-900">{member.developerName}</h3>
                                         <p className="text-sm text-gray-500">{member.developerEmail}</p>
                                         <div className="flex items-center gap-4 mt-1">
-                                            {member.agreedRate && (
+                                            {/* {member.agreedRate && (
                                                 <span className="text-sm text-green-600 font-medium">
                                                     {formatCurrency(member.agreedRate)}/tháng
                                                 </span>
-                                            )}
+                                            )} */}
                                             <span className={`px-2 py-1 text-xs rounded-full ${
                                                 member.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                                             }`}>

@@ -18,5 +18,7 @@ router.get('/profiles', authorize(['CUSTOMER']), customerApi.getAllCustomerProfi
 router.post('/chatbot/send-message', authorize(['CUSTOMER']), customerApi.sendMessage);
 router.post('/chatbot/get-sessions', authorize(['CUSTOMER']), customerApi.getChatbotSessionsByUserId);
 router.get('/chatbot/session/:sessionId', authorize(['CUSTOMER']), customerApi.getChatbotSessionById);
+router.put('/chatbot/session/:sessionId/rename', authorize(['CUSTOMER']), customerApi.renameChatbotSession);
+router.delete('/chatbot/session/:sessionId', authorize(['CUSTOMER']), customerApi.deleteChatbotSession);
 
 export default router;

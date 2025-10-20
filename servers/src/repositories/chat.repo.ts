@@ -79,6 +79,22 @@ export class ChatRepository {
     }
   }
 
+  async findConversationByProjectId(projectId: string): Promise<Conversation | null> {
+    try {
+      const results = await this.conversationRepo.scanItemsWithFilter(
+        'projectId = :projectId',
+        {
+          ':projectId': projectId
+        }
+      );
+      
+      return results.length > 0 ? results[0] as Conversation : null;
+    } catch (error) {
+      logger.error('ChatRepository: Error finding conversation by project ID:', error);
+      return null;
+    }
+  }
+
   async updateConversation(
     conversationId: string, 
     updates: Partial<Conversation>

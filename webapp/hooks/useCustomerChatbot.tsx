@@ -73,10 +73,43 @@ export const useCustomerChatbot = () => {
         }
     }, [axios]);
 
+    const renameChatbotSession = useCallback(async (sessionId: string, title: string): Promise<ChatbotSession> => {
+        setLoading(true);
+        setError(null);
+        
+        try {
+            const response = await axios.put(`${Api.Customer.RENAME_SESSION}/${sessionId}/rename`, { title });
+            return response.data.dataResponse;
+        } catch (err: any) {
+            const errorMessage = err.response?.data?.message || err.message || 'Failed to rename session';
+            setError(errorMessage);
+            throw new Error(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    }, [axios]);
+
+    const deleteChatbotSession = useCallback(async (sessionId: string): Promise<void> => {
+        setLoading(true);
+        setError(null);
+        
+        try {
+            await axios.delete(`${Api.Customer.DELETE_SESSION}/${sessionId}`);
+        } catch (err: any) {
+            const errorMessage = err.response?.data?.message || err.message || 'Failed to delete session';
+            setError(errorMessage);
+            throw new Error(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    }, [axios]);
+
     return {
         sendMessage,
         getChatbotSessions,
         getChatbotSession,
+        renameChatbotSession,
+        deleteChatbotSession,
         loading,
         sessionsLoading,
         error,

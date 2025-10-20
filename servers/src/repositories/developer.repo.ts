@@ -79,4 +79,23 @@ export class DeveloperRepository extends DynamoRepository {
         return this.findByUserId(id);
     }
 
+    public async findByIds(userIds: string[]): Promise<DeveloperProfile[]> {
+        try {
+            const profiles: DeveloperProfile[] = [];
+            
+            // Use batchGet for better performance when possible
+            for (const userId of userIds) {
+                const profile = await this.findByUserId(userId);
+                if (profile) {
+                    profiles.push(profile);
+                }
+            }
+            
+            return profiles;
+        } catch (error) {
+            console.error('Error finding developer profiles by IDs:', error);
+            return [];
+        }
+    }
+
 }

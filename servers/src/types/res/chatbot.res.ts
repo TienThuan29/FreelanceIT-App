@@ -7,3 +7,29 @@ export type ChatbotSessionResponse = {
     createdDate?: Date;
     updatedDate?: Date;
 }
+
+export type ChatbotMessageResponse = {
+    fullAnswer: string;
+    devIds: string[];
+    developerProfiles?: DeveloperProfileResponse[];
+}
+
+export type DeveloperProfileResponse = {
+    userId: string;
+    title?: string;
+    bio?: string;
+    hourlyRate?: number;
+    experienceYears?: number;
+    developerLevel?: string;
+    githubUrl?: string;
+    linkedinUrl?: string;
+    isAvailable?: boolean;
+    rating?: number;
+    skills?: Array<{id: string; name: string; proficiency: string; yearsOfExperience: number}>;
+    totalProjects?: number;
+    languages?: string[];
+    timezone?: string;
+    cvUrl?: string;
+    createdDate?: string;
+    updatedDate?: string;
+}

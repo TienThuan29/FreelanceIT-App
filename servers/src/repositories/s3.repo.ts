@@ -61,22 +61,22 @@ export class S3Repository {
     }
 
 
-    public async generatePresignedUploadUrl(fileName: string, contentType: string, expiresIn: number = 3600): Promise<string> {
-        try {
-            const command = new PutObjectCommand({
-                Bucket: this.bucketName,
-                Key: fileName,
-                ContentType: contentType,
-            });
+    // public async generatePresignedUploadUrl(fileName: string, contentType: string, expiresIn: number = 3600): Promise<string> {
+    //     try {
+    //         const command = new PutObjectCommand({
+    //             Bucket: this.bucketName,
+    //             Key: fileName,
+    //             ContentType: contentType,
+    //         });
 
-            const presignedUrl = await getSignedUrl(this.s3Client, command, { expiresIn });
-            return presignedUrl;
-        } 
-        catch (error) {
-            logger.error('Error generating presigned upload URL:', error);
-            throw error;
-        }
-    }
+    //         const presignedUrl = await getSignedUrl(this.s3Client, command, { expiresIn });
+    //         return presignedUrl;
+    //     } 
+    //     catch (error) {
+    //         logger.error('Error generating presigned upload URL:', error);
+    //         throw error;
+    //     }
+    // }
 
 
     public async fileExists(fileName: string): Promise<boolean> {

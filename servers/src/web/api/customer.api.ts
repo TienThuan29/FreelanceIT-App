@@ -13,6 +13,8 @@ export class CustomerApi {
         this.sendMessage = this.sendMessage.bind(this);
         this.getChatbotSessionsByUserId = this.getChatbotSessionsByUserId.bind(this);
         this.getChatbotSessionById = this.getChatbotSessionById.bind(this);
+        this.renameChatbotSession = this.renameChatbotSession.bind(this);
+        this.deleteChatbotSession = this.deleteChatbotSession.bind(this);
         this.createCustomerProfile = this.createCustomerProfile.bind(this);
         this.getCustomerProfile = this.getCustomerProfile.bind(this);
         this.updateCustomerProfile = this.updateCustomerProfile.bind(this);
@@ -131,6 +133,37 @@ export class CustomerApi {
                 return;
             }
             ResponseUtil.success(response, chatbotSession, 'Chatbot session', 200);
+        }
+        catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            ResponseUtil.error(response, message, 500);
+        }
+    }
+
+    public async renameChatbotSession(request: Request, response: Response): Promise<void> {
+        try {
+            const { sessionId } = request.params;
+            const { title } = request.body;
+            
+            if (!title || title.trim() === '') {
+                ResponseUtil.error(response, 'Title is required', 400);
+                return;
+            }
+
+            const chatbotSession = await this.customerService.renameChatbotSession(sessionId, title.trim());
+            ResponseUtil.success(response, chatbotSession, 'Chatbot session renamed successfully', 200);
+        }
+        catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            ResponseUtil.error(response, message, 500);
+        }
+    }
+
+    public async deleteChatbotSession(request: Request, response: Response): Promise<void> {
+        try {
+            const { sessionId } = request.params;
+            await this.customerService.deleteChatbotSession(sessionId);
+            ResponseUtil.success(response, null, 'Chatbot session deleted successfully', 200);
         }
         catch (error) {
             const message = error instanceof Error ? error.message : String(error);

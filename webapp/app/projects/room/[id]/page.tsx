@@ -56,6 +56,7 @@ export default function ProjectRoomPage() {
         joinConversation,
         setEnableSocket,
         loadMessages,
+        loadConversations,
         isConnected
     } = useChat()
 
@@ -87,9 +88,35 @@ export default function ProjectRoomPage() {
                 isConnected,
                 conversationsCount: conversations.length
             })
-            createProjectChat()
+            // Reload conversations first to ensure we have the latest data
+            loadConversations().then(() => {
+                createProjectChat()
+            })
         }
     }, [teamMembers, user, isConnected])
+
+    // Refresh conversation when team members change (for new members)
+    useEffect(() => {
+        if (teamMembers.length > 0 && user && isConnected && projectConversation) {
+            const currentParticipantIds = teamMembers.map(member => member.developerId)
+            if (user?.id && !currentParticipantIds.includes(user.id)) {
+                currentParticipantIds.push(user.id)
+            }
+
+            const existingParticipantIds = projectConversation.participants || []
+            
+            // Check if there are new team members not in the conversation
+            const newMembers = currentParticipantIds.filter(pid => !existingParticipantIds.includes(pid))
+            
+            if (newMembers.length > 0) {
+                console.log('New team members detected, refreshing conversation:', newMembers)
+                // Reload conversations first to get the updated conversation
+                loadConversations().then(() => {
+                    createProjectChat()
+                })
+            }
+        }
+    }, [teamMembers])
 
 
     const fetchProjectData = async () => {
@@ -117,41 +144,24 @@ export default function ProjectRoomPage() {
             console.log('Creating project chat for project:', projectId)
             console.log('Team members:', teamMembers)
             
-            // Check if project chat already exists
-            const existingChat = conversations.find(conv => 
-                conv.projectId === projectId
-            )
-            
-            if (existingChat) {
-                console.log('Found existing project chat:', existingChat.id)
-                setProjectConversation(existingChat)
-                setCurrentConversation(existingChat)
-                console.log('Joining existing conversation:', existingChat.id)
-                joinConversation(existingChat.id)
-                // Load messages for the existing conversation
-                console.log('Loading messages for conversation:', existingChat.id)
-                await loadMessages(existingChat.id)
-                setIsCreatingChat(false)
-                return
-            }
-
-            // Create new project chat with all team members
+            // Always try to create or find the conversation with all current team members
+            // This ensures new members get access even if they weren't in the original conversation
             const participantIds = teamMembers.map(member => member.developerId)
             if (user?.id && !participantIds.includes(user.id)) {
                 participantIds.push(user.id)
             }
 
-            console.log('Creating new conversation with participants:', participantIds)
+            console.log('Creating/finding conversation with participants:', participantIds)
             const chat = await createConversation(participantIds, projectId)
 
             if (chat) {
-                console.log('Created new conversation:', chat.id)
+                console.log('Got conversation:', chat.id)
                 setProjectConversation(chat)
                 setCurrentConversation(chat)
-                console.log('Joining new conversation:', chat.id)
+                console.log('Joining conversation:', chat.id)
                 joinConversation(chat.id)
-                // Load messages for the new conversation
-                console.log('Loading messages for new conversation:', chat.id)
+                // Load messages for the conversation
+                console.log('Loading messages for conversation:', chat.id)
                 await loadMessages(chat.id)
             }
             setIsCreatingChat(false)
@@ -235,11 +245,6 @@ export default function ProjectRoomPage() {
             console.error('Project Room: Error sending message:', error)
             toast.error('Không thể gửi tin nhắn')
         }
-    }
-
-    const handleUpload = () => {
-        // TODO: Implement file upload functionality
-        toast.info('Tính năng tải lên tài liệu sẽ được phát triển sớm')
     }
 
     const getProjectStatusColor = (status: ProjectStatus) => {
@@ -429,7 +434,9 @@ export default function ProjectRoomPage() {
 
                 {/* Files Tab */}
                 {activeTab === 'files' && (
-                    <FilesTab onUpload={handleUpload} />
+                    <FilesTab 
+                        projectId={projectId}
+                    />
                 )}
 
                 {/* Timeline Tab */}

@@ -4,13 +4,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleValidator } from "@/hooks/useRoleValidator";
 import { useCustomerChatbot, ChatbotSendMessageRequest, ChatbotSessionResponse } from "@/hooks/useCustomerChatbot";
-import { ChatbotSession, ChatItem } from '@/types/chatbot.type';
-import SmartNavbar from '@/components/SmartNavbar';
+import { ChatbotSession, ChatItem, ChatbotMessageResponse } from '@/types/chatbot.type';
+import DeveloperProfileCard from '@/components/chat/DeveloperProfileCard';
 
 export default function ChatBotPage() {
   const { user } = useAuth();
   const { isDeveloper, isCustomer } = useRoleValidator(user);
-  const { sendMessage, getChatbotSessions, getChatbotSession, loading, sessionsLoading, error, clearError } = useCustomerChatbot();
+  const { sendMessage, getChatbotSessions, getChatbotSession, renameChatbotSession, deleteChatbotSession, loading, sessionsLoading, error, clearError } = useCustomerChatbot();
 
   // State management
   const [currentSession, setCurrentSession] = useState<ChatbotSession | null>(null);
@@ -18,6 +18,9 @@ export default function ChatBotPage() {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Load chat history on component mount
@@ -31,6 +34,18 @@ export default function ChatBotPage() {
   useEffect(() => {
     scrollToBottom();
   }, [currentSession?.chatItems]);
+
+  // Close dropdown menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setOpenMenuId(null);
+    };
+
+    if (openMenuId) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [openMenuId]);
 
   const loadChatHistory = async () => {
     if (!user?.id) return;
@@ -134,6 +149,46 @@ export default function ChatBotPage() {
     clearError();
   };
 
+  const handleRenameSession = (sessionId: string, currentTitle: string) => {
+    setEditingSessionId(sessionId);
+    setEditingTitle(currentTitle || '');
+    setOpenMenuId(null);
+  };
+
+  const handleSaveRename = async () => {
+    if (!editingSessionId || !editingTitle.trim()) return;
+    
+    try {
+      await renameChatbotSession(editingSessionId, editingTitle.trim());
+      await loadChatHistory(); // Refresh the list
+      setEditingSessionId(null);
+      setEditingTitle('');
+    } catch (err) {
+      console.error('Failed to rename session:', err);
+    }
+  };
+
+  const handleDeleteSession = async (sessionId: string) => {
+    if (!confirm('Bạn có chắc chắn muốn xóa cuộc trò chuyện này?')) return;
+    
+    try {
+      await deleteChatbotSession(sessionId);
+      await loadChatHistory(); // Refresh the list
+      
+      // If the deleted session was currently active, clear it
+      if (currentSession?.sessionId === sessionId) {
+        setCurrentSession(null);
+      }
+    } catch (err) {
+      console.error('Failed to delete session:', err);
+    }
+  };
+
+  const handleMenuToggle = (sessionId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setOpenMenuId(openMenuId === sessionId ? null : sessionId);
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('vi-VN', {
       day: '2-digit',
@@ -142,6 +197,19 @@ export default function ChatBotPage() {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  // Helper function to get chatbot message data
+  const getChatbotMessageData = (message: ChatItem): { text: string; developerProfiles?: any[] } => {
+    // If message has structured data, use it directly
+    if (message.fullAnswer) {
+      return {
+        text: message.fullAnswer,
+        developerProfiles: message.developerProfiles || []
+      };
+    }
+    // Fallback to content for backward compatibility
+    return { text: message.content };
   };
 
   return (
@@ -181,19 +249,79 @@ export default function ChatBotPage() {
                 {chatHistory.map((session) => (
                   <div
                     key={session.sessionId}
-                    onClick={() => handleSessionSelect(session)}
-                    className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                    className={`p-3 rounded-lg cursor-pointer transition-colors relative ${
                       currentSession?.sessionId === session.sessionId
                         ? 'bg-blue-100 border border-blue-300'
                         : 'bg-gray-50 hover:bg-gray-100 border border-gray-200'
                     }`}
                   >
-                    <h3 className="font-medium text-sm truncate text-gray-800">
-                      {session.title || 'Trò chuyện mới'}
-                    </h3>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {session.createdDate && formatDate(session.createdDate)}
-                    </p>
+                    {editingSessionId === session.sessionId ? (
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="text"
+                          value={editingTitle}
+                          onChange={(e) => setEditingTitle(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && handleSaveRename()}
+                          onBlur={handleSaveRename}
+                          className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          autoFocus
+                        />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSaveRename();
+                          }}
+                          className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                        >
+                          Lưu
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <div onClick={() => handleSessionSelect(session)}>
+                          <h3 className="font-medium text-sm truncate text-gray-800 pr-8">
+                            {session.title || 'Trò chuyện mới'}
+                          </h3>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {session.createdDate && formatDate(session.createdDate)}
+                          </p>
+                        </div>
+                        
+                        {/* Menu Button */}
+                        <button
+                          onClick={(e) => handleMenuToggle(session.sessionId, e)}
+                          className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded"
+                        >
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                          </svg>
+                        </button>
+                        
+                        {/* Dropdown Menu */}
+                        {openMenuId === session.sessionId && (
+                          <div className="absolute top-8 right-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRenameSession(session.sessionId, session.title || '');
+                              }}
+                              className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-lg"
+                            >
+                              Đổi tên
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteSession(session.sessionId);
+                              }}
+                              className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 last:rounded-b-lg"
+                            >
+                              Xóa
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
                 ))}
               </div>
@@ -252,22 +380,46 @@ export default function ChatBotPage() {
             ) : (
               <>
                 {/* Chat messages */}
-                {currentSession.chatItems?.map((message, index) => (
-                  <div key={index} className={`flex ${message.isBot ? 'justify-start' : 'justify-end'}`}>
-                    <div className={`max-w-3xl p-4 rounded-lg ${
-                      message.isBot
-                        ? 'bg-gray-100 text-gray-800'
-                        : 'bg-blue-600 text-white'
-                    }`}>
-                      <p className="whitespace-pre-line">{message.content}</p>
-                      <p className={`text-xs mt-2 ${
-                        message.isBot ? 'text-gray-500' : 'text-blue-100'
-                      }`}>
-                        {formatDate(message.createdDate)}
-                      </p>
+                {currentSession.chatItems?.map((message, index) => {
+                  const messageData = message.isBot ? getChatbotMessageData(message) : { text: message.content };
+                  
+                  return (
+                    <div key={index} className={`flex ${message.isBot ? 'justify-start' : 'justify-end'}`}>
+                      <div className={`max-w-3xl ${message.isBot ? 'w-full' : ''}`}>
+                        {/* Text message */}
+                        <div className={`p-4 rounded-lg ${
+                          message.isBot
+                            ? 'bg-gray-100 text-gray-800'
+                            : 'bg-blue-600 text-white'
+                        }`}>
+                          <p className="whitespace-pre-line">{messageData.text}</p>
+                          <p className={`text-xs mt-2 ${
+                            message.isBot ? 'text-gray-500' : 'text-blue-100'
+                          }`}>
+                            {formatDate(message.createdDate)}
+                          </p>
+                        </div>
+                        
+                        {/* Developer profiles (only for bot messages) */}
+                        {message.isBot && messageData.developerProfiles && messageData.developerProfiles.length > 0 && (
+                          <div className="mt-4">
+                            <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                              Lập trình viên được đề xuất:
+                            </h3>
+                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                              {messageData.developerProfiles.map((profile, profileIndex) => (
+                                <DeveloperProfileCard 
+                                  key={profileIndex} 
+                                  profile={profile} 
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
 
                 {/* Typing indicator */}
                 {isTyping && (

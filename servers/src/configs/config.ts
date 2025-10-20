@@ -44,6 +44,7 @@ export const config = {
     LOG_TABLE: process.env.LOG_TABLE || '',
     CONVERSATION_TABLE: process.env.CONVERSATION_TABLE || '',
     MESSAGE_TABLE: process.env.MESSAGE_TABLE || '',
+    PROJECT_FILE_TABLE: process.env.PROJECT_FILE_TABLE || '',
 
     // redis
     REDIS_HOST: process.env.REDIS_HOST || 'localhost',

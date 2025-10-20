@@ -58,7 +58,7 @@ export class N8NChatbotService {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    timeout: 60000, // 30 seconds timeout
+                    timeout: 60000, 
                 }
             );
 

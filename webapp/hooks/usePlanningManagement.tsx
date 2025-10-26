@@ -45,9 +45,9 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
   const getAllPlannings = useCallback(async (): Promise<Planning[]> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
-      
+
       const plannings = await mockPlanningAPI.getAllPlannings();
-      
+
       setState(prev => ({
         ...prev,
         plannings,
@@ -65,9 +65,9 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
   const getPlanningById = useCallback(async (id: string): Promise<Planning | null> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
-      
+
       const planning = await mockPlanningAPI.getPlanningById(id);
-      
+
       setState(prev => ({
         ...prev,
         isLoading: false,
@@ -81,14 +81,15 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
   }, [handleError]);
 
   // Get user plannings
-  const getUserPlannings = useCallback(async (userId?: string): Promise<UserPlanning[]> => {
+  const getUserPlannings = useCallback(async (): Promise<UserPlanning[]> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
-      
-      // Use mock user ID if not provided
-      const mockUserId = userId || 'user-1';
-      const userPlannings = await mockPlanningAPI.getUserPlannings(mockUserId);
-      
+
+      // ✅ KHÔNG cần userId — token đã đủ
+      const res = await axiosInstance.get(Api.Planning.GET_USER_PLANNINGS);
+
+      const userPlannings = res.data.data; // chú ý nếu ResponseUtil.success trả về { data, message }
+
       setState(prev => ({
         ...prev,
         userPlannings,
@@ -98,6 +99,7 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
       return userPlannings;
     } catch (error) {
       handleError(error, 'fetch user plannings');
+      setState(prev => ({ ...prev, isLoading: false }));
       return [];
     }
   }, [handleError]);
@@ -106,11 +108,11 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
   const getActiveUserPlanning = useCallback(async (userId?: string): Promise<UserPlanning | null> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
-      
+
       // Use mock user ID if not provided
       const mockUserId = userId || 'user-1';
       const activeUserPlanning = await mockPlanningAPI.getActiveUserPlanning(mockUserId);
-      
+
       setState(prev => ({
         ...prev,
         activeUserPlanning,
@@ -128,11 +130,11 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
   const purchasePlanning = useCallback(async (purchaseRequest: PlanningPurchaseRequest): Promise<UserPlanning | null> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
-      
+
       // Use mock user ID
       const mockUserId = 'user-1';
       const userPlanning = await mockPlanningAPI.purchasePlanning(mockUserId, purchaseRequest);
-      
+
       setState(prev => ({
         ...prev,
         userPlannings: [...prev.userPlannings, userPlanning],
@@ -152,12 +154,12 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
   const confirmPayment = useCallback(async (orderId: string): Promise<UserPlanning | null> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
-      
+
       const userPlanning = await mockPlanningAPI.confirmPayment(orderId);
-      
+
       setState(prev => ({
         ...prev,
-        userPlannings: prev.userPlannings.map(up => 
+        userPlannings: prev.userPlannings.map(up =>
           up.orderId === orderId ? userPlanning : up
         ),
         activeUserPlanning: userPlanning.isEnable ? userPlanning : prev.activeUserPlanning,
@@ -178,9 +180,10 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
   }, [getAllPlannings]);
 
   // Refresh user plannings
-  const refreshUserPlannings = useCallback(async (userId?: string) => {
-    await Promise.all([getUserPlannings(userId), getActiveUserPlanning(userId)]);
+  const refreshUserPlannings = useCallback(async () => {
+    await Promise.all([getUserPlannings(), getActiveUserPlanning()]);
   }, [getUserPlannings, getActiveUserPlanning]);
+
 
   // Clear error
   const clearError = useCallback(() => {
@@ -190,7 +193,7 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
 
 
 
-  
+
 
 
   return {

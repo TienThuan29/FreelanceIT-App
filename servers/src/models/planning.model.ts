@@ -27,3 +27,8 @@ export type PlanningPurchaseRequest = {
     orderId: string;
     price: number;
 }
+
+
+export type UserPlanningWithDetails = UserPlanning & {
+    planning?: Planning;
+};

@@ -1,8 +1,9 @@
 import { CheckMomo, CreateMomoPaymentRequest } from "../types/req/momo.req.js";
 import axios from "axios";
-import crypto from "crypto";
-import { config } from "../configs/config";
-import { stat } from "fs";
+import crypto from "crypto";import { UserPlanningRepository } from "@/repositories/userplanning.repo";
+import { TransactionHistoryRepository } from "@/repositories/transaction-history.repo";
+import { v4 as uuidv4 } from 'uuid';
+
 
 export class MomoService {
   private static partnerCode = "MOMO";
@@ -79,10 +80,35 @@ export class MomoService {
       const { orderId, amount, extraData } = payload;
       const { userId, planningId } = JSON.parse(extraData);
 
-      // TODO: lưu vào bảng user_planning (Prisma / TypeORM)
+
+       const now = new Date();
+        const transactionHistoryRepo = new TransactionHistoryRepository();
+          await transactionHistoryRepo.create({
+      id: uuidv4(),
+      orderId,
+      userId,
+      amount,
+      status: 'SUCCESS',
+      paymentTransId: payload.transId || null,
+      payType: payload.payType || null,
+      message: "Đã Thanh Toán",
+      paidAt: now,
+    });
+
+      console.log(payload.body);
+      const userPlanningRepo = new UserPlanningRepository();
+      await userPlanningRepo.create({
+        userId,
+        planningId,
+        orderId,
+        transactionDate: new Date(),
+        price: amount,
+        isEnable: true
+      });
+
       console.log(`✅ Thanh toán thành công: user ${userId}, planning ${planningId}`);
     } else {
-      console.warn(`❌ Thanh toán thất bại: ${payload.message}`);
+      console.warn(` Thanh toán thất bại: ${payload.message}`);
     }
 
     return { message: "Callback received", result: payload };

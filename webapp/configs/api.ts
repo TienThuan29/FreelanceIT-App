@@ -117,10 +117,17 @@ export const Api = {
         GET_PLANNING_BY_ID: '/api/v1/planning/plannings', // append /:id when used
 
         // User endpoints
+<<<<<<< HEAD
         GET_USER_PLANNINGS: '/api/v1/planning/user/plannings',
         GET_ACTIVE_USER_PLANNING: '/api/v1/planning/user/plannings/active',
         PURCHASE_PLANNING: '/api/v1/planning/plannings/purchase',
         CONFIRM_PAYMENT: '/api/v1/planning/plannings', // append /:orderId/confirm-payment when used
+=======
+        GET_USER_PLANNINGS: '/api/v1/user/plannings',
+        GET_ACTIVE_USER_PLANNING: '/api/v1/user/plannings/active',
+        PURCHASE_PLANNING: '/api/v1/plannings/purchase',
+        CONFIRM_PAYMENT: '/api/v1/plannings',
+>>>>>>> ba90fa7b350201624e3fb21cb6722891e583139e
 
         // Admin endpoints (protected)
         ADMIN_PLANNINGS: '/api/v1/planning/admin/plannings', // GET (list), POST (create)

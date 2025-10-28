@@ -53,6 +53,10 @@ export type PlanningPurchaseRequest = {
     price: number;
 }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> ba90fa7b350201624e3fb21cb6722891e583139e
 export type UserPlanningWithDetails = UserPlanning & {
     planning?: Planning;
 };

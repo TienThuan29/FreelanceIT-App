@@ -50,6 +50,7 @@ export const config = {
     TRANSACTION_HISTORY_TABLE: process.env.TRANSACTION_HISTORY_TABLE || '',
     PROJECT_TASK_TABLE: process.env.PROJECT_TASK_TABLE || '',
     PROJECT_TIMELINE_TABLE: process.env.PROJECT_TIMELINE_TABLE || '',
+    PRODUCT_TABLE: process.env.PRODUCT_TABLE || '',
 
 
     // MoMo Payment Configuration

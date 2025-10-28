@@ -97,6 +97,16 @@ const generalFileUpload = multer({
     },
 });
 
+// Configure multer for product images (allow multiple images)
+const productImageUpload = multer({
+    storage: storage,
+    fileFilter: projectImageFilter,
+    limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB limit per image
+        files: 5, // Allow up to 5 images
+    },
+});
+
 // Export middleware for single file upload with field name 'projectImage'
 export const uploadProjectImage = projectImageUpload.single('projectImage');
 
@@ -105,3 +115,9 @@ export const handleProjectFormData = projectImageUpload.single('projectImage');
 
 // Export middleware for general file uploads with field name 'file'
 export const uploadFile = generalFileUpload.single('file');
+
+// Export middleware for product images (multiple files)
+export const uploadProductImages = productImageUpload.array('productImages', 5);
+
+// Export middleware for single product image
+export const uploadProductImage = productImageUpload.single('productImage');

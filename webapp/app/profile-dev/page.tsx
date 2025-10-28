@@ -1,18 +1,17 @@
 "use client";
 
 import React, { useState, useEffect } from 'react'
-import type { DeveloperProfile, Skill} from '@/types/user.type'
-import { DeveloperLevel, SkillProficiency } from '@/types/user.type'
+import type { DeveloperProfile } from '@/types/user.type'
+import { DeveloperLevel } from '@/types/user.type'
 import type { Product } from '@/types/product.type'
 import Avatar from '@/components/Avatar'
-// import NavbarAuthenticated from '@/components/NavbarAuthenticated'
 import { useRouter } from 'next/navigation'
 import { useDeveloperProfile, type UserProfileResponse } from '@/hooks/useDeveloperProfile'
 import { useAuth } from '@/contexts/AuthContext'
-import { formatCurrency, formatDate } from '@/utils'
+import { formatCurrency } from '@/utils'
 import { usePlanningManagement } from '@/hooks/usePlanningManagement'
 import { useTransaction } from '@/hooks/useTransaction'
-import { TransactionStatus } from '@/types/transaction.type'
+import { useProductManagement } from '@/hooks/useProductManagement'
 import {
   HiChartBar,
   HiCog,
@@ -21,27 +20,21 @@ import {
   HiPlus,
   HiPencil,
   HiCheck,
-  HiChartPie,
-  HiCheckCircle,
   HiStar,
   HiCube,
-  HiEnvelope,
-  HiPhone,
-  HiMapPin,
-  HiClock,
-  HiCodeBracket,
-  HiBriefcase,
-  HiDocument,
-  HiEye,
-  HiArrowDown,
-  HiHeart,
-  HiXMark,
   HiCreditCard,
-  HiCalendar,
-  HiReceiptPercent,
-  HiBanknotes
+  HiReceiptPercent
 } from 'react-icons/hi2'
 import { toast } from 'sonner';
+
+// Import Tab Components
+import OverviewTab from './OverviewTab';
+import SkillsTab from './SkillsTab';
+import ProductsTab from './ProductsTab';
+import PlanningTab from './PlanningTab';
+import TransactionsTab from './TransactionsTab';
+import SettingsTab from './SettingsTab';
+import ProductModal from './ProductModal';
 
 export default function ProfileDevPage() {
   const router = useRouter()
@@ -52,17 +45,11 @@ export default function ProfileDevPage() {
     isLoading,
     isUpdating,
     isSkillLoading,
-    skillError,
-    isSkillUpdated,
     getDeveloperProfile,
     updateDeveloperProfile,
     updateUserProfile,
     updateUserAvatar,
     addSkill,
-    updateSkill,
-    removeSkill,
-    getSkills,
-    resetSkillState,
     clearErrors,
     resetUpdateState,
     hasProfile
@@ -80,24 +67,27 @@ export default function ProfileDevPage() {
     getUserTransactions
   } = useTransaction()
 
+  const {
+    myProducts,
+    limitInfo,
+    isLoading: isProductLoading,
+    getMyProducts,
+    getProductLimitInfo,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+  } = useProductManagement()
+
   // Local state for UI
   const [isEditing, setIsEditing] = useState<boolean>(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'skills' | 'products' | 'planning' | 'transactions' | 'settings'>('overview')
   const [formData, setFormData] = useState<Partial<DeveloperProfile>>({})
   const [userFormData, setUserFormData] = useState<Partial<UserProfileResponse>>({})
-  const [products, setProducts] = useState<Product[]>([])
   
-  // Skill modal state
-  const [isSkillModalOpen, setIsSkillModalOpen] = useState<boolean>(false)
-  const [skillFormData, setSkillFormData] = useState<{
-    name: string;
-    proficiency: SkillProficiency;
-    yearsOfExperience: number;
-  }>({
-    name: '',
-    proficiency: SkillProficiency.BEGINNER,
-    yearsOfExperience: 1
-  })
+  // Product modal state
+  const [isProductModalOpen, setIsProductModalOpen] = useState<boolean>(false)
+  const [productModalMode, setProductModalMode] = useState<'create' | 'edit'>('create')
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
 
   useEffect(() => {
     const loadProfile = async (): Promise<void> => {
@@ -105,12 +95,13 @@ export default function ProfileDevPage() {
         await getDeveloperProfile(user.id)
         await getActiveUserPlanning()
         await getUserTransactions()
+        await getMyProducts()
+        await getProductLimitInfo()
       }
     }
 
     loadProfile()
-  }, [user?.id, getDeveloperProfile, getActiveUserPlanning, getUserTransactions])
-
+  }, [user?.id, getDeveloperProfile, getActiveUserPlanning, getUserTransactions, getMyProducts, getProductLimitInfo])
 
   useEffect(() => {
     if (developerProfile) {
@@ -121,23 +112,21 @@ export default function ProfileDevPage() {
     }
   }, [developerProfile, userProfile])
 
-
   useEffect(() => {
     if (isEditing) {
       resetUpdateState()
     }
   }, [isEditing, resetUpdateState])
 
-
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     const file = event.target.files?.[0]
     if (!file || !user?.id) return
-    // Validate file type
+    
     if (!file.type.startsWith('image/')) {
       toast.error('Vui lòng chọn file hình ảnh')
       return
     }
-    // Validate file size (5MB limit)
+    
     if (file.size > 5 * 1024 * 1024) {
       toast.error('Kích thước file không được vượt quá 5MB')
       return
@@ -156,20 +145,15 @@ export default function ProfileDevPage() {
     }
   }
 
-  /**
-   * Check if user form data has changes
-   */
   const hasUserFormChanges = (): boolean => {
     if (!userProfile || !userFormData) return false
 
-    // Check each field for changes
     const fieldsToCheck: (keyof UserProfileResponse)[] = ['fullname', 'email', 'phone', 'dateOfBirth']
 
     return fieldsToCheck.some(field => {
       const originalValue = userProfile[field]
       const newValue = userFormData[field]
 
-      // Handle date comparison
       if (field === 'dateOfBirth') {
         const originalDate = originalValue && typeof originalValue !== 'boolean' ? new Date(originalValue).getTime() : null
         const newDate = newValue && typeof newValue !== 'boolean' ? new Date(newValue).getTime() : null
@@ -180,20 +164,16 @@ export default function ProfileDevPage() {
     })
   }
 
-  /**
-   * Check if developer form data has changes
-   */
   const hasDeveloperFormChanges = (): boolean => {
     if (!formData) return false
-    // If no developer profile exists yet, check if any fields have values (creating new profile)
+    
     if (!developerProfile) {
       const fieldsToCheck: (keyof DeveloperProfile)[] = [
         'title', 'bio', 'hourlyRate', 'experienceYears', 'developerLevel',
         'githubUrl', 'linkedinUrl', 'cvUrl', 'timezone', 'isAvailable'
       ]
-      const hasChanges = fieldsToCheck.some(field => {
+      return fieldsToCheck.some(field => {
         const newValue = formData[field]
-        // Check if field has a meaningful value (not empty string, null, undefined, or 0 for numbers)
         if (typeof newValue === 'string') {
           return newValue.trim() !== ''
         }
@@ -203,36 +183,28 @@ export default function ProfileDevPage() {
         if (typeof newValue === 'boolean') {
           return true
         }
-        // Skip array fields (skills, languages) and other complex types
         return false
       })
-      // console.log('Creating new profile - hasChanges:', hasChanges, 'formData:', formData)
-      return hasChanges
     }
-    // If developer profile exists, check for changes
+    
     const fieldsToCheck: (keyof DeveloperProfile)[] = [
       'title', 'bio', 'hourlyRate', 'experienceYears', 'developerLevel',
       'githubUrl', 'linkedinUrl', 'cvUrl', 'timezone', 'isAvailable'
     ]
-    const hasChanges = fieldsToCheck.some(field => {
+    return fieldsToCheck.some(field => {
       const originalValue = developerProfile[field]
       const newValue = formData[field]
-      // Handle number comparison
+      
       if (typeof originalValue === 'number' && typeof newValue === 'number') {
         return originalValue !== newValue
       }
-      // Handle boolean comparison
       if (typeof originalValue === 'boolean' && typeof newValue === 'boolean') {
         return originalValue !== newValue
       }
       return originalValue !== newValue
     })
-    return hasChanges
   }
 
-  /**
-   * Handle saving user profile data only
-   */
   const handleSaveUserProfile = async (): Promise<void> => {
     if (!user?.id) return
 
@@ -242,7 +214,6 @@ export default function ProfileDevPage() {
         return
       }
 
-      // console.log('Updating user profile with changes:', userFormData)
       const success = await updateUserProfile(user.id, userFormData)
 
       if (success) {
@@ -256,9 +227,6 @@ export default function ProfileDevPage() {
     }
   }
 
-  /**
-   * Handle saving developer profile data only
-   */
   const handleSaveDeveloperProfile = async (): Promise<void> => {
     if (!user?.id) return
 
@@ -280,27 +248,27 @@ export default function ProfileDevPage() {
     }
   }
 
-
   const handleSave = async (): Promise<void> => {
     if (!user?.id) return
 
     try {
       let userSuccess = true
       let developerSuccess = true
+      
       if (hasUserFormChanges()) {
         userSuccess = await updateUserProfile(user.id, userFormData)
       }
-      // Update developer profile if there are changes and profile exists
+      
       if (hasProfile && hasDeveloperFormChanges()) {
-        // console.log('Updating developer profile with changes:', formData)
         developerSuccess = await updateDeveloperProfile(user.id, formData)
       }
-      // If no changes were made, show a message
+      
       if (!hasUserFormChanges() && (!hasProfile || !hasDeveloperFormChanges())) {
         toast.info('Không có thay đổi nào để lưu')
         setIsEditing(false)
         return
       }
+      
       if (userSuccess && developerSuccess) {
         setIsEditing(false)
         toast.success('Cập nhật thông tin thành công!')
@@ -320,62 +288,67 @@ export default function ProfileDevPage() {
     clearErrors()
   }
 
-  // Skill modal handlers
-  const handleOpenSkillModal = (): void => {
-    setIsSkillModalOpen(true)
-    resetSkillState()
+  const handleManageProducts = (): void => {
+    setActiveTab('products')
   }
 
-  const handleCloseSkillModal = (): void => {
-    setIsSkillModalOpen(false)
-    setSkillFormData({
-      name: '',
-      proficiency: SkillProficiency.BEGINNER,
-      yearsOfExperience: 1
-    })
-    resetSkillState()
+  const handleCreateProduct = (): void => {
+    setProductModalMode('create')
+    setSelectedProduct(null)
+    setIsProductModalOpen(true)
   }
 
-  const handleSkillFormChange = (field: string, value: string | number): void => {
-    setSkillFormData(prev => ({
-      ...prev,
-      [field]: value
-    }))
+  const handleEditProduct = (product: Product): void => {
+    setProductModalMode('edit')
+    setSelectedProduct(product)
+    setIsProductModalOpen(true)
   }
 
-  const handleAddSkill = async (): Promise<void> => {
-    if (!user?.id) return
-
-    // Validate form data
-    if (!skillFormData.name.trim()) {
-      toast.error('Vui lòng nhập tên kỹ năng')
-      return
+  const handleDeleteProduct = async (id: string): Promise<void> => {
+    const success = await deleteProduct(id)
+    if (success) {
+      // Refresh limit info after deletion
+      await getProductLimitInfo()
     }
+  }
 
-    if (skillFormData.yearsOfExperience < 1) {
-      toast.error('Số năm kinh nghiệm phải lớn hơn 0')
-      return
-    }
+  const handleProductModalClose = (): void => {
+    setIsProductModalOpen(false)
+    setSelectedProduct(null)
+  }
 
+  const handleProductSubmit = async (productData: Partial<Product>): Promise<boolean> => {
     try {
-      const success = await addSkill(user.id, {
-        name: skillFormData.name.trim(),
-        proficiency: skillFormData.proficiency,
-        yearsOfExperience: skillFormData.yearsOfExperience
-      })
+      let success = false;
+      
+      if (productModalMode === 'create') {
+        const newProduct = await createProduct(productData)
+        success = !!newProduct
+      } else if (productModalMode === 'edit' && selectedProduct) {
+        const updatedProduct = await updateProduct(selectedProduct.id, productData)
+        success = !!updatedProduct
+      }
 
       if (success) {
-        toast.success('Thêm kỹ năng thành công!')
-        handleCloseSkillModal()
-      } else {
-        toast.error('Có lỗi xảy ra khi thêm kỹ năng!')
+        // Refresh limit info after create/update
+        await getProductLimitInfo()
+        return true
       }
+      
+      return false
     } catch (error) {
-      console.error('Error adding skill:', error)
-      toast.error('Có lỗi xảy ra khi thêm kỹ năng!')
+      console.error('Error submitting product:', error)
+      return false
     }
   }
 
+  const handleInputChange = (field: keyof DeveloperProfile, value: any): void => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleUserInputChange = (field: string, value: any): void => {
+    setUserFormData(prev => ({ ...prev, [field]: value }))
+  }
 
   const getAvailabilityColor = (isAvailable: boolean): string => {
     return isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
@@ -384,46 +357,6 @@ export default function ProfileDevPage() {
   const getAvailabilityText = (isAvailable: boolean): string => {
     return isAvailable ? 'Sẵn sàng nhận việc' : 'Chưa sẵn sàng'
   }
-
-  const getProficiencyColor = (proficiency: SkillProficiency): string => {
-    const proficiencyColors: Record<SkillProficiency, string> = {
-      [SkillProficiency.BEGINNER]: 'bg-gray-100 text-gray-800',
-      [SkillProficiency.INTERMEDIATE]: 'bg-yellow-100 text-yellow-800',
-      [SkillProficiency.ADVANCED]: 'bg-blue-100 text-blue-800',
-      [SkillProficiency.EXPERT]: 'bg-green-100 text-green-800'
-    }
-    return proficiencyColors[proficiency] || 'bg-gray-100 text-gray-800'
-  }
-
-  const getProficiencyText = (proficiency: SkillProficiency): string => {
-    const proficiencyTexts: Record<SkillProficiency, string> = {
-      [SkillProficiency.BEGINNER]: 'Cơ bản',
-      [SkillProficiency.INTERMEDIATE]: 'Trung bình',
-      [SkillProficiency.ADVANCED]: 'Nâng cao',
-      [SkillProficiency.EXPERT]: 'Chuyên gia'
-    }
-    return proficiencyTexts[proficiency] || 'Chưa xác định'
-  }
-
-  const handleManageProducts = (): void => {
-    
-  }
-
-  const handleCreateProduct = (): void => {
-    
-  }
-
-
-  const handleInputChange = (field: keyof DeveloperProfile, value: any): void => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-  }
-
-
-  const handleUserInputChange = (field: string, value: any): void => {
-    setUserFormData(prev => ({ ...prev, [field]: value }))
-  }
-
-
 
   // Loading state
   if (isLoading) {
@@ -451,7 +384,6 @@ export default function ProfileDevPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* <NavbarAuthenticated /> */}
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header Section */}
         <div className="bg-white rounded-lg shadow-sm mb-6">
@@ -524,7 +456,6 @@ export default function ProfileDevPage() {
               {/* Action Buttons */}
               <div className="flex space-x-2">
                 {!hasProfile ? (
-                  // Show create profile button when no profile exists
                   <button
                     onClick={() => {
                       setIsEditing(true)
@@ -611,10 +542,11 @@ export default function ProfileDevPage() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                    className={`py-4 text-sm font-medium border-b-2 flex items-center ${activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                      }`}
+                    className={`py-4 text-sm font-medium border-b-2 flex items-center ${
+                      activeTab === tab.id
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
                     type="button"
                     role="tab"
                     aria-selected={activeTab === tab.id}
@@ -630,1309 +562,93 @@ export default function ProfileDevPage() {
 
         {/* Tab Content */}
         <div className="space-y-6">
-          {/* Overview Tab */}
           {activeTab === 'overview' && (
-            <div className="space-y-6">
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <div className="flex items-center">
-                    <div className="p-3 bg-blue-100 rounded-lg">
-                      <HiChartPie className="w-6 h-6 text-blue-600" />
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-2xl font-bold text-gray-900">{hasProfile ? (developerProfile?.totalProjects || 0) : 0}</p>
-                      <p className="text-gray-500 text-sm">Tổng dự án</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <div className="flex items-center">
-                    <div className="p-3 bg-green-100 rounded-lg">
-                      <HiCheckCircle className="w-6 h-6 text-green-600" />
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-2xl font-bold text-gray-900">{hasProfile ? (developerProfile?.experienceYears || 0) : 0}</p>
-                      <p className="text-gray-500 text-sm">Năm kinh nghiệm</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <div className="flex items-center">
-                    <div className="p-3 bg-yellow-100 rounded-lg">
-                      <HiStar className="w-6 h-6 text-yellow-600" />
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-2xl font-bold text-gray-900">{hasProfile ? (developerProfile?.rating || 0) : 0}</p>
-                      <p className="text-gray-500 text-sm">Đánh giá</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <div className="flex items-center">
-                    <div className="p-3 bg-purple-100 rounded-lg">
-                      <HiShoppingBag className="w-6 h-6 text-purple-600" />
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-2xl font-bold text-gray-900">{products.length}</p>
-                      <p className="text-gray-500 text-sm">Sản phẩm</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Actions */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Thao tác nhanh</h3>
-                {hasProfile ? (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <button
-                      onClick={handleCreateProduct}
-                      className="flex items-center justify-center p-4 border-2 border-dashed border-green-300 rounded-lg hover:border-green-400 hover:bg-green-50 transition-colors group"
-                      type="button"
-                    >
-                      <div className="text-center">
-                        <HiShoppingBag className="w-8 h-8 mb-2 group-hover:scale-110 transition-transform text-green-600" />
-                        <p className="text-gray-600 group-hover:text-green-600">Đăng sản phẩm mới</p>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={handleManageProducts}
-                      className="flex items-center justify-center p-4 border-2 border-dashed border-blue-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors group"
-                      type="button"
-                    >
-                      <div className="text-center">
-                        <HiCube className="w-8 h-8 mb-2 group-hover:scale-110 transition-transform text-blue-600" />
-                        <p className="text-gray-600 group-hover:text-blue-600">Quản lý sản phẩm</p>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => setActiveTab('skills')}
-                      className="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-colors group"
-                      type="button"
-                    >
-                      <div className="text-center">
-                        <HiWrenchScrewdriver className="w-8 h-8 mb-2 group-hover:scale-110 transition-transform text-gray-600" />
-                        <p className="text-gray-600 group-hover:text-gray-600">Quản lý kỹ năng</p>
-                      </div>
-                    </button>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    {/* <HiUser className="text-gray-400 text-6xl mb-4" /> */}
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      Tạo Profile Developer
-                    </h3>
-                    <p className="text-gray-500 mb-4">
-                      Tạo profile developer để bắt đầu sử dụng các tính năng của nền tảng
-                    </p>
-                    <button
-                      onClick={() => {
-                        setIsEditing(true)
-                        setActiveTab('settings')
-                      }}
-                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                      type="button"
-                    >
-                      Tạo Profile Ngay
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Developer Overview */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 bg-white rounded-lg shadow-sm p-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Giới thiệu</h3>
-                  {hasProfile ? (
-                    <>
-                      <p className="text-gray-600 text-sm leading-relaxed mb-4">{developerProfile?.bio || 'Chưa cập nhật giới thiệu'}</p>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-gray-500 flex items-center">
-                            <HiEnvelope className="w-4 h-4 mr-1" />
-                            Email:
-                          </span>
-                          <span className="ml-2 text-gray-900">{userProfile?.email}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500 flex items-center">
-                            <HiPhone className="w-4 h-4 mr-1" />
-                            Điện thoại:
-                          </span>
-                          <span className="ml-2 text-gray-900">{userProfile?.phone || 'Chưa cập nhật'}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500 flex items-center">
-                            <HiMapPin className="w-4 h-4 mr-1" />
-                            Địa điểm:
-                          </span>
-                          <span className="ml-2 text-gray-900">{userProfile?.id}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500 flex items-center">
-                            <HiClock className="w-4 h-4 mr-1" />
-                            Múi giờ:
-                          </span>
-                          <span className="ml-2 text-gray-900">{developerProfile?.timezone || 'Chưa cập nhật'}</span>
-                        </div>
-                      </div>
-
-                      {/* Skills Preview */}
-                      <div className="mt-6">
-                        <h4 className="text-sm font-medium text-gray-900 mb-3">Kỹ năng chính</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {developerProfile?.skills?.slice(0, 6).map(skill => (
-                            <span key={skill.id} className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
-                              {skill.name}
-                            </span>
-                          )) || <span className="text-gray-500">Chưa cập nhật kỹ năng</span>}
-                        </div>
-                        {developerProfile?.skills && developerProfile.skills.length > 6 && (
-                          <button
-                            onClick={() => setActiveTab('skills')}
-                            className="mt-2 text-blue-600 hover:text-blue-800 text-sm"
-                            type="button"
-                          >
-                            Xem tất cả kỹ năng →
-                          </button>
-                        )}
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-center py-8">
-                      {/* <HiDocumentText className="text-gray-400 text-4xl mb-4" /> */}
-                      <h4 className="text-lg font-medium text-gray-900 mb-2">
-                        Chưa có thông tin giới thiệu
-                      </h4>
-                      <p className="text-gray-500 mb-4">
-                        Tạo profile developer để thêm thông tin giới thiệu và kỹ năng của bạn
-                      </p>
-                      <button
-                        onClick={() => {
-                          setIsEditing(true)
-                          setActiveTab('settings')
-                        }}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                        type="button"
-                      >
-                        Tạo Profile
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Thông tin bổ sung</h3>
-
-                  {hasProfile ? (
-                    <>
-                      <div className="space-y-4">
-                        <div>
-                          <span className="text-gray-500 text-sm">Cấp độ:</span>
-                          <span className="ml-2 text-gray-900 capitalize">{developerProfile?.developerLevel?.toLowerCase() || 'Chưa cập nhật'}</span>
-                        </div>
-
-                        <div>
-                          <span className="text-gray-500 text-sm">Ngôn ngữ:</span>
-                          <div className="mt-1">
-                            {developerProfile?.languages?.map((lang, index) => (
-                              <span key={index} className="inline-block px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded mr-1 mb-1">
-                                {lang}
-                              </span>
-                            )) || <span className="text-gray-500 text-sm">Chưa cập nhật</span>}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mt-6 pt-4 border-t border-gray-200">
-                        <h4 className="text-sm font-medium text-gray-900 mb-3">Liên kết</h4>
-                        <div className="space-y-2">
-                          {developerProfile?.githubUrl && (
-                            <a
-                              href={developerProfile.githubUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center text-sm text-gray-600 hover:text-gray-900"
-                            >
-                              <HiCodeBracket className="w-4 h-4 mr-2" /> GitHub
-                            </a>
-                          )}
-                          {developerProfile?.linkedinUrl && (
-                            <a
-                              href={developerProfile.linkedinUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center text-sm text-gray-600 hover:text-gray-900"
-                            >
-                              <HiBriefcase className="w-4 h-4 mr-2" /> LinkedIn
-                            </a>
-                          )}
-                          {developerProfile?.cvUrl && (
-                            <a
-                              href={developerProfile.cvUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center text-sm text-gray-600 hover:text-gray-900"
-                            >
-                              <HiDocument className="w-4 h-4 mr-2" /> CV/Resume
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-center py-6">
-                      {/* <HiInformationCircle className="text-gray-400 text-3xl mb-3" /> */}
-                      <p className="text-gray-500 text-sm">
-                        Tạo profile developer để hiển thị thông tin bổ sung
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            <OverviewTab
+              hasProfile={hasProfile}
+              developerProfile={developerProfile || undefined}
+              userProfile={userProfile || undefined}
+              products={myProducts as any}
+              onCreateProduct={handleCreateProduct}
+              onManageProducts={handleManageProducts}
+              onNavigateToSkills={() => setActiveTab('skills')}
+              onNavigateToSettings={() => setActiveTab('settings')}
+              onStartEditing={() => setIsEditing(true)}
+            />
           )}
 
-          {/* Skills Tab */}
           {activeTab === 'skills' && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-medium text-gray-900">Kỹ năng & Chuyên môn</h3>
-                {hasProfile && (
-                  <button
-                    onClick={handleOpenSkillModal}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    type="button"
-                  >
-                    Thêm kỹ năng
-                  </button>
-                )}
-              </div>
-
-              {hasProfile ? (
-                <div className="space-y-6">
-                  {developerProfile?.skills?.map(skill => (
-                    <div key={skill.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <h4 className="font-medium text-gray-900 text-lg">{skill.name}</h4>
-                          <p className="text-gray-600 text-sm">{skill.yearsOfExperience} năm kinh nghiệm</p>
-                        </div>
-                        <span className={`px-3 py-1 text-xs font-medium rounded-full ${getProficiencyColor(skill.proficiency)}`}>
-                          {getProficiencyText(skill.proficiency)}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex space-x-4 text-sm text-gray-500">
-                          <span>ID: {skill.id}</span>
-                          <span>Tạo: {skill.createdDate ? formatDate(skill.createdDate) : 'Chưa xác định'}</span>
-                          {skill.updatedDate && (
-                            <span>Cập nhật: {formatDate(skill.updatedDate)}</span>
-                          )}
-                        </div>
-                        <div className="flex space-x-2">
-                          <button
-                            className="px-3 py-1 text-blue-600 border border-blue-600 rounded hover:bg-blue-50 text-sm"
-                            type="button"
-                          >
-                            Chỉnh sửa
-                          </button>
-                          <button
-                            className="px-3 py-1 text-red-600 border border-red-600 rounded hover:bg-red-50 text-sm"
-                            type="button"
-                          >
-                            Xóa
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )) || (
-                      <div className="text-center py-12">
-                        {/* <HiWrenchScrewdriver className="text-gray-400 text-6xl mb-4" /> */}
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
-                          Chưa có kỹ năng nào
-                        </h3>
-                        <p className="text-gray-500 mb-4">
-                          Hãy thêm kỹ năng của bạn để khách hàng có thể tìm thấy bạn dễ dàng hơn
-                        </p>
-                        <button
-                          onClick={handleOpenSkillModal}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                          type="button"
-                        >
-                          Thêm kỹ năng đầu tiên
-                        </button>
-                      </div>
-                    )}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  {/* <HiWrenchScrewdriver className="text-gray-400 text-6xl mb-4" /> */}
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Chưa có profile developer
-                  </h3>
-                  <p className="text-gray-500 mb-4">
-                    Tạo profile developer để quản lý kỹ năng và chuyên môn của bạn
-                  </p>
-                  <button
-                    onClick={() => {
-                      setIsEditing(true)
-                      setActiveTab('settings')
-                    }}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    type="button"
-                  >
-                    Tạo Profile Developer
-                  </button>
-                </div>
-              )}
-            </div>
+            <SkillsTab
+              hasProfile={hasProfile}
+              developerProfile={developerProfile || undefined}
+              onAddSkill={async (skill) => {
+                if (!user?.id) return false;
+                return await addSkill(user.id, skill);
+              }}
+              onNavigateToSettings={() => setActiveTab('settings')}
+              onStartEditing={() => setIsEditing(true)}
+              isSkillLoading={isSkillLoading}
+            />
           )}
 
-          {/* Planning Tab */}
-          {activeTab === 'planning' && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-medium text-gray-900">Gói dịch vụ của bạn</h3>
-                <button
-                  onClick={() => router.push('/planning/pricing')}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-                  type="button"
-                >
-                  <HiShoppingBag className="w-4 h-4" />
-                  <span>Xem tất cả gói</span>
-                </button>
-              </div>
-
-              {isPlanningLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                </div>
-              ) : activeUserPlanning && activeUserPlanning.planning ? (
-                <div className="space-y-6">
-                  {/* Active Plan Card */}
-                  <div className="border-2 border-green-200 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="p-3 bg-green-100 rounded-lg">
-                          <HiCreditCard className="w-6 h-6 text-green-600" />
-                        </div>
-                        <div>
-                          <h4 className="text-xl font-bold text-gray-900">{activeUserPlanning.planning.name}</h4>
-                          <span className="px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">
-                            Đang kích hoạt
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold text-blue-600">
-                          {activeUserPlanning.price.toLocaleString('vi-VN')} VND
-                        </p>
-                        <p className="text-sm text-gray-500">Đã thanh toán</p>
-                      </div>
-                    </div>
-
-                    {/* Plan Details */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                      <div className="bg-white bg-opacity-50 rounded-lg p-4">
-                        <div className="flex items-center text-sm text-gray-600 mb-1">
-                          <HiCalendar className="w-4 h-4 mr-2" />
-                          Ngày mua
-                        </div>
-                        <p className="font-semibold text-gray-900">
-                          {new Date(activeUserPlanning.transactionDate).toLocaleDateString('vi-VN')}
-                        </p>
-                      </div>
-                      <div className="bg-white bg-opacity-50 rounded-lg p-4">
-                        <div className="flex items-center text-sm text-gray-600 mb-1">
-                          <HiCalendar className="w-4 h-4 mr-2" />
-                          Ngày hết hạn
-                        </div>
-                        <p className="font-semibold text-gray-900">
-                          {new Date(activeUserPlanning.expireDate).toLocaleDateString('vi-VN')}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Developer Plan Features */}
-                    {activeUserPlanning.planning.detailDevPlanning && (
-                      <div className="bg-white bg-opacity-70 rounded-lg p-4">
-                        <h5 className="font-semibold text-gray-900 mb-3">Tính năng gói của bạn:</h5>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div className="flex items-center space-x-2">
-                            <HiCheckCircle className="w-5 h-5 text-green-600" />
-                            <div>
-                              <p className="text-xs text-gray-600">Dự án tham gia</p>
-                              <p className="font-semibold text-gray-900">
-                                {activeUserPlanning.planning.detailDevPlanning.numberOfJoinedProjects}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <HiCheckCircle className="w-5 h-5 text-green-600" />
-                            <div>
-                              <p className="text-xs text-gray-600">Số sản phẩm</p>
-                              <p className="font-semibold text-gray-900">
-                                {activeUserPlanning.planning.detailDevPlanning.numberOfProducts}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <HiCheckCircle className="w-5 h-5 text-green-600" />
-                            <div>
-                              <p className="text-xs text-gray-600">Chatbot AI</p>
-                              <p className="font-semibold text-gray-900">
-                                {activeUserPlanning.planning.detailDevPlanning.useChatbot ? 'Có' : 'Không'}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Plan Description */}
-                    {activeUserPlanning.planning.description && (
-                      <div className="mt-4 pt-4 border-t border-gray-200">
-                        <h5 className="font-semibold text-gray-900 mb-2">Mô tả gói:</h5>
-                        <ul className="space-y-1">
-                          {activeUserPlanning.planning.description.split(';').map((desc, idx) => (
-                            desc.trim() && (
-                              <li key={idx} className="flex items-start space-x-2 text-sm text-gray-600">
-                                <HiCheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                                <span>{desc.trim()}</span>
-                              </li>
-                            )
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Quick Actions */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <button
-                      onClick={() => router.push('/planning/pricing')}
-                      className="p-4 border-2 border-blue-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors text-left"
-                      type="button"
-                    >
-                      <HiShoppingBag className="w-6 h-6 text-blue-600 mb-2" />
-                      <h4 className="font-semibold text-gray-900">Nâng cấp gói</h4>
-                      <p className="text-sm text-gray-600">Khám phá các gói dịch vụ cao cấp hơn</p>
-                    </button>
-                    <button
-                      onClick={() => router.push('/purchase-history')}
-                      className="p-4 border-2 border-gray-200 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-colors text-left"
-                      type="button"
-                    >
-                      <HiDocument className="w-6 h-6 text-gray-600 mb-2" />
-                      <h4 className="font-semibold text-gray-900">Lịch sử giao dịch</h4>
-                      <p className="text-sm text-gray-600">Xem tất cả giao dịch của bạn</p>
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <div className="p-4 bg-gray-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                    <HiCreditCard className="w-8 h-8 text-gray-400" />
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Chưa có gói dịch vụ
-                  </h3>
-                  <p className="text-gray-500 mb-6">
-                    Bạn chưa đăng ký gói dịch vụ nào. Hãy chọn một gói phù hợp để bắt đầu!
-                  </p>
-                  <button
-                    onClick={() => router.push('/planning/pricing')}
-                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center space-x-2"
-                    type="button"
-                  >
-                    <HiShoppingBag className="w-5 h-5" />
-                    <span>Xem các gói dịch vụ</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Transactions Tab */}
-          {activeTab === 'transactions' && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-medium text-gray-900">Lịch sử giao dịch</h3>
-                <button
-                  onClick={getUserTransactions}
-                  disabled={isTransactionLoading}
-                  className="px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors flex items-center space-x-2 disabled:opacity-50"
-                  type="button"
-                >
-                  <HiArrowDown className={`w-4 h-4 ${isTransactionLoading ? 'animate-spin' : ''}`} />
-                  <span>Làm mới</span>
-                </button>
-              </div>
-
-              {isTransactionLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                </div>
-              ) : transactions.length > 0 ? (
-                <div className="space-y-4">
-                  {transactions.map((transaction) => {
-                    const isSuccess = transaction.status === TransactionStatus.SUCCESS;
-                    const isPending = transaction.status === TransactionStatus.PENDING;
-                    const isFailed = transaction.status === TransactionStatus.FAILED;
-                    const isCancelled = transaction.status === TransactionStatus.CANCELLED;
-
-                    return (
-                      <div
-                        key={transaction.id}
-                        className={`border-2 rounded-lg p-4 hover:shadow-md transition-shadow ${
-                          isSuccess ? 'border-green-200 bg-green-50' :
-                          isPending ? 'border-yellow-200 bg-yellow-50' :
-                          isFailed ? 'border-red-200 bg-red-50' :
-                          'border-gray-200 bg-gray-50'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center space-x-3">
-                            <div className={`p-2 rounded-lg ${
-                              isSuccess ? 'bg-green-100' :
-                              isPending ? 'bg-yellow-100' :
-                              isFailed ? 'bg-red-100' :
-                              'bg-gray-100'
-                            }`}>
-                              <HiBanknotes className={`w-6 h-6 ${
-                                isSuccess ? 'text-green-600' :
-                                isPending ? 'text-yellow-600' :
-                                isFailed ? 'text-red-600' :
-                                'text-gray-600'
-                              }`} />
-                            </div>
-                            <div>
-                              <p className="font-semibold text-gray-900">Mã giao dịch: {transaction.orderId}</p>
-                              <p className="text-sm text-gray-600">ID: {transaction.id}</p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-xl font-bold text-gray-900">
-                              {transaction.amount.toLocaleString('vi-VN')} VND
-                            </p>
-                            <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${
-                              isSuccess ? 'bg-green-500 text-white' :
-                              isPending ? 'bg-yellow-500 text-white' :
-                              isFailed ? 'bg-red-500 text-white' :
-                              'bg-gray-500 text-white'
-                            }`}>
-                              {isSuccess ? 'Thành công' :
-                               isPending ? 'Đang xử lý' :
-                               isFailed ? 'Thất bại' :
-                               'Đã hủy'}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                          <div>
-                            <p className="text-gray-500">Ngày giao dịch</p>
-                            <p className="font-medium text-gray-900">
-                              {transaction.createdDate.toLocaleDateString('vi-VN')} {transaction.createdDate.toLocaleTimeString('vi-VN')}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500">Planning ID</p>
-                            <p className="font-medium text-gray-900">{transaction.planningId}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500">Trạng thái</p>
-                            <p className={`font-medium ${
-                              isSuccess ? 'text-green-600' :
-                              isPending ? 'text-yellow-600' :
-                              isFailed ? 'text-red-600' :
-                              'text-gray-600'
-                            }`}>
-                              {transaction.status}
-                            </p>
-                          </div>
-                        </div>
-
-                        {isFailed && (
-                          <div className="mt-3 pt-3 border-t border-red-200">
-                            <p className="text-sm text-red-600">
-                              Giao dịch thất bại. Vui lòng thử lại hoặc liên hệ hỗ trợ.
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <div className="p-4 bg-gray-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                    <HiReceiptPercent className="w-8 h-8 text-gray-400" />
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Chưa có giao dịch nào
-                  </h3>
-                  <p className="text-gray-500 mb-6">
-                    Bạn chưa thực hiện giao dịch nào. Hãy mua một gói dịch vụ để bắt đầu!
-                  </p>
-                  <button
-                    onClick={() => router.push('/planning/pricing')}
-                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center space-x-2"
-                    type="button"
-                  >
-                    <HiShoppingBag className="w-5 h-5" />
-                    <span>Xem các gói dịch vụ</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Products Tab */}
           {activeTab === 'products' && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-medium text-gray-900">Sản phẩm đang bán</h3>
-                {hasProfile && (
-                  <button
-                    onClick={handleCreateProduct}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                    type="button"
-                  >
-                    Đăng sản phẩm mới
-                  </button>
-                )}
-              </div>
-
-              {hasProfile ? (
-                <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {products.map(product => (
-                      <div key={product.id} className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                        <img
-                          src={product.images[0]}
-                          alt={product.title}
-                          className="w-full h-48 object-cover"
-                        />
-                        <div className="p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-medium text-gray-900">{product.title}</h4>
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${product.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                              }`}>
-                              {product.status === 'ACTIVE' ? 'Đang bán' : 'Ngừng bán'}
-                            </span>
-                          </div>
-                          <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
-                          <div className="flex flex-wrap gap-1 mb-3">
-                            {product.techStack.slice(0, 3).map(tech => (
-                              <span key={tech} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                                {tech}
-                              </span>
-                            ))}
-                            {product.techStack.length > 3 && (
-                              <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                                +{product.techStack.length - 3}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex justify-between items-center mb-3">
-                            <span className="text-lg font-bold text-gray-900">
-                              {formatCurrency(product.price)}
-                            </span>
-                            <div className="flex space-x-2 text-sm text-gray-500">
-                              <HiEye className="w-4 h-4 mr-1" />
-                              <HiArrowDown className="w-4 h-4 mr-1" />
-                              <HiHeart className="w-4 h-4 mr-1" />
-                            </div>
-                          </div>
-                          <div className="flex space-x-2">
-                            <button
-                              className="px-3 py-1 text-blue-600 border border-blue-600 rounded hover:bg-blue-50 text-sm"
-                              type="button"
-                            >
-                              Chỉnh sửa
-                            </button>
-                            {product.liveUrl && (
-                              <a
-                                href={product.liveUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-                              >
-                                Xem demo
-                              </a>
-                            )}
-                            {product.githubUrl && (
-                              <a
-                                href={product.githubUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm"
-                              >
-                                GitHub
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {products.length === 0 && (
-                    <div className="text-center py-12">
-                      {/* <HiShoppingBag className="text-gray-400 text-6xl mb-4" /> */}
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        Chưa có sản phẩm nào
-                      </h3>
-                      <p className="text-gray-500 mb-4">
-                        Hãy đăng sản phẩm đầu tiên của bạn để bắt đầu kiếm tiền
-                      </p>
-                      <button
-                        onClick={handleCreateProduct}
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                        type="button"
-                      >
-                        Đăng sản phẩm đầu tiên
-                      </button>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-12">
-                  {/* <HiShoppingBag className="text-gray-400 text-6xl mb-4" /> */}
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Chưa có profile developer
-                  </h3>
-                  <p className="text-gray-500 mb-4">
-                    Tạo profile developer để bắt đầu đăng sản phẩm và kiếm tiền
-                  </p>
-                  <button
-                    onClick={() => {
-                      setIsEditing(true)
-                      setActiveTab('settings')
-                    }}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    type="button"
-                  >
-                    Tạo Profile Developer
-                  </button>
-                </div>
-              )}
-            </div>
+            <ProductsTab
+              hasProfile={hasProfile}
+              products={myProducts as any}
+              limitInfo={limitInfo}
+              isLoading={isProductLoading}
+              onCreateProduct={handleCreateProduct}
+              onEditProduct={handleEditProduct}
+              onDeleteProduct={handleDeleteProduct}
+              onNavigateToSettings={() => setActiveTab('settings')}
+              onStartEditing={() => setIsEditing(true)}
+            />
           )}
 
+          {activeTab === 'planning' && (
+            <PlanningTab
+              activeUserPlanning={activeUserPlanning}
+              isLoading={isPlanningLoading}
+            />
+          )}
 
-          {/* Settings Tab */}
+          {activeTab === 'transactions' && (
+            <TransactionsTab
+              transactions={transactions}
+              isLoading={isTransactionLoading}
+              onRefresh={getUserTransactions}
+            />
+          )}
+
           {activeTab === 'settings' && (
-            <div className="space-y-6">
-              {/* Personal Information */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-6">Thông tin cá nhân</h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Họ tên *
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={userFormData?.fullname || ''}
-                        onChange={(e) => handleUserInputChange('fullname', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    ) : (
-                      <p className="text-gray-900">{userProfile?.fullname}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email *
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="email"
-                        value={userFormData?.email || ''}
-                        onChange={(e) => handleUserInputChange('email', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    ) : (
-                      <p className="text-gray-900">{userProfile?.email}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Số điện thoại
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="tel"
-                        value={userFormData?.phone || ''}
-                        onChange={(e) => handleUserInputChange('phone', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    ) : (
-                      <p className="text-gray-900">{userProfile?.phone || 'Chưa cập nhật'}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Ngày sinh
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="date"
-                        value={userFormData?.dateOfBirth ? new Date(userFormData.dateOfBirth).toISOString().split('T')[0] : ''}
-                        onChange={(e) => handleUserInputChange('dateOfBirth', new Date(e.target.value))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    ) : (
-                      <p className="text-gray-900">{userProfile?.dateOfBirth ? formatDate(new Date(userProfile.dateOfBirth)) : 'Chưa cập nhật'}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Vai trò
-                    </label>
-                    <p className="text-gray-900 capitalize">{userProfile?.role || 'Chưa xác định'}</p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Trạng thái tài khoản
-                    </label>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${userProfile?.isEnable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
-                      {userProfile?.isEnable ? 'Hoạt động' : 'Bị khóa'}
-                    </span>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Lần đăng nhập cuối
-                    </label>
-                    <p className="text-gray-900">{userProfile?.lastLoginDate ? formatDate(new Date(userProfile.lastLoginDate)) : 'Chưa có'}</p>
-                  </div>
-                </div>
-
-                {/* Personal Information Save Button */}
-                {isEditing && (
-                  <div className="mt-6 pt-6 border-t border-gray-200">
-                    <div className="flex justify-end space-x-4">
-                      <button
-                        onClick={handleCancel}
-                        className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                        type="button"
-                      >
-                        Hủy
-                      </button>
-                      <button
-                        onClick={handleSaveUserProfile}
-                        disabled={isUpdating || !hasUserFormChanges()}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
-                        type="button"
-                      >
-                        {isUpdating ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                            <span>Đang lưu...</span>
-                          </>
-                        ) : (
-                          <>
-                            <HiCheck className="w-4 h-4" />
-                            <span>Lưu</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Developer Profile Settings */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-6">Cài đặt Developer Profile</h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Chức danh
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={formData.title || ''}
-                        onChange={(e) => handleInputChange('title', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="VD: Full Stack Developer, Frontend Developer..."
-                      />
-                    ) : (
-                      <p className="text-gray-900">{developerProfile?.title || 'Chưa cập nhật'}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Giá theo giờ (VND)
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        value={formData.hourlyRate || ''}
-                        onChange={(e) => handleInputChange('hourlyRate', Number(e.target.value))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="VD: 500000"
-                      />
-                    ) : (
-                      <p className="text-gray-900">{developerProfile?.hourlyRate ? formatCurrency(developerProfile.hourlyRate) : 'Chưa cập nhật'}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Cấp độ Developer
-                    </label>
-                    {isEditing ? (
-                      <select
-                        value={formData.developerLevel || ''}
-                        onChange={(e) => handleInputChange('developerLevel', e.target.value as DeveloperLevel)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">Chọn cấp độ</option>
-                        <option value={DeveloperLevel.JUNIOR}>Junior</option>
-                        <option value={DeveloperLevel.MID}>Mid</option>
-                        <option value={DeveloperLevel.SENIOR}>Senior</option>
-                        <option value={DeveloperLevel.LEAD}>Lead</option>
-                      </select>
-                    ) : (
-                      <p className="text-gray-900 capitalize">{developerProfile?.developerLevel?.toLowerCase() || 'Chưa cập nhật'}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Năm kinh nghiệm
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        value={formData.experienceYears || ''}
-                        onChange={(e) => handleInputChange('experienceYears', Number(e.target.value))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    ) : (
-                      <p className="text-gray-900">{developerProfile?.experienceYears || 'Chưa cập nhật'}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      GitHub URL
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="url"
-                        value={formData.githubUrl || ''}
-                        onChange={(e) => handleInputChange('githubUrl', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="https://github.com/username"
-                      />
-                    ) : (
-                      <p className="text-gray-900">{developerProfile?.githubUrl || 'Chưa cập nhật'}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      LinkedIn URL
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="url"
-                        value={formData.linkedinUrl || ''}
-                        onChange={(e) => handleInputChange('linkedinUrl', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="https://linkedin.com/in/username"
-                      />
-                    ) : (
-                      <p className="text-gray-900">{developerProfile?.linkedinUrl || 'Chưa cập nhật'}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      CV/Resume URL
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="url"
-                        value={formData.cvUrl || ''}
-                        onChange={(e) => handleInputChange('cvUrl', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="https://example.com/cv.pdf"
-                      />
-                    ) : (
-                      <p className="text-gray-900">{developerProfile?.cvUrl || 'Chưa cập nhật'}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Múi giờ
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-
-                        value={formData.timezone || 'Asia/Ho_Chi_Minh_City'}
-                        onChange={(e) => handleInputChange('timezone', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Asia/Ho_Chi_Minh"
-                      />
-                    ) : (
-                      <p className="text-gray-900">{developerProfile?.timezone || 'Chưa cập nhật'}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="mt-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Giới thiệu bản thân
-                  </label>
-                  {isEditing ? (
-                    <textarea
-                      rows={4}
-                      value={formData.bio || ''}
-                      onChange={(e) => handleInputChange('bio', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Mô tả về kinh nghiệm, kỹ năng và mục tiêu nghề nghiệp của bạn..."
-                    />
-                  ) : (
-                    <p className="text-gray-900">{developerProfile?.bio || 'Chưa cập nhật giới thiệu'}</p>
-                  )}
-                </div>
-
-                <div className="mt-6">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={formData.isAvailable || false}
-                      onChange={(e) => handleInputChange('isAvailable', e.target.checked)}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Sẵn sàng nhận việc</span>
-                  </label>
-                </div>
-
-                {/* Developer Profile Save Button */}
-                {isEditing && (
-                  <div className="mt-6 pt-6 border-t border-gray-200">
-                    <div className="flex justify-end space-x-4">
-                      <button
-                        onClick={handleCancel}
-                        className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                        type="button"
-                      >
-                        Hủy
-                      </button>
-                      <button
-                        onClick={handleSaveDeveloperProfile}
-                        disabled={isUpdating || !hasDeveloperFormChanges()}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
-                        type="button"
-                      >
-                        {isUpdating ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                            <span>Đang lưu...</span>
-                          </>
-                        ) : (
-                          <>
-                            <HiCheck className="w-4 h-4" />
-                            <span>Lưu</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Account Settings */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-6">Cài đặt tài khoản</h3>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between py-3 border-b border-gray-200">
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-900">Thông báo email</h4>
-                      <p className="text-sm text-gray-500">Nhận thông báo về dự án mới và tin nhắn</p>
-                    </div>
-                    <button
-                      className="relative inline-flex h-6 w-11 items-center rounded-full bg-blue-600"
-                      type="button"
-                    >
-                      <span className="translate-x-6 inline-block h-4 w-4 transform rounded-full bg-white transition"></span>
-                    </button>
-                  </div>
-
-                  <div className="flex items-center justify-between py-3 border-b border-gray-200">
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-900">Hiển thị trạng thái hoạt động</h4>
-                      <p className="text-sm text-gray-500">Cho phép clients thấy khi bạn online</p>
-                    </div>
-                    <button
-                      className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200"
-                      type="button"
-                    >
-                      <span className="translate-x-1 inline-block h-4 w-4 transform rounded-full bg-white transition"></span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-
-              {/* Danger Zone */}
-              <div className="bg-white rounded-lg shadow-sm p-6 border border-red-200">
-                <h3 className="text-lg font-medium text-red-900 mb-4">Vùng nguy hiểm</h3>
-                <p className="text-sm text-red-600 mb-4">
-                  Các hành động này không thể hoàn tác. Vui lòng cân nhắc kỹ trước khi thực hiện.
-                </p>
-                <div className="space-y-3">
-                  <button
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                    type="button"
-                  >
-                    Xóa tài khoản
-                  </button>
-                </div>
-              </div>
-            </div>
+            <SettingsTab
+              isEditing={isEditing}
+              hasProfile={hasProfile}
+              userProfile={userProfile || undefined}
+              developerProfile={developerProfile || undefined}
+              userFormData={userFormData}
+              formData={formData as any}
+              isUpdating={isUpdating}
+              onUserInputChange={handleUserInputChange}
+              onInputChange={handleInputChange as any}
+              onSaveUserProfile={handleSaveUserProfile}
+              onSaveDeveloperProfile={handleSaveDeveloperProfile}
+              onCancel={handleCancel}
+              hasUserFormChanges={hasUserFormChanges}
+              hasDeveloperFormChanges={hasDeveloperFormChanges}
+            />
           )}
         </div>
       </div>
 
-      {/* Skill Addition Modal */}
-      {isSkillModalOpen && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-medium text-gray-900">Thêm kỹ năng mới</h3>
-                <button
-                  onClick={handleCloseSkillModal}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                  type="button"
-                >
-                  <HiXMark className="w-6 h-6" />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {/* Skill Name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tên kỹ năng *
-                  </label>
-                  <input
-                    type="text"
-                    value={skillFormData.name}
-                    onChange={(e) => handleSkillFormChange('name', e.target.value)}
-                    placeholder="Ví dụ: React, Node.js, Python..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-
-                {/* Proficiency Level */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Mức độ thành thạo *
-                  </label>
-                  <select
-                    value={skillFormData.proficiency}
-                    onChange={(e) => handleSkillFormChange('proficiency', e.target.value as SkillProficiency)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value={SkillProficiency.BEGINNER}>Mới bắt đầu</option>
-                    <option value={SkillProficiency.INTERMEDIATE}>Trung bình</option>
-                    <option value={SkillProficiency.ADVANCED}>Nâng cao</option>
-                    <option value={SkillProficiency.EXPERT}>Chuyên gia</option>
-                  </select>
-                </div>
-
-                {/* Years of Experience */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Số năm kinh nghiệm *
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="50"
-                    value={skillFormData.yearsOfExperience}
-                    onChange={(e) => handleSkillFormChange('yearsOfExperience', parseInt(e.target.value) || 1)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-
-                {/* Error Display */}
-                {skillError && (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-sm text-red-600">{skillError}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Modal Actions */}
-              <div className="flex justify-end space-x-4 mt-6 pt-6 border-t border-gray-200">
-                <button
-                  onClick={handleCloseSkillModal}
-                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                  type="button"
-                >
-                  Hủy
-                </button>
-                <button
-                  onClick={handleAddSkill}
-                  disabled={isSkillLoading || !skillFormData.name.trim()}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
-                  type="button"
-                >
-                  {isSkillLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>Đang thêm...</span>
-                    </>
-                  ) : (
-                    <>
-                      <HiPlus className="w-4 h-4" />
-                      <span>Thêm kỹ năng</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Product Modal */}
+      <ProductModal
+        isOpen={isProductModalOpen}
+        mode={productModalMode}
+        product={selectedProduct}
+        onClose={handleProductModalClose}
+        onSubmit={handleProductSubmit}
+        isLoading={isProductLoading}
+      />
     </div>
   )
-  // return (
-  //   <ProtectedRoute requiredRole="developer">
-  //     <ProfileDev />
-  //   </ProtectedRoute>
-  // );
 }

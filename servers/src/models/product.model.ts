@@ -8,13 +8,9 @@ export type Product = {
     price: number;
     images: string[];
     techStack: string[];
-    liveUrl?: string;
-    githubUrl?: string;
     status: ProductStatus;
     views?: number;
-    downloads?: number;
     likes?: number;
-    sellOnlyOne?: boolean;
     reviews?: ProductReview[];
     createdDate?: Date;
     updatedDate?: Date;

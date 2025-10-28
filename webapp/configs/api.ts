@@ -147,5 +147,26 @@ export const Api = {
         GET_USER_TRANSACTIONS: '/api/v1/transactions/user/transactions',
         GET_TRANSACTION_BY_ID: '/api/v1/transactions/transactions',
         GET_ALL_TRANSACTIONS: '/api/v1/transactions/admin/transactions',
+    },
+
+    Product: {
+        // Public endpoints
+        GET_ACTIVE_PRODUCTS: '/api/v1/products/public/active',
+        GET_PRODUCT_BY_ID_PUBLIC: '/api/v1/products/public',
+        INCREMENT_VIEWS: '/api/v1/products/public', // append /:id/view when used
+        
+        // Developer endpoints (protected)
+        CREATE_PRODUCT: '/api/v1/products',
+        GET_MY_PRODUCTS: '/api/v1/products/my-products',
+        GET_PRODUCT_LIMIT_INFO: '/api/v1/products/limit-info',
+        CAN_ADD_PRODUCT: '/api/v1/products/can-add',
+        UPDATE_PRODUCT: '/api/v1/products', // append /:id when used
+        DELETE_PRODUCT: '/api/v1/products', // append /:id when used
+        UPLOAD_IMAGE: '/api/v1/products/upload-image',
+        UPLOAD_IMAGES: '/api/v1/products/upload-images',
+        
+        // Admin/Developer endpoints
+        GET_ALL_PRODUCTS: '/api/v1/products',
+        GET_PRODUCT_BY_ID: '/api/v1/products', // append /:id when used
     }
 }

@@ -12,6 +12,7 @@ import planningRouter from './planning.route';
 import momoRoute from './momo.route';
 import projectTimelineRouter from './project-timeline.route';
 import transactionRouter from './transaction.route';
+import productRouter from './product.route';
 
 const router = Router();
 
@@ -29,6 +30,7 @@ router.use('/planning', planningRouter);
 router.use('/momo', momoRoute);
 router.use('/project-timeline', projectTimelineRouter);
 router.use('/transactions', transactionRouter);
+router.use('/products', productRouter);
 /**
  * @swagger
  * /health:

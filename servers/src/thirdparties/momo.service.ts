@@ -1,6 +1,5 @@
 import { CheckMomo, CreateMomoPaymentRequest } from "../types/req/momo.req.js";
 import axios from "axios";
-<<<<<<< HEAD
 import crypto from "crypto";
 import { config } from "../configs/config";
 import { stat } from "fs";
@@ -8,12 +7,6 @@ import { PlanningService } from "../services/planning.service";
 import { TransactionService } from "../services/transaction.service";
 import { TransactionStatus } from "../models/transaction.model";
 import logger from "../libs/logger";
-=======
-import crypto from "crypto";import { UserPlanningRepository } from "@/repositories/userplanning.repo";
-import { TransactionHistoryRepository } from "@/repositories/transaction-history.repo";
-import { v4 as uuidv4 } from 'uuid';
-
->>>>>>> ba90fa7b350201624e3fb21cb6722891e583139e
 
 export class MomoService {
   private partnerCode = "MOMO";
@@ -112,7 +105,6 @@ export class MomoService {
       const { orderId, amount, extraData, resultCode, message } = payload;
       const { userId, planningId } = JSON.parse(extraData);
 
-<<<<<<< HEAD
       if (resultCode === 0) {
         // Payment successful - save to database
         console.log(`Payment SUCCESS for orderId: ${orderId}`);
@@ -156,38 +148,6 @@ export class MomoService {
             note: "Planning does not exist - transaction recorded for testing"
           };
         }
-=======
-
-       const now = new Date();
-        const transactionHistoryRepo = new TransactionHistoryRepository();
-          await transactionHistoryRepo.create({
-      id: uuidv4(),
-      orderId,
-      userId,
-      amount,
-      status: 'SUCCESS',
-      paymentTransId: payload.transId || null,
-      payType: payload.payType || null,
-      message: "Đã Thanh Toán",
-      paidAt: now,
-    });
-
-      console.log(payload.body);
-      const userPlanningRepo = new UserPlanningRepository();
-      await userPlanningRepo.create({
-        userId,
-        planningId,
-        orderId,
-        transactionDate: new Date(),
-        price: amount,
-        isEnable: true
-      });
-
-      console.log(`✅ Thanh toán thành công: user ${userId}, planning ${planningId}`);
-    } else {
-      console.warn(` Thanh toán thất bại: ${payload.message}`);
-    }
->>>>>>> ba90fa7b350201624e3fb21cb6722891e583139e
 
         // 2. Create/Update UserPlanning
         const userPlanning = await this.planningService.purchasePlanning(userId, {

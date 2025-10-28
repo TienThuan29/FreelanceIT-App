@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import { Planning, PlanningCreate, UserPlanning, PlanningPurchaseRequest, UserPlanningWithDetails } from '@/models/planning.model';
-=======
-import { Planning, UserPlanning, PlanningPurchaseRequest, UserPlanningWithDetails } from '@/models/planning.model';
->>>>>>> ba90fa7b350201624e3fb21cb6722891e583139e
 import { PlanningRepository, UserPlanningRepository } from '@/repositories/planning.repo';
 import { UserRepository } from '@/repositories/user.repo';
 import logger from '@/libs/logger';
@@ -80,50 +76,28 @@ export class PlanningService {
 
     public async getUserPlannings(userId: string): Promise<UserPlanning[]> {
         const userPlannings = await this.userPlanningRepository.findByUserId(userId);
-<<<<<<< HEAD
         
-=======
-
->>>>>>> ba90fa7b350201624e3fb21cb6722891e583139e
         // Populate planning details khi cần thiết
         const populatedPlannings = await Promise.all(
             userPlannings.map(async (userPlanning) => {
                 const planning = await this.planningRepository.findById(userPlanning.planningId);
                 return {
                     ...userPlanning,
-<<<<<<< HEAD
                     planning: planning || undefined  // Convert null to undefined
                 };
             })
         );
         
-=======
-                    planning: planning  // Chỉ populate khi cần
-                };
-            })
-        );
-
->>>>>>> ba90fa7b350201624e3fb21cb6722891e583139e
         return populatedPlannings;
     }
 
     public async getActiveUserPlanning(userId: string): Promise<UserPlanningWithDetails | null> {
         const activeUserPlanning = await this.userPlanningRepository.findActiveByUserId(userId);
         if (!activeUserPlanning) return null;
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> ba90fa7b350201624e3fb21cb6722891e583139e
-        // ✅ Populate planning details
         const planning = await this.planningRepository.findById(activeUserPlanning.planningId);
         return {
             ...activeUserPlanning,
-<<<<<<< HEAD
             planning: planning || undefined  // Convert null to undefined
-=======
-            planning: planning
->>>>>>> ba90fa7b350201624e3fb21cb6722891e583139e
         } as UserPlanningWithDetails;
     }
 

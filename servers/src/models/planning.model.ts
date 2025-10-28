@@ -1,25 +1,50 @@
 export type Planning = {
-    id: string; // UUID
-    name: string; // varchar(60)
-    description: string; // Text
-    price: number; // numeric(38,2)
-    dailyLimit: number; // integer
-    daysLimit: number; // integer
-    aiModel: any; // object - AI model configuration
-    isDeleted: boolean; // boolean - soft delete flag
-    createdDate: Date; // timestamp
-    updateDate: Date; // timestamp
+    id: string;
+    name: string;
+    description: string; // is string of many description of planning, split by ";"
+    price: number; // VND
+    forDeveloper: boolean; // if true, this planning is for developer
+    forCustomer: boolean; // if true, this planning is for customer
+    detailDevPlanning?: DetailDevPlanning;
+    detailCustomerPlanning?: DetailCustomerPlanning;
+    isDeleted: boolean;
+    createdDate: Date;
+    updateDate: Date;
 }
 
-// Removed PlanningFeature and DurationType as they're not in the database schema
+export type DetailDevPlanning = {
+    numberOfJoinedProjects: number; // number of projects that can be managed by this planning
+    numberOfProducts: number; // number of products that can be managed by this planning
+    useChatbot: boolean; // if true, this planning can use chatbot
+}
 
-export type UserPlanning = {
-    userId: string; // string (FK to User.id)
-    planningId: string; // string (FK to Planning.id)
-    orderId: string; // varchar(255) - unique order identifier
-    transactionDate: Date; // timestamp - when plan was purchased
-    price: number; // numeric(38,2) - actual price paid
-    isEnable: boolean; // boolean - if this subscription is active
+export type DetailCustomerPlanning = {
+    numberOfProjects: number; // number of projects that can be managed by this planning
+    useChatbot: boolean; // if true, this planning can use chatbot
+}
+
+
+export type PlanningCreate = {
+    name: string;
+    description: string;
+    price: number;
+    forDeveloper: boolean;
+    forCustomer: boolean;
+    detailDevPlanning?: DetailDevPlanning;
+    detailCustomerPlanning?: DetailCustomerPlanning;
+    isDeleted: boolean;
+}
+
+export type UserPlanning = {    
+    id: string;
+    userId: string;
+    planningId: string;
+    planning?: Planning;
+    orderId: string;
+    expireDate: Date;
+    transactionDate: Date;
+    price: number;
+    isEnable: boolean;
 }
 
 export type PlanningPurchaseRequest = {
@@ -27,3 +52,7 @@ export type PlanningPurchaseRequest = {
     orderId: string;
     price: number;
 }
+
+export type UserPlanningWithDetails = UserPlanning & {
+    planning?: Planning;
+};

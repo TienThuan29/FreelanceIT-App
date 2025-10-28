@@ -140,6 +140,8 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   const messageRetryMapRef = useRef(new Map<string, number>());
   const notificationTimestampsRef = useRef(new Map<string, number>());
   const previousConversationRef = useRef<Conversation | null>(null);
+  const loadingMessagesRef = useRef(new Set<string>());
+  const conversationsLoadedRef = useRef(false);
 
   // Helper function to throttle notifications
   const showThrottledNotification = (key: string, message: string, type: 'info' | 'error' | 'warning' = 'info', throttleMs: number = 5000) => {
@@ -1024,10 +1026,21 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     }
 
     // Prevent multiple simultaneous requests for the same conversation
-    if (isLoadingMessages && !loadOlder) {
-      console.log('Already loading messages for conversation:', conversationId);
+    const loadingKey = `${conversationId}_${page}`;
+    if (loadingMessagesRef.current.has(loadingKey)) {
+      console.log('Already loading messages for conversation:', conversationId, 'page:', page);
       return;
     }
+
+    // Prevent loading if already loaded for this conversation and page
+    const currentPage = messagePages[conversationId] || 0;
+    if (page === 1 && currentPage >= 1 && !loadOlder) {
+      console.log('Messages already loaded for conversation:', conversationId);
+      return;
+    }
+
+    // Mark as loading
+    loadingMessagesRef.current.add(loadingKey);
 
     console.log('Loading messages for conversation:', conversationId, 'page:', page, 'loadOlder:', loadOlder);
     console.log('Access token available:', !!accessToken);
@@ -1051,8 +1064,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       
       if (page === 1) {
         // First load - replace all messages
-        console.log('Loading messages from server:', newMessages);
-        console.log('Current user ID:', user?.id);
+        console.log('Loading messages from server:', newMessages.length, 'messages');
         setMessages(newMessages);
         
         // Update pagination state
@@ -1093,6 +1105,8 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
         toast.error('Không thể tải tin nhắn');
       }
     } finally {
+      // Remove loading key
+      loadingMessagesRef.current.delete(loadingKey);
       setIsLoadingMessages(false);
       setIsLoadingOlderMessages(false);
     }
@@ -1312,12 +1326,16 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       connect();
     } else if ((!user || !enableSocket) && socket) {
       disconnect();
+      // Reset conversations loaded flag when user logs out
+      conversationsLoadedRef.current = false;
     }
   }, [user?.id, accessToken, enableSocket]);
 
   // Load conversations when user and accessToken are available (only once)
   useEffect(() => {
-    if (user && accessToken && conversations.length === 0) {
+    if (user && accessToken && !conversationsLoadedRef.current) {
+      console.log('Loading conversations on mount...');
+      conversationsLoadedRef.current = true;
       loadConversations();
     }
   }, [user?.id, accessToken]); // Remove conversations.length and loadConversations from dependencies
@@ -1335,6 +1353,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       // Clear sent messages set to prevent memory leaks
       sentMessagesRef.current.clear();
       messageRetryMapRef.current.clear();
+      loadingMessagesRef.current.clear();
       
       disconnect();
     };

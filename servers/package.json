@@ -14,8 +14,9 @@
     "debug": "node --inspect --require ts-node/register --require tsconfig-paths/register src/server.ts",
     "debug:brk": "node --inspect-brk --require ts-node/register --require tsconfig-paths/register src/server.ts",
     "debug:nodemon": "nodemon --inspect src/server.ts",
-            "create-planning-tables": "ts-node --require tsconfig-paths/register src/scripts/create-planning-tables.ts",
-            "seed:ai-plans": "ts-node --require tsconfig-paths/register src/scripts/seed-ai-plans.ts"
+    "create-planning-tables": "ts-node --require tsconfig-paths/register src/scripts/create-planning-tables.ts",
+    "seed:ai-plans": "ts-node --require tsconfig-paths/register src/scripts/seed-ai-plans.ts",
+    "seed:plannings": "ts-node --require tsconfig-paths/register src/scripts/seed-plannings.ts"
   },
   "keywords": [],
   "author": "",

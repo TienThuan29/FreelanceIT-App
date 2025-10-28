@@ -3,20 +3,35 @@ import axios from "axios";
 import crypto from "crypto";
 import { config } from "../configs/config";
 import { stat } from "fs";
+import { PlanningService } from "../services/planning.service";
+import { TransactionService } from "../services/transaction.service";
+import { TransactionStatus } from "../models/transaction.model";
+import logger from "../libs/logger";
 
 export class MomoService {
-  private static partnerCode = "MOMO";
-  private static accessKey = "F8BBA842ECF85";
-  private static secretKey = "K951B6PE1waDMi640xX08PD3vg6EkVlz";
-  private static redirectUrl = "http://localhost:3000/planning/pricing/success";
-  private static ipnUrl = "https://sherilyn-infusorial-ervin.ngrok-free.dev/api/v1/momo/callback";
+  private partnerCode = "MOMO";
+  private accessKey = "F8BBA842ECF85";
+  private secretKey = "K951B6PE1waDMi640xX08PD3vg6EkVlz";
+  private redirectUrl = config.MOMO_REDIRECT_URL || "http://localhost:3000/planning/pricing/success";
+  private ipnUrl = config.MOMO_IPN_URL || "http://localhost:5000/api/v1/momo/callback";
+  private planningService: PlanningService;
+  private transactionService: TransactionService;
 
-  static async createPayment({ userId, planningId, amount, orderInfo }: CreateMomoPaymentRequest) {
-    const partnerCode = MomoService.partnerCode;
-    const accessKey = MomoService.accessKey;
-    const secretKey = MomoService.secretKey;
-    const redirectUrl = MomoService.redirectUrl;
-    const ipnUrl = MomoService.ipnUrl;
+  constructor() {
+    this.planningService = new PlanningService();
+    this.transactionService = new TransactionService();
+    
+    logger.info('MoMo Service initialized');
+    logger.info('IPN URL:', this.ipnUrl);
+    logger.info('Redirect URL:', this.redirectUrl);
+  }
+
+  async createPayment({ userId, planningId, amount, orderInfo }: CreateMomoPaymentRequest) {
+    const partnerCode = this.partnerCode;
+    const accessKey = this.accessKey;
+    const secretKey = this.secretKey;
+    const redirectUrl = this.redirectUrl;
+    const ipnUrl = this.ipnUrl;
     const requestType = "payWithMethod";
     const orderId = partnerCode + new Date().getTime();
     const requestId = orderId;
@@ -25,15 +40,23 @@ export class MomoService {
     const lang = "vi";
     console.log("Access Key:", accessKey);
 
-
-    var rawSignature = "accessKey=" + accessKey + "&amount=" + amount + "&extraData=" + extraData + "&ipnUrl=" + ipnUrl + "&orderId=" + orderId + "&orderInfo=" + orderInfo + "&partnerCode=" + partnerCode + "&redirectUrl=" + redirectUrl + "&requestId=" + requestId + "&requestType=" + requestType;
-
-    console.log("--------------------RAW SIGNATURE----------------");
-    console.log(rawSignature);
+    var rawSignature = 
+        "accessKey=" + accessKey + 
+        "&amount=" + amount + 
+        "&extraData=" + extraData + 
+        "&ipnUrl=" + ipnUrl + 
+        "&orderId=" + orderId + 
+        "&orderInfo=" + orderInfo + 
+        "&partnerCode=" + partnerCode + 
+        "&redirectUrl=" + redirectUrl + 
+        "&requestId=" + requestId + 
+        "&requestType=" + requestType;
+    // console.log("--------------------RAW SIGNATURE----------------");
+    // console.log(rawSignature);
 
     const signature = crypto.createHmac("sha256", secretKey).update(rawSignature).digest("hex");
-    console.log("--------------------SIGNATURE----------------")
-    console.log(signature)
+    // console.log("--------------------SIGNATURE----------------")
+    // console.log(signature)
 
 
     const requestBody = JSON.stringify({
@@ -72,28 +95,127 @@ export class MomoService {
       return { message: "Error connecting to MoMo", error };
     }
   }
-  static async handleCallback(payload: any) {
-    console.log("Callback from MoMo:", payload);
 
-    if (payload.resultCode === 0) {
-      const { orderId, amount, extraData } = payload;
+  async handleCallback(payload: any) {
+    console.log("\n========== MoMo Callback Received ==========");
+    console.log("Callback from MoMo:", payload);
+    console.log("Timestamp:", new Date().toISOString());
+
+    try {
+      const { orderId, amount, extraData, resultCode, message } = payload;
       const { userId, planningId } = JSON.parse(extraData);
 
-      // TODO: lưu vào bảng user_planning (Prisma / TypeORM)
-      console.log(`✅ Thanh toán thành công: user ${userId}, planning ${planningId}`);
-    } else {
-      console.warn(`❌ Thanh toán thất bại: ${payload.message}`);
-    }
+      if (resultCode === 0) {
+        // Payment successful - save to database
+        console.log(`Payment SUCCESS for orderId: ${orderId}`);
+        
+        // 0. Check if transaction already exists (prevent duplicates)
+        console.log(`Checking for existing transaction with orderId: ${orderId}...`);
+        const existingTransaction = await this.transactionService.getTransactionByOrderId(orderId);
+        if (existingTransaction) {
+          console.log(`DUPLICATE DETECTED! Transaction already processed for orderId: ${orderId}`);
+          logger.info(`Duplicate callback ignored for orderId: ${orderId}`);
+          return { 
+            success: true, 
+            message: "Transaction already processed", 
+            result: payload,
+            transaction: existingTransaction,
+            note: "Duplicate callback ignored"
+          };
+        }
+        console.log(`No existing transaction found. Proceeding with payment processing...`);
+        
+        // 1. Get planning details
+        const planning = await this.planningService.getPlanningById(planningId);
+        if (!planning) {
+          logger.warn(`Planning not found: ${planningId} (test mode or invalid planning)`);
+          
+          // For testing: still create transaction record even if planning doesn't exist
+          await this.transactionService.createTransaction(
+            userId,
+            planningId,
+            orderId,
+            amount,
+            TransactionStatus.SUCCESS
+          );
+          
+          logger.info(`Test payment recorded: user ${userId}, planning ${planningId}, orderId ${orderId}`);
+          
+          return { 
+            success: true, 
+            message: "Test payment processed (planning not found)", 
+            result: payload,
+            note: "Planning does not exist - transaction recorded for testing"
+          };
+        }
 
-    return { message: "Callback received", result: payload };
+        // 2. Create/Update UserPlanning
+        const userPlanning = await this.planningService.purchasePlanning(userId, {
+          planningId,
+          orderId,
+          price: amount
+        });
+
+        // 3. Create transaction history with SUCCESS status
+        await this.transactionService.createTransaction(
+          userId,
+          planningId,
+          orderId,
+          amount,
+          TransactionStatus.SUCCESS
+        );
+
+        logger.info(`Thanh toán thành công: user ${userId}, planning ${planningId}, orderId ${orderId}`);
+        
+        return { 
+          success: true, 
+          message: "Payment processed successfully", 
+          result: payload,
+          userPlanning 
+        };
+      } else {
+        // Payment failed - save transaction with FAILED status
+        const { userId, planningId } = JSON.parse(extraData);
+        
+        // Check if transaction already exists
+        const existingTransaction = await this.transactionService.getTransactionByOrderId(orderId);
+        if (existingTransaction) {
+          logger.info(`Failed transaction already recorded for orderId: ${orderId}`);
+          return { 
+            success: false, 
+            message: "Transaction already processed", 
+            result: payload 
+          };
+        }
+        
+        await this.transactionService.createTransaction(
+          userId,
+          planningId,
+          orderId,
+          amount,
+          TransactionStatus.FAILED
+        );
+
+        logger.warn(`Thanh toán thất bại: ${message}`);
+        
+        return { 
+          success: false, 
+          message: `Payment failed: ${message}`, 
+          result: payload 
+        };
+      }
+    } catch (error: any) {
+      logger.error('Error handling MoMo callback:', error);
+      throw error;
+    }
   }
 
 
-  static async getTransactionStatus(orderId: string) {
+  async getTransactionStatus(orderId: string) {
 
 
-    const rawSignature = `accessKey=${MomoService.accessKey}&orderId=${orderId}&partnerCode=MOMO&requestId=${orderId}`;
-    const signature = crypto.createHmac('sha256', MomoService.secretKey)
+    const rawSignature = `accessKey=${this.accessKey}&orderId=${orderId}&partnerCode=MOMO&requestId=${orderId}`;
+    const signature = crypto.createHmac('sha256', this.secretKey)
       .update(rawSignature)
       .digest('hex');
 

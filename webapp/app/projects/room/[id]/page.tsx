@@ -441,7 +441,7 @@ export default function ProjectRoomPage() {
 
                 {/* Timeline Tab */}
                 {activeTab === 'timeline' && (
-                    <TimelineTab />
+                    <TimelineTab projectId={projectId} />
                 )}
             </div>
 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { FaCheckCircle, FaCrown, FaRocket, FaStar } from "react-icons/fa";
 import { usePlanningManagement } from "@/hooks/usePlanningManagement";
-import { Planning, AiModelConfig } from "@/types/planning.type";
+import { Planning } from "@/types/planning.type";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -12,9 +12,8 @@ type PlanData = {
   name: string;
   description: string;
   price: number;
-  dailyLimit: number;
-  daysLimit: number;
-  aiModel: AiModelConfig;
+  forDeveloper: boolean;
+  forCustomer: boolean;
   button: {
     text: string;
     type: "primary" | "secondary";
@@ -26,43 +25,62 @@ type PlanData = {
 export default function PlanningPricing() {
   const router = useRouter();
   const { user } = useAuth();
-  const { plannings, isLoading, getAllPlannings } = usePlanningManagement();
+  const { plannings, activeUserPlanning, isLoading, getAllPlanningsPublic, getActiveUserPlanning } = usePlanningManagement();
   const [plans, setPlans] = useState<PlanData[]>([]);
 
   useEffect(() => {
-    getAllPlannings();
-  }, [getAllPlannings]);
+    getAllPlanningsPublic();
+    if (user) {
+      getActiveUserPlanning();
+    }
+  }, [getAllPlanningsPublic, getActiveUserPlanning, user]);
 
   useEffect(() => {
     if (plannings.length > 0) {
       const formattedPlans: PlanData[] = plannings
-        .filter((planning: Planning) => !planning.isDeleted)
+        .filter((planning: Planning) => {
+          // Filter out deleted plannings
+          if (planning.isDeleted) return false;
+          
+          // Filter based on user role
+          if (user?.role === 'DEVELOPER') {
+            return planning.forDeveloper;
+          } else if (user?.role === 'CUSTOMER') {
+            return planning.forCustomer;
+          }
+          
+          // If no user or other role, show all active plannings
+          return true;
+        })
+        .sort((a, b) => a.price - b.price) // Sort by price (low to high)
         .map((planning: Planning, index: number) => {
-          // Use AI model features
-          const features = planning.aiModel?.features || [];
+          // Split description by semicolon to get features
+          const features = planning.description 
+            ? planning.description.split(';').map(f => f.trim()).filter(f => f)
+            : [];
 
           return {
             id: planning.id || `plan-${index}`,
             name: planning.name || "Gói cơ bản",
-            description: planning.description || "Gói dịch vụ AI cơ bản",
+            description: features[0] || "Gói dịch vụ AI cơ bản",
             price: planning.price || 0,
-            dailyLimit: planning.dailyLimit || 0,
-            daysLimit: planning.daysLimit || 30,
-            aiModel: planning.aiModel,
+            forDeveloper: planning.forDeveloper,
+            forCustomer: planning.forCustomer,
             button: {
               text: "Chọn gói",
               type: index === 1 ? "primary" : "secondary"
             },
-            badge: getPlanBadge(planning.aiModel?.modelType || 'basic'),
+            badge: getPlanBadge(planning.name),
             features: features
           };
         });
       
       setPlans(formattedPlans);
     }
-  }, [plannings]);
+  }, [plannings, user]);
 
-  const getPlanBadge = (modelType: string): string => {
+  const getPlanBadge = (planName: string): string => {
+    const modelType = planName.toLowerCase();
     switch (modelType) {
       case 'basic': return 'Basic';
       case 'pro': return 'Popular';
@@ -76,28 +94,9 @@ export default function PlanningPricing() {
     router.push(`/planning/pricing/${packageId}`);
   };
 
-  const formatDuration = (daysLimit: number): string => {
-    if (daysLimit >= 365) {
-      const years = Math.floor(daysLimit / 365);
-      return `${years} năm`;
-    } else if (daysLimit >= 30) {
-      const months = Math.floor(daysLimit / 30);
-      return `${months} tháng`;
-    } else {
-      return `${daysLimit} ngày`;
-    }
-  };
-
-  const formatRequests = (dailyLimit: number): string => {
-    if (dailyLimit >= 1000) {
-      return `${(dailyLimit / 1000).toFixed(1)}K requests/ngày`;
-    }
-    return `${dailyLimit} requests/ngày`;
-  };
-
   if (isLoading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-10">
         <div className="animate-pulse">
           <div className="h-6 sm:h-8 bg-gray-300 rounded mb-4"></div>
           <div className="h-3 sm:h-4 bg-gray-300 rounded mb-6 sm:mb-8"></div>
@@ -117,17 +116,26 @@ export default function PlanningPricing() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-10">
       <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold mb-2 text-gray-900">
-        Gói dịch vụ AI chuyên nghiệp
+        Gói dịch vụ
       </h2>
       <p className="text-xs sm:text-sm text-gray-700 mb-6 sm:mb-8">
-        Khám phá sức mạnh của AI với các gói dịch vụ được thiết kế cho mọi nhu cầu từ cá nhân đến doanh nghiệp.
+        Khám phá các tính năng độc quyền cùng với sức mạnh của AI với các gói dịch vụ được thiết kế cho mọi nhu cầu từ cá nhân đến doanh nghiệp.
       </p>
+
+      {/* Show message if user is logged in but has no active plan */}
+      {user && !activeUserPlanning && !isLoading && (
+        <div className="mb-8 bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 max-w-2xl mx-auto">
+          <p className="text-sm text-yellow-800">
+            Bạn chưa có gói dịch vụ nào. Hãy chọn một gói phù hợp bên dưới!
+          </p>
+        </div>
+      )}
 
       {/* Pricing cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-        {plans.map(({ id, name, description, price, dailyLimit, daysLimit, aiModel, button, badge, features }, i) => (
+        {plans.map(({ id, name, description, price, forDeveloper, forCustomer, button, badge, features }, i) => (
           <div
             key={id}
             className="bg-white rounded-xl shadow-lg flex flex-col p-4 sm:p-6 relative hover:shadow-xl transition-shadow"
@@ -177,18 +185,24 @@ export default function PlanningPricing() {
               <span className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900">
                 {price.toLocaleString('vi-VN')}
               </span>
-              <span className="text-xs sm:text-sm text-gray-700 block sm:inline"> VND / {formatDuration(daysLimit)}</span>
+              <span className="text-xs sm:text-sm text-gray-700 block sm:inline"> VND</span>
             </div>
 
             {/* Title */}
             <h3 className="font-semibold text-base sm:text-lg text-gray-900 mb-2">{name}</h3>
             
-            {/* Package Details */}
-            <div className="text-xs sm:text-sm text-gray-700 mb-3 sm:mb-4 space-y-1">
-              <p>{formatRequests(dailyLimit)}</p>
-              <p>Thời hạn: {formatDuration(daysLimit)}</p>
-              <p>Tokens: {aiModel?.maxTokens?.toLocaleString()} max</p>
-              <p>Response: {aiModel?.responseTime || 'standard'}</p>
+            {/* Package Details - User Types */}
+            <div className="text-xs sm:text-sm mb-3 sm:mb-4 flex flex-wrap gap-2">
+              {forDeveloper && (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                  Developer
+                </span>
+              )}
+              {forCustomer && (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">
+                  Customer
+                </span>
+              )}
             </div>
 
             {/* Features */}
@@ -229,7 +243,7 @@ export default function PlanningPricing() {
       </div>
 
       {/* Additional Info */}
-      <div className="mt-8 sm:mt-12 text-center">
+      <div className="mt-8 sm:mt-12 text-center mb-10">
         <p className="text-xs sm:text-sm text-gray-600 mb-4">
           Tất cả gói đều bao gồm hỗ trợ khách hàng 24/7 và cập nhật tự động
         </p>

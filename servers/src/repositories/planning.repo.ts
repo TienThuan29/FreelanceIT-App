@@ -1,6 +1,6 @@
 import { config } from "@/configs/config";
 import { DynamoRepository } from "./dynamo.repo";
-import { Planning, UserPlanning } from "@/models/planning.model";
+import { Planning, PlanningCreate, UserPlanning } from "@/models/planning.model";
 import { v4 as uuidv4 } from 'uuid';
 import { ScanCommand, UpdateCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import { dynamoDB } from '@/configs/database';
@@ -10,7 +10,7 @@ export class PlanningRepository extends DynamoRepository {
         super(config.PLANNING_TABLE);
     }
 
-    public async create(planning: Omit<Planning, 'id' | 'createdDate' | 'updateDate'>): Promise<Planning | null> {
+    public async create(planning: PlanningCreate): Promise<Planning | null> {
         const id = uuidv4();
         const createdDate = new Date();
         const updateDate = new Date();
@@ -73,6 +73,7 @@ export class PlanningRepository extends DynamoRepository {
 
         const planningForDynamo = {
             ...updatedPlanning,
+            createdDate: this.convertDateToISOString(updatedPlanning.createdDate),
             updateDate: this.convertDateToISOString(updatedPlanning.updateDate)
         };
 
@@ -99,6 +100,7 @@ export class PlanningRepository extends DynamoRepository {
 
             const planningForDynamo = {
                 ...updatedPlanning,
+                createdDate: this.convertDateToISOString(updatedPlanning.createdDate),
                 updateDate: this.convertDateToISOString(updatedPlanning.updateDate)
             };
 
@@ -124,25 +126,65 @@ export class UserPlanningRepository extends DynamoRepository {
         super(config.USER_PLANNING_TABLE);
     }
 
-    public async create(userPlanning: UserPlanning): Promise<UserPlanning | null> {
+    public async create(userPlanning: Omit<UserPlanning, 'id' | 'transactionDate' | 'expireDate'> & { transactionDate?: Date; expireDate?: Date }): Promise<UserPlanning | null> {
+        // Check if UserPlanning with this orderId already exists
+        const existing = await this.findByOrderId(userPlanning.orderId);
+        if (existing) {
+            console.log(`UserPlanning with orderId ${userPlanning.orderId} already exists. Returning existing.`);
+            return existing;
+        }
+
+        const id = uuidv4();
+        const transactionDate = userPlanning.transactionDate || new Date();
+        
+        // Calculate expire date (30 days from transaction date by default)
+        const expireDate = userPlanning.expireDate || new Date(transactionDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+        
         const userPlanningForDynamo = {
             ...userPlanning,
-            transactionDate: this.convertDateToISOString(userPlanning.transactionDate)
+            id,
+            transactionDate: this.convertDateToISOString(transactionDate),
+            expireDate: this.convertDateToISOString(expireDate)
         };
 
         const savingResult = await this.putItem(userPlanningForDynamo);
         if (!savingResult) {
             return null;
         }
-        return await this.findByUserAndPlanning(userPlanning.userId, userPlanning.planningId);
+        
+        console.log(`New UserPlanning created: ${id} for orderId: ${userPlanning.orderId}`);
+        return await this.findById(id);
     }
 
-    public async findByUserAndPlanning(userId: string, planningId: string): Promise<UserPlanning | null> {
-        const userPlanning = await this.getItem({ userId, planningId });
+    public async findById(id: string): Promise<UserPlanning | null> {
+        const userPlanning = await this.getItem({ id });
         if (!userPlanning) {
             return null;
         }
         return this.convertUserPlanningFromDynamo(userPlanning);
+    }
+
+    public async findByUserAndPlanning(userId: string, planningId: string): Promise<UserPlanning | null> {
+        try {
+            const command = new ScanCommand({
+                TableName: this.getTableName(),
+                FilterExpression: 'userId = :userId AND planningId = :planningId',
+                ExpressionAttributeValues: {
+                    ':userId': userId,
+                    ':planningId': planningId
+                }
+            });
+            
+            const result = await dynamoDB.send(command);
+            if (!result.Items || result.Items.length === 0) {
+                return null;
+            }
+            
+            return this.convertUserPlanningFromDynamo(result.Items[0]);
+        } catch (error) {
+            console.error('Error finding user planning by userId and planningId:', error);
+            return null;
+        }
     }
 
     public async findByOrderId(orderId: string): Promise<UserPlanning | null> {
@@ -218,27 +260,29 @@ export class UserPlanningRepository extends DynamoRepository {
     }
 
     public async update(userPlanning: UserPlanning): Promise<UserPlanning | null> {
-        const existingUserPlanning = await this.findByUserAndPlanning(userPlanning.userId, userPlanning.planningId);
+        const existingUserPlanning = await this.findById(userPlanning.id);
         if (!existingUserPlanning) {
             return null;
         }
 
         const userPlanningForDynamo = {
             ...userPlanning,
-            transactionDate: this.convertDateToISOString(userPlanning.transactionDate)
+            transactionDate: this.convertDateToISOString(userPlanning.transactionDate),
+            expireDate: this.convertDateToISOString(userPlanning.expireDate)
         };
 
         const savingResult = await this.putItem(userPlanningForDynamo);
         if (!savingResult) {
             return null;
         }
-        return await this.findByUserAndPlanning(userPlanning.userId, userPlanning.planningId);
+        return await this.findById(userPlanning.id);
     }
 
     private convertUserPlanningFromDynamo(item: any): UserPlanning {
         return {
             ...item,
-            transactionDate: this.convertISOStringToDate(item.transactionDate)
+            transactionDate: this.convertISOStringToDate(item.transactionDate),
+            expireDate: this.convertISOStringToDate(item.expireDate)
         };
     }
 }

@@ -287,3 +287,4 @@ export * from './project.type';
 export * from './shared.type';
 export * from './message.type';
 export * from './notification.type';
+export * from './transaction.type';

@@ -8,9 +8,10 @@ import customerRouter from "./customer.route";
 import chatRouter from "./chat.route";
 import applicationRouter from "./application.route";
 import projectTeamRouter from "./project-team.route";
-import planningRoute from './planning.route';
-import fileRouter from './file.route';
+import planningRouter from './planning.route';
 import momoRoute from './momo.route';
+import projectTimelineRouter from './project-timeline.route';
+import transactionRouter from './transaction.route';
 
 const router = Router();
 
@@ -24,9 +25,10 @@ router.use('/project-teams', projectTeamRouter);
 
 router.use('/test-data', testDataRouter);
 router.use('/chat', chatRouter);
-router.use('/api', planningRoute);
-router.use('/', fileRouter);
+router.use('/planning', planningRouter);
 router.use('/momo', momoRoute);
+router.use('/project-timeline', projectTimelineRouter);
+router.use('/transactions', transactionRouter);
 /**
  * @swagger
  * /health:

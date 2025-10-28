@@ -50,3 +50,16 @@ export type ProjectTeam = {
     joinedDate?: Date;
     leftDate?: Date;
 };
+
+
+export type ProjectTimeline = {
+    id: string;
+    projectId: string;
+    title: string;
+    meetingUrl: string;
+    description?: string;
+    meetingDate: Date;
+    isDeleted: boolean;
+    createdDate: Date;
+    updatedDate: Date;
+}

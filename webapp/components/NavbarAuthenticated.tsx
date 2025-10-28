@@ -66,7 +66,10 @@ const NavbarAuthenticated: React.FC = () => {
             {/* Role-specific links */}
             {isDeveloper && (
               <>
-                <a href="/profile-dev" className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
+                <a href={PageUrl.Dev.DEV_PLANNING_PAGE} className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
+                  Gói người dùng
+                </a>
+                <a href={PageUrl.Dev.PROFILE_DEV_PAGE} className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
                   Hồ sơ
                 </a>
                 <a href={PageUrl.Dev.AVAILABLE_PROJECTS_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
@@ -74,6 +77,9 @@ const NavbarAuthenticated: React.FC = () => {
                 </a>
                 <a href={PageUrl.Dev.MANAGE_DEVELOPER_PROJECTS_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Dự án của tôi
+                </a>
+                <a href={PageUrl.TRANSACTION_HISTORY_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                  Lịch sử giao dịch 
                 </a>
                 {/* <a href="/nda-contracts" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Hợp đồng NDA
@@ -86,7 +92,10 @@ const NavbarAuthenticated: React.FC = () => {
 
             {isCustomer && (
               <>
-                <a href="/chatbot/customer" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                <a href={PageUrl.Customer.CUSTOMER_PLANNING_PAGE} className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
+                  Gói người dùng
+                </a>
+                <a href={PageUrl.Customer.CHATBOT_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Chatbot AI
                 </a>
                 <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
@@ -97,6 +106,9 @@ const NavbarAuthenticated: React.FC = () => {
                 </a>
                 <a href={PageUrl.Customer.PROFILE_CUSTOMER_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Hồ sơ
+                </a>
+                <a href={PageUrl.TRANSACTION_HISTORY_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                  Lịch sử giao dịch 
                 </a>
                 {/* <a href="/nda-contracts" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Hợp đồng NDA
@@ -111,7 +123,7 @@ const NavbarAuthenticated: React.FC = () => {
             )}
 
             {isAdmin && (
-              <a href="/" className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
+              <a href={PageUrl.ADMIN_DASHBOARD_PAGE} className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
                 Quản trị
               </a>
             )}
@@ -170,7 +182,7 @@ const NavbarAuthenticated: React.FC = () => {
 
                   {isDeveloper && (
                     <a
-                      href="/profile-dev"
+                      href={PageUrl.Dev.PROFILE_DEV_PAGE}
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                     >
                       Hồ sơ của tôi

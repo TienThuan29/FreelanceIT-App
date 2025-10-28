@@ -1,0 +1,82 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Server",
+      "runtimeArgs": [
+        "--require",
+        "ts-node/register",
+        "--require",
+        "tsconfig-paths/register"
+      ],
+      "args": ["${workspaceFolder}/servers/src/server.ts"],
+      "cwd": "${workspaceFolder}/servers",
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "envFile": "${workspaceFolder}/servers/.env",
+      "sourceMaps": true,
+      "skipFiles": ["<node_internals>/**"],
+      "console": "integratedTerminal",
+      "outputCapture": "std"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Server (with Nodemon)",
+      "runtimeExecutable": "nodemon",
+      "restart": true,
+      "runtimeArgs": [
+        "--inspect",
+        "--exec",
+        "ts-node",
+        "--require",
+        "tsconfig-paths/register"
+      ],
+      "args": ["${workspaceFolder}/servers/src/server.ts"],
+      "cwd": "${workspaceFolder}/servers",
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "envFile": "${workspaceFolder}/servers/.env",
+      "sourceMaps": true,
+      "skipFiles": ["<node_internals>/**"],
+      "console": "integratedTerminal",
+      "outputCapture": "std"
+    },
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach to Process",
+      "port": 9229,
+      "restart": true,
+      "skipFiles": ["<node_internals>/**"],
+      "sourceMaps": true,
+      "localRoot": "${workspaceFolder}/servers",
+      "remoteRoot": "${workspaceFolder}/servers"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Current TS File",
+      "runtimeArgs": [
+        "--require",
+        "ts-node/register",
+        "--require",
+        "tsconfig-paths/register"
+      ],
+      "args": ["${file}"],
+      "cwd": "${workspaceFolder}/servers",
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "envFile": "${workspaceFolder}/servers/.env",
+      "sourceMaps": true,
+      "skipFiles": ["<node_internals>/**"],
+      "console": "integratedTerminal"
+    }
+  ]
+}
+

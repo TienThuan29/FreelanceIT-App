@@ -73,6 +73,7 @@ interface UseMoMoReturn {
     refundPayment: (orderId: string, amount?: number, description?: string) => Promise<any>;
     clearError: () => void;
     clearPaymentData: () => void;
+    processCallback: (callbackData: any) => Promise<boolean>;
 }
 
 export const useMoMo = (): UseMoMoReturn => {
@@ -85,7 +86,7 @@ export const useMoMo = (): UseMoMoReturn => {
     });
     // Helper function to handle API errors
     const handleError = useCallback((error: any, operation: string) => {
-        const errorMessage = error.response?.data?.message || error.message || `Failed to ${operation}`;
+        const errorMessage = error.response?.data?.message || error.message || `Lỗi khi ${operation}`;
         setState(prev => ({ ...prev, error: errorMessage, isLoading: false }));
         toast.error(errorMessage);
         console.error(`Error ${operation}:`, error);
@@ -100,10 +101,16 @@ export const useMoMo = (): UseMoMoReturn => {
             setState(prev => ({ ...prev, isLoading: true, error: null }));
 
             const response = await axiosInstance.post(Api.Momo.CREATE_PAYMENT, paymentData);
-            console.log("response", response.data);
+            console.log("Full response:", response.data);
 
+            // Backend uses ResponseUtil which returns data in 'dataResponse'
+            const paymentResponse: MoMoPaymentResponse = response.data.dataResponse || response.data.data || response.data;
 
-            const paymentResponse: MoMoPaymentResponse = response.data.data || response.data;
+            console.log("Payment response:", paymentResponse);
+
+            if (!paymentResponse || typeof paymentResponse !== 'object') {
+                throw new Error('Invalid response from MoMo service');
+            }
 
             setState(prev => ({
                 ...prev,
@@ -111,17 +118,17 @@ export const useMoMo = (): UseMoMoReturn => {
                 paymentUrl: paymentResponse.payUrl || null,
             }));
 
-            if (paymentResponse.resultCode === 0) {
-                toast.success('MoMo payment created successfully');
+            if (paymentResponse.resultCode === 0 && paymentResponse.payUrl) {
+                toast.success('Tạo thanh toán MoMo thành công!');
                 return paymentResponse;
             } else {
-                throw new Error(paymentResponse.message || 'Failed to create MoMo payment');
+                throw new Error(paymentResponse.message || 'Không thể tạo thanh toán MoMo');
             }
         } catch (error: any) {
             if (error.response) {
                 console.error("MoMo API error response:", error.response.data);
             } else {
-                console.error("Other error:", error.message);
+                console.error("Error creating MoMo payment:", error.message);
             }
             handleError(error, 'create MoMo payment');
             return null;
@@ -286,6 +293,34 @@ export const useMoMo = (): UseMoMoReturn => {
             error: null,
         }));
     }, []);
+
+    // Process MoMo callback manually (for local dev without ngrok)
+    const processCallback = useCallback(async (callbackData: any): Promise<boolean> => {
+        try {
+            setState(prev => ({ ...prev, isLoading: true, error: null }));
+
+            console.log("Processing callback data:", callbackData);
+
+            const response = await axiosInstance.post(Api.Momo.CALLBACK, callbackData);
+
+            console.log("Callback response:", response.data);
+
+            setState(prev => ({ ...prev, isLoading: false }));
+
+            if (response.data.success) {
+                toast.success('Thanh toán đã được xử lý thành công!');
+                return true;
+            } else {
+                toast.error('Xử lý thanh toán thất bại');
+                return false;
+            }
+        } catch (error: any) {
+            console.error("Error processing callback:", error);
+            handleError(error, 'process callback');
+            return false;
+        }
+    }, [axiosInstance, handleError]);
+
     return {
         isLoading: state.isLoading,
         error: state.error,
@@ -298,5 +333,6 @@ export const useMoMo = (): UseMoMoReturn => {
         refundPayment,
         clearError,
         clearPaymentData,
+        processCallback,
     };
 };

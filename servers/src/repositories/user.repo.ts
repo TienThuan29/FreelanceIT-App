@@ -152,6 +152,30 @@ export class UserRepository extends DynamoRepository {
     public async updateStatus(userId: string, isEnable: boolean): Promise<User | null> {
         return await this.update(userId, { isEnable });
     }
+
+    public async findByRole(role: string): Promise<User[]> {
+        const command = new ScanCommand({
+            TableName: this.getTableName(),
+            FilterExpression: '#role = :role',
+            ExpressionAttributeNames: {
+                '#role': 'role'
+            },
+            ExpressionAttributeValues: {
+                ':role': role
+            }
+        });
+        
+        const result = await dynamoDB.send(command);
+        const users = result.Items || [];
+        
+        return users.map(user => ({
+            ...user,
+            createdDate: this.convertISOStringToDate(user.createdDate),
+            updatedDate: this.convertISOStringToDate(user.updatedDate),
+            lastLoginDate: this.convertISOStringToDate(user.lastLoginDate),
+            dateOfBirth: this.convertISOStringToDate(user.dateOfBirth)
+        })) as User[];
+    }
 }
 
 export const userRepositoryInstance = new UserRepository();

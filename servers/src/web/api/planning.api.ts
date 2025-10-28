@@ -43,9 +43,10 @@ export class PlanningApi {
                 name: request.body.name,
                 description: request.body.description,
                 price: request.body.price,
-                dailyLimit: request.body.dailyLimit || 0,
-                daysLimit: request.body.daysLimit || 30,
-                aiModel: request.body.aiModel || {},
+                forDeveloper: request.body.forDeveloper || false,
+                forCustomer: request.body.forCustomer || false,
+                detailDevPlanning: request.body.detailDevPlanning,
+                detailCustomerPlanning: request.body.detailCustomerPlanning,
                 isDeleted: false
             });
 

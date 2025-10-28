@@ -58,3 +58,13 @@ export type ProjectTeam = BaseTimestamps & {
   agreedRate?: number;
   contractUrl?: string;
 };
+
+export type ProjectTimeline = BaseTimestamps & {
+  id: string;
+  projectId: string;
+  title: string;
+  meetingUrl: string;
+  description?: string;
+  meetingDate: Date;
+  isDeleted: boolean;
+};

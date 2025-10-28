@@ -1,0 +1,55 @@
+{
+  "developerPlannings": [
+    {
+      "name": "Developer Starter",
+      "description": "Gói khởi đầu cho Developer;Quản lý tối đa 5 dự án;Công cụ quản lý task cơ bản;Lưu trữ 5GB;Hỗ trợ email;Báo cáo cơ bản",
+      "price": 199000,
+      "forDeveloper": true,
+      "forCustomer": false,
+      "isDeleted": false
+    },
+    {
+      "name": "Developer Pro",
+      "description": "Gói chuyên nghiệp cho Developer;Quản lý không giới hạn dự án;Công cụ quản lý task nâng cao;Lưu trữ 50GB;Hỗ trợ ưu tiên;Báo cáo chi tiết;Tích hợp Git;API access;Code review tools",
+      "price": 499000,
+      "forDeveloper": true,
+      "forCustomer": false,
+      "isDeleted": false
+    },
+    {
+      "name": "Developer Enterprise",
+      "description": "Gói doanh nghiệp cho Developer;Tất cả tính năng Pro;Lưu trữ không giới hạn;Hỗ trợ 24/7;Team collaboration tools;Custom integrations;Advanced security;Dedicated account manager;SLA 99.9%",
+      "price": 1299000,
+      "forDeveloper": true,
+      "forCustomer": false,
+      "isDeleted": false
+    }
+  ],
+  "customerPlannings": [
+    {
+      "name": "Customer Basic",
+      "description": "Gói cơ bản cho Customer;Đăng tối đa 3 dự án/tháng;Tìm kiếm developer;Xem hồ sơ developer;Hỗ trợ email;Chat với developer",
+      "price": 149000,
+      "forDeveloper": false,
+      "forCustomer": true,
+      "isDeleted": false
+    },
+    {
+      "name": "Customer Business",
+      "description": "Gói kinh doanh cho Customer;Đăng không giới hạn dự án;Tìm kiếm nâng cao;Xem chi tiết hồ sơ developer;Hỗ trợ ưu tiên;Quản lý nhiều dự án;Báo cáo tiến độ;Project timeline;Budget tracking",
+      "price": 399000,
+      "forDeveloper": false,
+      "forCustomer": true,
+      "isDeleted": false
+    },
+    {
+      "name": "Customer Premium",
+      "description": "Gói cao cấp cho Customer;Tất cả tính năng Business;Developer matching AI;Hỗ trợ 24/7;Dedicated project manager;Contract management;Payment protection;Quality assurance;Priority hiring;Custom workflows",
+      "price": 999000,
+      "forDeveloper": false,
+      "forCustomer": true,
+      "isDeleted": false
+    }
+  ]
+}
+

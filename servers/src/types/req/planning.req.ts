@@ -1,19 +1,23 @@
+import { DetailDevPlanning, DetailCustomerPlanning } from '@/models/planning.model';
+
 export type PlanningCreateRequest = {
     name: string;
     description: string;
     price: number;
-    dailyLimit?: number;
-    daysLimit?: number;
-    aiModel?: any;
+    forDeveloper: boolean;
+    forCustomer: boolean;
+    detailDevPlanning?: DetailDevPlanning;
+    detailCustomerPlanning?: DetailCustomerPlanning;
 }
 
 export type PlanningUpdateRequest = {
     name?: string;
     description?: string;
     price?: number;
-    dailyLimit?: number;
-    daysLimit?: number;
-    aiModel?: any;
+    forDeveloper?: boolean;
+    forCustomer?: boolean;
+    detailDevPlanning?: DetailDevPlanning;
+    detailCustomerPlanning?: DetailCustomerPlanning;
     isDeleted?: boolean;
 }
 

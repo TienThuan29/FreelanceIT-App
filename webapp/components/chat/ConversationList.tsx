@@ -26,7 +26,6 @@ const ConversationList: React.FC<ConversationListProps> = ({
   isLoading,
   currentUserId,
   onSelectConversation,
-  onCreateConversation,
   lastMessages,
   participantNames
 }) => {

@@ -14,7 +14,9 @@ interface SettingsTabProps {
   userFormData: Partial<UserProfileResponse>;
   formData: Partial<DeveloperProfile>;
   isUpdating: boolean;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onUserInputChange: (field: string, value: any) => void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onInputChange: (field: keyof DeveloperProfile, value: any) => void;
   onSaveUserProfile: () => Promise<void>;
   onSaveDeveloperProfile: () => Promise<void>;

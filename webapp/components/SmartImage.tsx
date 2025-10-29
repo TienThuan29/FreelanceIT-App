@@ -26,8 +26,7 @@ const SmartImage: React.FC<SmartImageProps> = ({
   width,
   height,
   type = 'default',
-  backgroundColor,
-  onClick
+  backgroundColor
 }) => {
   const [imageError, setImageError] = useState(false)
   const [isLoading, setIsLoading] = useState(true)

@@ -56,6 +56,7 @@ export default function PlanningDashboard() {
     return isEnable ? "Đang hoạt động" : "Đã hết hạn";
   };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getBadgeInfo = (planning: any) => {
     const modelType = planning.aiModel?.modelType || 'basic';
     switch (modelType) {
@@ -127,27 +128,47 @@ export default function PlanningDashboard() {
                     <div className="flex items-center gap-2">
                       <FaClock className="text-blue-600 text-sm sm:text-base flex-shrink-0" />
                       <span className="text-xs sm:text-sm text-gray-600">
-                        Thời hạn: {formatDuration(activePlanning.planning?.daysLimit || 30)}
+                        Có hiệu lực đến: {new Date(activePlanning.expireDate).toLocaleDateString('vi-VN')}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <FaProjectDiagram className="text-green-600 text-sm sm:text-base flex-shrink-0" />
-                      <span className="text-xs sm:text-sm text-gray-600">
-                        Requests/ngày: {activePlanning.planning?.dailyLimit || 0}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <FaDatabase className="text-purple-600 text-sm sm:text-base flex-shrink-0" />
-                      <span className="text-xs sm:text-sm text-gray-600">
-                        Max Tokens: {activePlanning.planning?.aiModel?.maxTokens?.toLocaleString() || "N/A"}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <FaHeadset className="text-orange-600 text-sm sm:text-base flex-shrink-0" />
-                      <span className="text-xs sm:text-sm text-gray-600">
-                        Response: {activePlanning.planning?.aiModel?.responseTime || "standard"}
-                      </span>
-                    </div>
+                    {activePlanning.planning?.detailDevPlanning && (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <FaProjectDiagram className="text-purple-600 text-sm sm:text-base flex-shrink-0" />
+                          <span className="text-xs sm:text-sm text-gray-600">
+                            Số dự án: {activePlanning.planning.detailDevPlanning.numberOfJoinedProjects}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <FaDatabase className="text-green-600 text-sm sm:text-base flex-shrink-0" />
+                          <span className="text-xs sm:text-sm text-gray-600">
+                            Số sản phẩm: {activePlanning.planning.detailDevPlanning.numberOfProducts}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <FaHeadset className="text-orange-600 text-sm sm:text-base flex-shrink-0" />
+                          <span className="text-xs sm:text-sm text-gray-600">
+                            Chatbot: {activePlanning.planning.detailDevPlanning.useChatbot ? 'Có' : 'Không'}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                    {activePlanning.planning?.detailCustomerPlanning && (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <FaProjectDiagram className="text-purple-600 text-sm sm:text-base flex-shrink-0" />
+                          <span className="text-xs sm:text-sm text-gray-600">
+                            Số dự án: {activePlanning.planning.detailCustomerPlanning.numberOfProjects}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <FaHeadset className="text-orange-600 text-sm sm:text-base flex-shrink-0" />
+                          <span className="text-xs sm:text-sm text-gray-600">
+                            Chatbot: {activePlanning.planning.detailCustomerPlanning.useChatbot ? 'Có' : 'Không'}
+                          </span>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -171,8 +192,8 @@ export default function PlanningDashboard() {
                       <span className="font-medium text-right">{activePlanning.orderId}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Model Type:</span>
-                      <span className="font-medium text-right">{activePlanning.planning?.aiModel?.modelType || "basic"}</span>
+                      <span className="text-gray-600">Giá:</span>
+                      <span className="font-medium text-right">{activePlanning.price.toLocaleString('vi-VN')} VND</span>
                     </div>
                   </div>
                 </div>
@@ -254,7 +275,13 @@ export default function PlanningDashboard() {
                             </div>
                           </td>
                           <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">
-                            {formatDuration(userPlanning.planning?.daysLimit || 30)}
+                            {formatDuration(
+                              Math.ceil(
+                                (new Date(userPlanning.expireDate).getTime() - 
+                                 new Date(userPlanning.transactionDate).getTime()) / 
+                                (1000 * 60 * 60 * 24)
+                              )
+                            )}
                           </td>
                           <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                             <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(userPlanning.isEnable)}`}>

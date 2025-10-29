@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from 'react';
-import type { DeveloperProfile, Skill, SkillProficiency } from '@/types/user.type';
+import type { DeveloperProfile, Skill } from '@/types/user.type';
+import { SkillProficiency } from '@/types/user.type';
 import { formatDate } from '@/utils';
 import { HiPlus, HiXMark } from 'react-icons/hi2';
 import { toast } from 'sonner';
@@ -32,26 +33,26 @@ export default function SkillsTab({
   const [isSkillModalOpen, setIsSkillModalOpen] = useState(false);
   const [skillFormData, setSkillFormData] = useState<SkillFormData>({
     name: '',
-    proficiency: 'BEGINNER' as SkillProficiency,
+    proficiency: SkillProficiency.BEGINNER,
     yearsOfExperience: 1
   });
 
   const getProficiencyColor = (proficiency: SkillProficiency): string => {
     const proficiencyColors: Record<SkillProficiency, string> = {
-      BEGINNER: 'bg-gray-100 text-gray-800',
-      INTERMEDIATE: 'bg-yellow-100 text-yellow-800',
-      ADVANCED: 'bg-blue-100 text-blue-800',
-      EXPERT: 'bg-green-100 text-green-800'
+      [SkillProficiency.BEGINNER]: 'bg-gray-100 text-gray-800',
+      [SkillProficiency.INTERMEDIATE]: 'bg-yellow-100 text-yellow-800',
+      [SkillProficiency.ADVANCED]: 'bg-blue-100 text-blue-800',
+      [SkillProficiency.EXPERT]: 'bg-green-100 text-green-800'
     };
     return proficiencyColors[proficiency] || 'bg-gray-100 text-gray-800';
   };
 
   const getProficiencyText = (proficiency: SkillProficiency): string => {
     const proficiencyTexts: Record<SkillProficiency, string> = {
-      BEGINNER: 'Cơ bản',
-      INTERMEDIATE: 'Trung bình',
-      ADVANCED: 'Nâng cao',
-      EXPERT: 'Chuyên gia'
+      [SkillProficiency.BEGINNER]: 'Cơ bản',
+      [SkillProficiency.INTERMEDIATE]: 'Trung bình',
+      [SkillProficiency.ADVANCED]: 'Nâng cao',
+      [SkillProficiency.EXPERT]: 'Chuyên gia'
     };
     return proficiencyTexts[proficiency] || 'Chưa xác định';
   };
@@ -60,7 +61,7 @@ export default function SkillsTab({
     setIsSkillModalOpen(true);
     setSkillFormData({
       name: '',
-      proficiency: 'BEGINNER' as SkillProficiency,
+      proficiency: SkillProficiency.BEGINNER,
       yearsOfExperience: 1
     });
   };
@@ -69,7 +70,7 @@ export default function SkillsTab({
     setIsSkillModalOpen(false);
     setSkillFormData({
       name: '',
-      proficiency: 'BEGINNER' as SkillProficiency,
+      proficiency: SkillProficiency.BEGINNER,
       yearsOfExperience: 1
     });
   };
@@ -247,10 +248,10 @@ export default function SkillsTab({
                     onChange={(e) => handleSkillFormChange('proficiency', e.target.value as SkillProficiency)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="BEGINNER">Mới bắt đầu</option>
-                    <option value="INTERMEDIATE">Trung bình</option>
-                    <option value="ADVANCED">Nâng cao</option>
-                    <option value="EXPERT">Chuyên gia</option>
+                    <option value={SkillProficiency.BEGINNER}>Mới bắt đầu</option>
+                    <option value={SkillProficiency.INTERMEDIATE}>Trung bình</option>
+                    <option value={SkillProficiency.ADVANCED}>Nâng cao</option>
+                    <option value={SkillProficiency.EXPERT}>Chuyên gia</option>
                   </select>
                 </div>
 

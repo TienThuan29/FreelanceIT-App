@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import type { Project } from '@/types/project.type';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ProjectStatus } from '@/types/shared.type';
@@ -10,7 +8,6 @@ import Footer from '@/components/Footer';
 import useAllProjects from '@/hooks/useAllProjects';
 
 export default function PostPage() {
-  const { user } = useAuth();
   const router = useRouter();
   const { projects, isLoading, getAllProjects } = useAllProjects();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);

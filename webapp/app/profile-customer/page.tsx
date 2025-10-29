@@ -6,7 +6,7 @@ import Avatar from '@/components/Avatar'
 import { useRouter } from 'next/navigation'
 import { useCustomerProfile, type UserProfileResponse } from '@/hooks/useCustomerProfile'
 import { useAuth } from '@/contexts/AuthContext'
-import { formatCurrency, formatDate } from '@/utils'
+import { formatDate } from '@/utils'
 import { Api } from '@/configs/api'
 import {
   HiChartBar,
@@ -23,16 +23,7 @@ import {
   HiEnvelope,
   HiPhone,
   HiMapPin,
-  HiClock,
   HiGlobeAlt,
-  HiBriefcase,
-  HiDocument,
-  HiEye,
-  HiArrowDown,
-  HiHeart,
-  HiBuildingOffice2,
-  HiIdentification,
-  HiHome
 } from 'react-icons/hi2'
 import { toast } from 'sonner';
 
@@ -410,10 +401,12 @@ export default function ProfileCustomerPage() {
     clearErrors()
   }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleInputChange = (field: keyof CustomerProfile, value: any): void => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleUserInputChange = (field: string, value: any): void => {
     setUserFormData(prev => ({ ...prev, [field]: value }))
   }

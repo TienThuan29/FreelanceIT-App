@@ -11,6 +11,7 @@ export const PageUrl = {
     ADMIN_PROJECTS_PAGE: '/admin/projects',
     TRANSACTION_HISTORY_PAGE: '/purchase-history',
 
+
     Customer: {
         CHATBOT_PAGE: '/chatbot/customer',
         PROJECTS_PAGE: '/projects',
@@ -18,6 +19,7 @@ export const PageUrl = {
         PROFILE_CUSTOMER_PAGE: '/profile-customer',
         CUSTOMER_PLANNING_PAGE: '/planning/pricing',
         PURCHASE_HISTORY_PAGE: '/purchase-history',
+        PRODUCTS_PAGE: '/products',
     },
 
     Dev: {

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import type { Transaction } from '@/types/transaction.type';
+import type { TransactionHistory } from '@/types/transaction.type';
 import { TransactionStatus } from '@/types/transaction.type';
 import {
   HiArrowDown,
@@ -12,7 +12,7 @@ import {
 } from 'react-icons/hi2';
 
 interface TransactionsTabProps {
-  transactions: Transaction[];
+  transactions: TransactionHistory[];
   isLoading: boolean;
   onRefresh: () => void;
 }

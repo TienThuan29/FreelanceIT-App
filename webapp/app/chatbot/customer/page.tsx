@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleValidator } from "@/hooks/useRoleValidator";
 import { useCustomerChatbot, ChatbotSendMessageRequest, ChatbotSessionResponse } from "@/hooks/useCustomerChatbot";
-import { ChatbotSession, ChatItem, ChatbotMessageResponse } from '@/types/chatbot.type';
+import { ChatbotSession, ChatItem } from '@/types/chatbot.type';
 import DeveloperProfileCard from '@/components/chat/DeveloperProfileCard';
 
 export default function ChatBotPage() {
@@ -200,6 +200,7 @@ export default function ChatBotPage() {
   };
 
   // Helper function to get chatbot message data
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getChatbotMessageData = (message: ChatItem): { text: string; developerProfiles?: any[] } => {
     // If message has structured data, use it directly
     if (message.fullAnswer) {

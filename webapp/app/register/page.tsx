@@ -2,10 +2,8 @@
 
 import React, { useState } from 'react'
 import EmailVerification from './EmailVerification'
-import { PageUrl } from '@/configs/page.url';
 import { Role } from '@/types/user.type';
 import { useAuth } from '@/contexts/AuthContext';
-import { Constant } from '@/configs/constant';
 
 interface RegisterFormData {
   fullName: string
@@ -144,6 +142,7 @@ const Page: React.FC = () => {
         setErrors({ email: 'Đăng ký thất bại. Vui lòng thử lại.' })
       }
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     catch (error: any) {
       console.error('Registration failed:', error)
       setErrors({ email: error.message || 'Đăng ký thất bại. Vui lòng thử lại.' })

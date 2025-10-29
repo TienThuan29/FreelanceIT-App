@@ -13,6 +13,7 @@ export class ProjectTimelineApi {
         this.getAllTimelines = this.getAllTimelines.bind(this);
         this.updateTimeline = this.updateTimeline.bind(this);
         this.deleteTimeline = this.deleteTimeline.bind(this);
+        this.updateMeetingUrl = this.updateMeetingUrl.bind(this);
     }
 
     /**
@@ -154,6 +155,52 @@ export class ProjectTimelineApi {
             }
 
             ResponseUtil.success(response, null, 'Xóa lịch họp thành công', 200);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            ResponseUtil.error(response, message, 500);
+        }
+    }
+
+    /**
+     * Update Google Meet link for a timeline
+     * PATCH /api/project-timeline/:id/meeting-url
+     */
+    public async updateMeetingUrl(request: Request, response: Response): Promise<void> {
+        try {
+            const { id } = request.params;
+            const { meetingUrl } = request.body;
+
+            // Validate meeting URL (optional - can be empty string to remove)
+            if (meetingUrl && typeof meetingUrl !== 'string') {
+                ResponseUtil.error(response, 'meetingUrl phải là một chuỗi', 400);
+                return;
+            }
+
+            // Optional: Validate if it's a valid Google Meet URL format
+            if (meetingUrl && meetingUrl.trim() !== '') {
+                const meetUrlPattern = /^https:\/\/meet\.google\.com\/[a-z]{3}-[a-z]{4}-[a-z]{3}$/;
+                if (!meetUrlPattern.test(meetingUrl.trim())) {
+                    // Allow any URL format, not just strict Google Meet format
+                    // Just ensure it's a valid URL
+                    try {
+                        new URL(meetingUrl.trim());
+                    } catch {
+                        ResponseUtil.error(response, 'URL không hợp lệ', 400);
+                        return;
+                    }
+                }
+            }
+
+            const timeline = await this.projectTimelineService.updateTimeline(id, {
+                meetingUrl: meetingUrl?.trim() || ''
+            });
+
+            if (!timeline) {
+                ResponseUtil.error(response, 'Lịch họp không tìm thấy hoặc cập nhật thất bại', 404);
+                return;
+            }
+
+            ResponseUtil.success(response, timeline, 'Cập nhật link họp thành công', 200);
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
             ResponseUtil.error(response, message, 500);

@@ -417,7 +417,7 @@ export default function Page() {
                   <div className="space-y-4">
                     <div className="bg-gray-50 rounded-xl p-4">
                       <p className="text-sm text-gray-500 mb-2">Yêu cầu:</p>
-                      <p className="text-gray-800 font-medium">"Cần làm app mobile React Native, ngân sách 10-15 triệu"</p>
+                      <p className="text-gray-800 font-medium">&ldquo;Cần làm app mobile React Native, ngân sách 10-15 triệu&rdquo;</p>
                     </div>
                     <div className="text-center text-gray-400">↓</div>
                     <div className="bg-blue-50 rounded-xl p-4">

@@ -17,6 +17,7 @@ import {
     FiFolder, 
     FiCalendar 
 } from 'react-icons/fi'
+import { Project } from '@/types/project.type'
 
 export default function ProjectRoomPage() {
     const params = useParams()
@@ -25,7 +26,7 @@ export default function ProjectRoomPage() {
     const projectId = params.id as string
 
     const [activeTab, setActiveTab] = useState<'overview' | 'team' | 'chat' | 'files' | 'timeline'>('overview')
-    const [project, setProject] = useState<any>(null)
+    const [project, setProject] = useState<Project | null>(null)
     const [teamMembers, setTeamMembers] = useState<ProjectTeamMember[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [showAddMemberModal, setShowAddMemberModal] = useState(false)
@@ -54,6 +55,7 @@ export default function ProjectRoomPage() {
         joinConversation
     } = useChat()
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [projectConversation, setProjectConversation] = useState<any>(null)
     const [messageInput, setMessageInput] = useState('')
     const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -212,7 +214,7 @@ export default function ProjectRoomPage() {
         }
     }
 
-    const isProjectOwner = user?.id === project?.ownerId
+    const isProjectOwner = user?.id === project?.customerId
     const isTeamMember = teamMembers.some(member => member.developerId === user?.id)
 
     // Show loading while authentication is being checked
@@ -321,6 +323,7 @@ export default function ProjectRoomPage() {
                             ].map((tab) => (
                                 <button
                                     key={tab.id}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                     onClick={() => setActiveTab(tab.id as any)}
                                     className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
                                         activeTab === tab.id
@@ -413,7 +416,7 @@ export default function ProjectRoomPage() {
                                     </div>
                                     <div>
                                         <p className="text-sm text-gray-500">Ngày tạo</p>
-                                        <p className="text-2xl font-bold text-gray-900">{formatDate(project.createdDate)}</p>
+                                        <p className="text-2xl font-bold text-gray-900">{project.createdDate ? formatDate(project.createdDate) : 'Chưa có'}</p>
                                     </div>
                                 </div>
                             </div>
@@ -527,6 +530,7 @@ export default function ProjectRoomPage() {
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 h-96 flex flex-col">
                                 {/* Messages */}
                                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                                     {messages?.map((message: any, index: number) => (
                                         <div
                                             key={index}

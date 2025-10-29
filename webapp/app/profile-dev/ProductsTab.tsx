@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useState } from 'react';
-import type { Product, ProductStatus } from '@/types/product.type';
+import type { Product } from '@/types/product.type';
 import { formatCurrency } from '@/utils';
-import { HiEye, HiArrowDown, HiHeart, HiPlus, HiXMark, HiTrash } from 'react-icons/hi2';
-import { toast } from 'sonner';
+import { HiEye, HiHeart, HiPlus, HiTrash } from 'react-icons/hi2';
 
 interface ProductsTabProps {
   hasProfile: boolean;

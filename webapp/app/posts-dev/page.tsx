@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useDeveloperProfile } from '@/hooks/useDeveloperProfile';
 import { useAuth } from '@/contexts/AuthContext';
 import Image from 'next/image';
@@ -134,12 +135,12 @@ Check console for detailed logs.`);
                             <div className="bg-red-50 border border-red-200 rounded-xl p-8 max-w-md mx-auto">
                                 <h3 className="text-xl font-semibold text-red-800 mb-2">Không có quyền truy cập</h3>
                                 <p className="text-red-600 mb-4">Chỉ khách hàng mới có thể xem danh sách developers</p>
-                                <a
+                                <Link
                                     href="/"
                                     className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium inline-block"
                                 >
                                     Về trang chủ
-                                </a>
+                                </Link>
                             </div>
                         </div>
                     </section>

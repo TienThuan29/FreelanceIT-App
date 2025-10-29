@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter, useSearchParams } from 'next/navigation'
 import type { Project, ProjectType } from '@/types/project.type'
@@ -15,7 +15,7 @@ import { useProjectTypeManagement } from '@/hooks/useProjectTypeManagement';
 import { useProjectManagement } from '@/hooks/useProjectManagement';
 import NavbarAuthenticated from '@/components/NavbarAuthenticated';
 
-export default function CustomerProjectsPage() {
+function CustomerProjectsPageContent() {
   const { user } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -46,7 +46,6 @@ export default function CustomerProjectsPage() {
     getProjects,
     updateProject,
     deleteProject,
-    refreshProjects,
     clearError: clearProjectsError
   } = useProjectManagement()
 
@@ -158,8 +157,8 @@ export default function CustomerProjectsPage() {
       return matchesSearch && matchesStatus && matchesSkills && matchesBudget && matchesDate
     })
     .sort((a, b) => {
-      let aValue = a[sortBy as keyof Project]
-      let bValue = b[sortBy as keyof Project]
+      const aValue = a[sortBy as keyof Project]
+      const bValue = b[sortBy as keyof Project]
 
       if (aValue instanceof Date && bValue instanceof Date) {
         return sortOrder === 'asc' ? aValue.getTime() - bValue.getTime() : bValue.getTime() - aValue.getTime()
@@ -174,6 +173,7 @@ export default function CustomerProjectsPage() {
         String(bValue).localeCompare(String(aValue))
     })
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleCreateProject = async (projectData: any) => {
     try {
       const result = await createProject(projectData)
@@ -186,6 +186,7 @@ export default function CustomerProjectsPage() {
     }
   }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleUpdateProject = async (projectId: string, updates: any) => {
     try {
       const result = await updateProject({ id: projectId, ...updates })
@@ -590,4 +591,14 @@ export default function CustomerProjectsPage() {
   )
 }
 
-
+export default function CustomerProjectsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    }>
+      <CustomerProjectsPageContent />
+    </Suspense>
+  );
+}

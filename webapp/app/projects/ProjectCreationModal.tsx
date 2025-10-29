@@ -7,6 +7,7 @@ import { useProjectManagement } from '@/hooks/useProjectManagement'
 interface ProjectModalProps {
     project?: Project | null
     onClose: () => void
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onSave: (project: any) => void // Updated to match ProjectCreateRequest
 }
 

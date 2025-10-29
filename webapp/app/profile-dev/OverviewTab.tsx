@@ -4,7 +4,6 @@ import React from 'react';
 import type { DeveloperProfile } from '@/types/user.type';
 import type { Product } from '@/types/product.type';
 import type { UserProfileResponse } from '@/hooks/useDeveloperProfile';
-import { formatCurrency, formatDate } from '@/utils';
 import {
   HiChartPie,
   HiCheckCircle,

@@ -49,6 +49,7 @@ const Login: React.FC = () => {
         setError('Email hoặc mật khẩu không đúng. Vui lòng kiểm tra lại.')
       }
     } catch (err) {
+      console.log(err)
       setError('Đăng nhập thất bại. Vui lòng thử lại.')
     } finally {
       setIsLoading(false)

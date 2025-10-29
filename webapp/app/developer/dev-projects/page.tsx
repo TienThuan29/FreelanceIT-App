@@ -19,6 +19,7 @@ export default function DeveloperProjectsPage() {
     const [isLoading, setIsLoading] = useState(true)
     const [currentProjects, setCurrentProjects] = useState<ProjectTeamMember[]>([])
     const [applications, setApplications] = useState<ProjectApplication[]>([])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [projectDetails, setProjectDetails] = useState<{[key: string]: any}>({})
 
     const { 
@@ -36,6 +37,7 @@ export default function DeveloperProjectsPage() {
     } = useAllProjects()
 
     const fetchProjectDetails = useCallback(async (projectIds: string[]) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const projectDetailsMap: {[key: string]: any} = {}
         
         // Fetch project details for all unique project IDs

@@ -66,42 +66,8 @@ export default function ManageDeveloperProjectsPage() {
 
   const loadDeveloperProjects = () => {
     setTimeout(() => {
-      // Mock data: tạo các dự án mà developer này đã apply/làm việc
-      const developerProjects: DeveloperProject[] = [
-        {
-          ...mockProjects[0], // Website e-commerce
-          applicationStatus: 'applied',
-          applicationDate: new Date('2024-01-16'),
-        },
-        {
-          ...mockProjects[1], // Mobile app Flutter
-          applicationStatus: 'in_progress',
-          applicationDate: new Date('2024-01-10'),
-          startDate: new Date('2024-01-20'),
-          earnings: 12500000,
-        },
-        {
-          ...mockProjects[2], // AI chatbot
-          applicationStatus: 'completed',
-          applicationDate: new Date('2023-12-01'),
-          startDate: new Date('2023-12-10'),
-          completedDate: new Date('2024-01-05'),
-          earnings: 8000000,
-          rating: 4.9,
-          review: 'Developer rất chuyên nghiệp, giao sản phẩm đúng hạn và chất lượng cao!'
-        },
-        {
-          ...mockProjects[3], // WordPress website
-          applicationStatus: 'accepted',
-          applicationDate: new Date('2024-01-18'),
-          startDate: new Date('2024-01-25'),
-        },
-        {
-          ...mockProjects[4], // Data analysis
-          applicationStatus: 'rejected',
-          applicationDate: new Date('2024-01-12'),
-        }
-      ]
+      // TODO: Replace with actual API call to fetch developer projects
+      const developerProjects: DeveloperProject[] = []
 
       setProjects(developerProjects)
       setLoading(false)
@@ -121,7 +87,7 @@ export default function ManageDeveloperProjectsPage() {
       filtered = filtered.filter(project =>
         project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (project.clientName && project.clientName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        project.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()))
+        (project.requiredSkills && project.requiredSkills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase())))
       )
     }
 
@@ -129,12 +95,15 @@ export default function ManageDeveloperProjectsPage() {
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'budget':
-          return b.budget - a.budget
+          return (b.budget || 0) - (a.budget || 0)
         case 'deadline':
-          return new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
+          if (!a.endDate && !b.endDate) return 0
+          if (!a.endDate) return 1
+          if (!b.endDate) return -1
+          return new Date(a.endDate).getTime() - new Date(b.endDate).getTime()
         case 'date':
         default:
-          return new Date(b.applicationDate || b.createdAt).getTime() - new Date(a.applicationDate || a.createdAt).getTime()
+          return new Date(b.applicationDate || b.createdDate || new Date()).getTime() - new Date(a.applicationDate || a.createdDate || new Date()).getTime()
       }
     })
 
@@ -316,6 +285,7 @@ export default function ManageDeveloperProjectsPage() {
               <span className="text-sm text-gray-500">Sắp xếp:</span>
               <select
                 value={sortBy}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 onChange={(e) => setSortBy(e.target.value as any)}
                 className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
@@ -340,6 +310,7 @@ export default function ManageDeveloperProjectsPage() {
               ].map(tab => (
                 <button
                   key={tab.key}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   onClick={() => setActiveTab(tab.key as any)}
                   className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.key
                       ? 'border-blue-500 text-blue-600'
@@ -378,13 +349,13 @@ export default function ManageDeveloperProjectsPage() {
                         <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                         </svg>
-                        {formatCurrency(project.budget)}
+                        {project.budget ? formatCurrency(project.budget) : 'Chưa xác định'}
                       </span>
                       <span className="flex items-center">
                         <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a4 4 0 118 0v4m-4 8l-3-3m0 0l-3 3m3-3v12" />
                         </svg>
-                        {formatDate(project.deadline)}
+                        {project.endDate ? formatDate(project.endDate) : 'Chưa xác định'}
                       </span>
                     </div>
 
@@ -393,13 +364,13 @@ export default function ManageDeveloperProjectsPage() {
                     </p>
 
                     <div className="flex flex-wrap gap-2 mb-3">
-                      {project.skills.slice(0, 3).map(skill => (
+                      {project.requiredSkills && project.requiredSkills.slice(0, 3).map(skill => (
                         <span key={skill} className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
                           {skill}
                         </span>
                       ))}
-                      {project.skills.length > 3 && (
-                        <span className="text-gray-500 text-xs">+{project.skills.length - 3} kỹ năng khác</span>
+                      {project.requiredSkills && project.requiredSkills.length > 3 && (
+                        <span className="text-gray-500 text-xs">+{project.requiredSkills.length - 3} kỹ năng khác</span>
                       )}
                     </div>
 
@@ -438,7 +409,7 @@ export default function ManageDeveloperProjectsPage() {
                         )}
                         {project.review && (
                           <div className="italic text-gray-600 bg-gray-50 p-2 rounded text-sm mt-2">
-                            "{project.review}"
+                            &ldquo;{project.review}&rdquo;
                           </div>
                         )}
                       </div>

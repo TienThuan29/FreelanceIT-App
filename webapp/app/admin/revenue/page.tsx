@@ -4,16 +4,12 @@ import { motion } from 'framer-motion';
 import { 
   DollarSign, 
   TrendingUp, 
-  TrendingDown, 
   Users, 
-  Calendar, 
   BarChart3, 
   PieChart, 
   Download,
   RefreshCw,
   Eye,
-  Filter,
-  Search
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -28,7 +24,7 @@ import {
 
 export default function AdminRevenuePage() {
   const [selectedPeriod, setSelectedPeriod] = useState('month');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
 
   // Mock revenue data
   const revenueStats = {
@@ -163,6 +159,7 @@ export default function AdminRevenuePage() {
     return new Date(date).toLocaleDateString('vi-VN');
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const StatCard = ({ title, value, icon: Icon, color, subtitle, trend, delay = 0 }: any) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -391,7 +388,7 @@ export default function AdminRevenuePage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {topCustomers.map((customer, index) => (
+                  {topCustomers.map((customer) => (
                     <TableRow key={customer.id} className="hover:bg-gray-50 transition-colors">
                       <TableCell>
                         <div>
@@ -454,7 +451,7 @@ export default function AdminRevenuePage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recentTransactions.map((transaction, index) => (
+                  {recentTransactions.map((transaction) => (
                     <TableRow key={transaction.id} className="hover:bg-gray-50 transition-colors">
                       <TableCell>
                         <p className="font-mono text-sm text-gray-900">{transaction.id}</p>

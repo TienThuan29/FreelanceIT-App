@@ -27,6 +27,7 @@ interface UseProjectTimelineReturn {
   getTimelinesByProjectId: (projectId: string) => Promise<ProjectTimeline[]>;
   getAllTimelines: () => Promise<ProjectTimeline[]>;
   updateTimeline: (id: string, updateData: ProjectTimelineUpdateRequest) => Promise<ProjectTimeline | null>;
+  updateMeetingUrl: (id: string, meetingUrl: string) => Promise<boolean>;
   deleteTimeline: (id: string) => Promise<boolean>;
   refreshTimelines: () => Promise<void>;
   clearError: () => void;
@@ -177,6 +178,36 @@ export const useProjectTimeline = (): UseProjectTimelineReturn => {
     }
   }, [axiosInstance, handleError]);
 
+  // Update Google Meet URL for a timeline
+  const updateMeetingUrl = useCallback(async (
+    id: string,
+    meetingUrl: string
+  ): Promise<boolean> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+
+      const response = await axiosInstance.patch(
+        `${Api.ProjectTimeline.UPDATE_MEETING_URL}/${id}/meeting-url`,
+        { meetingUrl }
+      );
+      const updatedTimeline: ProjectTimeline = response.data.dataResponse;
+
+      setState(prev => ({
+        ...prev,
+        timelines: prev.timelines.map(timeline => 
+          timeline.id === id ? updatedTimeline : timeline
+        ),
+        isLoading: false,
+      }));
+
+      toast.success('Cập nhật link họp thành công');
+      return true;
+    } catch (error) {
+      handleError(error, 'update meeting URL');
+      return false;
+    }
+  }, [axiosInstance, handleError]);
+
   // Delete a timeline
   const deleteTimeline = useCallback(async (
     id: string
@@ -219,6 +250,7 @@ export const useProjectTimeline = (): UseProjectTimelineReturn => {
     getTimelinesByProjectId,
     getAllTimelines,
     updateTimeline,
+    updateMeetingUrl,
     deleteTimeline,
     refreshTimelines,
     clearError,

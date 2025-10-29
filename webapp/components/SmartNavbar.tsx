@@ -1,4 +1,5 @@
 import React from 'react'
+import Link from 'next/link'
 import { useAuth } from '../contexts/AuthContext'
 import Navbar from './Navbar'
 import NavbarAuthenticated from './NavbarAuthenticated'
@@ -20,9 +21,9 @@ const SmartNavbar: React.FC = () => {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <a href="/" className="flex items-center">
+              <Link href="/" className="flex items-center">
                 <Image src={'/assets/fulllogo_lightArtboard_1.png'} alt="FreeLanceIT Logo" className="h-12 w-auto" width={48} height={48} />
-              </a>
+              </Link>
             </div>
             
             {/* Loading indicator */}

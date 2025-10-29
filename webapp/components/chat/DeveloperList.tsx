@@ -88,9 +88,11 @@ const DeveloperList: React.FC<DeveloperListProps> = ({
         let filteredUsers;
         if (user?.role === 'DEVELOPER') {
           // DEVELOPER sees CUSTOMER users
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           filteredUsers = allUsers.filter((userItem: any) => userItem.role === 'CUSTOMER');
         } else if (user?.role === 'CUSTOMER') {
           // CUSTOMER sees DEVELOPER users
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           filteredUsers = allUsers.filter((userItem: any) => userItem.role === 'DEVELOPER');
         } else {
           // Default: show all users

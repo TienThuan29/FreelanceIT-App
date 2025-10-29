@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Users, 
@@ -10,23 +10,17 @@ import {
   DollarSign, 
   MessageSquare, 
   ShoppingCart, 
-  FileText, 
   Clock, 
   Activity,
   AlertTriangle,
   CheckCircle,
   BarChart3,
-  PieChart,
-  Eye,
   Download,
-  Filter,
-  Search
 } from 'lucide-react';
 import { useAdminStats } from '../../hooks/useAdminStats';
 import { useAdminUsers } from '../../hooks/useAdminUsers';
 import useProjectManagement from '../../hooks/useProjectManagement';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const StatCard = ({ 
   title, 
@@ -40,6 +34,7 @@ const StatCard = ({
 }: { 
   title: string; 
   value: number | string; 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   icon: any; 
   color: string; 
   isLoading: boolean; 
@@ -102,6 +97,7 @@ const LoadingSkeleton = () => (
   </div>
 );
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const QuickStatsChart = ({ data }: { data: any }) => {
   const chartData = [
     { label: 'Developers', value: data.developers || 0, color: 'bg-blue-500' },
@@ -140,6 +136,7 @@ const QuickStatsChart = ({ data }: { data: any }) => {
   );
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const RecentActivity = ({ activities }: { activities: any[] }) => (
   <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
     <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
@@ -233,8 +230,6 @@ const SystemHealth = () => (
 export default function AdminDashboardPage() {
   const { stats, isLoading, error, refresh } = useAdminStats();
   const { developers, customers } = useAdminUsers();
-  const { projects } = useProjectManagement();
-  const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
     refresh();
@@ -285,7 +280,7 @@ export default function AdminDashboardPage() {
       trend: { value: 8, isPositive: true }
     },
     {
-      title: 'Kế hoạch AI',
+      title: 'Gói người dùng',
       value: comprehensiveStats.plannings,
       icon: Calendar,
       color: 'bg-gradient-to-r from-green-500 to-green-600',

@@ -143,7 +143,8 @@ const ConversationSettingsModal: React.FC<ConversationSettingsModalProps> = ({
                 <div className="flex space-x-2">
                   <Button
                     size="sm"
-                    variant="destructive"
+                    variant="primary"
+                    className="bg-red-600 hover:bg-red-700 focus:ring-red-500"
                     onClick={handleDelete}
                     disabled={isLoading}
                   >

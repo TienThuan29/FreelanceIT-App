@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react';
-import { FiAlertTriangle, FiX } from 'react-icons/fi';
+import { FiAlertTriangle } from 'react-icons/fi';
 
 interface ConfirmationModalProps {
     isOpen: boolean;

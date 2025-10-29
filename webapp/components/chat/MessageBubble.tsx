@@ -21,7 +21,6 @@ interface MessageBubbleProps {
 const MessageBubble: React.FC<MessageBubbleProps> = ({
   message,
   currentUserId,
-  showAvatar = false,
   showTime = true
 }) => {
   const [isClient, setIsClient] = useState(false);

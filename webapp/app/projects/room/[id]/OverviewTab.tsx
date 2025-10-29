@@ -7,6 +7,7 @@ import { formatDate } from '@/lib/date'
 import { ProjectTeamMember } from '@/hooks/useProjectManagement'
 
 interface OverviewTabProps {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     project: any
     teamMembers: ProjectTeamMember[]
 }

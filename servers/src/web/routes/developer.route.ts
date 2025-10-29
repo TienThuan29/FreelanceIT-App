@@ -6,6 +6,10 @@ import { uploadProjectImage } from "../middlewares/multer.middleware";
 const router = Router();
 const developerApi = new DeveloperApi();
 
+// Public routes (no authentication required) - for customers to view developer profiles
+router.get('/public/profile/:userId', developerApi.getDeveloperProfile);
+
+// Protected routes
 router.use(authenticate);
 router.get('/profile/get/:userId', developerApi.getDeveloperProfile);
 router.get('/list', authorize(['CUSTOMER']), developerApi.getDevelopersByPage);

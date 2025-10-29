@@ -92,6 +92,7 @@ export default function ProductModal({
     }
   }, [isOpen, mode, product]);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleInputChange = (field: keyof Product, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error for this field
@@ -171,6 +172,7 @@ export default function ProductModal({
       } else {
         toast.error('Không thể tải lên hình ảnh');
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('Error uploading images:', error);
       const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi tải lên hình ảnh';
@@ -256,7 +258,7 @@ export default function ProductModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0  bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-gray-900">

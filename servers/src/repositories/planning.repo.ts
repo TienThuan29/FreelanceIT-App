@@ -130,8 +130,16 @@ export class UserPlanningRepository extends DynamoRepository {
         // Check if UserPlanning with this orderId already exists
         const existing = await this.findByOrderId(userPlanning.orderId);
         if (existing) {
-            console.log(`UserPlanning with orderId ${userPlanning.orderId} already exists. Returning existing.`);
-            return existing;
+            console.log(`UserPlanning with orderId ${userPlanning.orderId} already exists. Updating with new values.`);
+            // Update the existing record with new values (especially isEnable)
+            const updatedUserPlanning = {
+                ...existing,
+                ...userPlanning,
+                id: existing.id, // Keep the existing ID
+                transactionDate: userPlanning.transactionDate || existing.transactionDate,
+                expireDate: userPlanning.expireDate || existing.expireDate
+            };
+            return await this.update(updatedUserPlanning);
         }
 
         const id = uuidv4();

@@ -1,8 +1,8 @@
 'use client';
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useAdminUsers, DeveloperWithProfile, CustomerWithProfile } from '@/hooks/useAdminUsers';
 import { UserPlanning } from '@/types/planning.type';
-import { Button } from '@/components/ui/Button';
 import {
   Table,
   TableBody,
@@ -18,7 +18,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Eye, Mail, Phone, MapPin, Briefcase, Award, Calendar, Star, Globe, Github, Linkedin, FolderOpen } from 'lucide-react';
 
@@ -28,8 +27,6 @@ export default function AdminUsersPage() {
     customers,
     isLoading,
     error,
-    fetchDevelopers,
-    fetchCustomers,
     fetchUserPlannings,
     refreshAll,
   } = useAdminUsers();
@@ -77,308 +74,6 @@ export default function AdminUsersPage() {
     }).format(amount);
   };
 
-  // Enhanced mock data for developers
-  const mockDevelopers: DeveloperWithProfile[] = [
-    {
-      id: 'dev-1',
-      email: 'nguyen.van.a@email.com',
-      fullname: 'Nguyễn Văn An',
-      phone: '0901234567',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-      dateOfBirth: new Date('1990-05-15'),
-      province: { id: '1', name: 'Hồ Chí Minh' },
-      role: 'DEVELOPER',
-      isEnable: true,
-      createdDate: new Date('2023-01-15'),
-      updatedDate: new Date('2024-01-20'),
-      lastLoginDate: new Date('2024-01-25'),
-      developerProfile: {
-        id: 'dev-profile-1',
-        userId: 'dev-1',
-        title: 'Senior Full Stack Developer',
-        developerLevel: 'SENIOR',
-        experienceYears: 8,
-        hourlyRate: 45,
-        rating: 4.8,
-        totalProjects: 25,
-        githubUrl: 'https://github.com/nguyenvanan',
-        linkedinUrl: 'https://linkedin.com/in/nguyenvanan',
-        skills: [
-          { id: '1', name: 'React', proficiency: 'EXPERT' },
-          { id: '2', name: 'Node.js', proficiency: 'EXPERT' },
-          { id: '3', name: 'TypeScript', proficiency: 'ADVANCED' },
-          { id: '4', name: 'AWS', proficiency: 'ADVANCED' }
-        ]
-      }
-    },
-    {
-      id: 'dev-2',
-      email: 'tran.thi.b@email.com',
-      fullname: 'Trần Thị Bình',
-      phone: '0901234568',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-      avatarUrl: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-      dateOfBirth: new Date('1992-08-22'),
-      province: { id: '2', name: 'Hà Nội' },
-      role: 'DEVELOPER',
-      isEnable: true,
-      createdDate: new Date('2023-02-10'),
-      updatedDate: new Date('2024-01-18'),
-      lastLoginDate: new Date('2024-01-24'),
-      developerProfile: {
-        id: 'dev-profile-2',
-        userId: 'dev-2',
-        title: 'Lead Mobile Developer',
-        developerLevel: 'LEAD',
-        experienceYears: 10,
-        hourlyRate: 60,
-        rating: 4.9,
-        totalProjects: 35,
-        githubUrl: 'https://github.com/tranthibinh',
-        linkedinUrl: 'https://linkedin.com/in/tranthibinh',
-        skills: [
-          { id: '5', name: 'React Native', proficiency: 'EXPERT' },
-          { id: '6', name: 'Flutter', proficiency: 'EXPERT' },
-          { id: '7', name: 'iOS', proficiency: 'ADVANCED' },
-          { id: '8', name: 'Android', proficiency: 'ADVANCED' }
-        ]
-      }
-    },
-    {
-      id: 'dev-3',
-      email: 'le.van.c@email.com',
-      fullname: 'Lê Văn Cường',
-      phone: '0901234569',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-      avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-      dateOfBirth: new Date('1995-03-10'),
-      province: { id: '3', name: 'Đà Nẵng' },
-      role: 'DEVELOPER',
-      isEnable: true,
-      createdDate: new Date('2023-03-05'),
-      updatedDate: new Date('2024-01-15'),
-      lastLoginDate: new Date('2024-01-23'),
-      developerProfile: {
-        id: 'dev-profile-3',
-        userId: 'dev-3',
-        title: 'Mid-level Backend Developer',
-        developerLevel: 'MID',
-        experienceYears: 4,
-        hourlyRate: 30,
-        rating: 4.5,
-        totalProjects: 15,
-        githubUrl: 'https://github.com/levancuong',
-        linkedinUrl: 'https://linkedin.com/in/levancuong',
-        skills: [
-          { id: '9', name: 'Python', proficiency: 'ADVANCED' },
-          { id: '10', name: 'Django', proficiency: 'ADVANCED' },
-          { id: '11', name: 'PostgreSQL', proficiency: 'INTERMEDIATE' },
-          { id: '12', name: 'Docker', proficiency: 'INTERMEDIATE' }
-        ]
-      }
-    },
-    {
-      id: 'dev-4',
-      email: 'pham.thi.d@email.com',
-      fullname: 'Phạm Thị Dung',
-      phone: '0901234570',
-      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
-      avatarUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
-      dateOfBirth: new Date('1998-11-18'),
-      province: { id: '4', name: 'Cần Thơ' },
-      role: 'DEVELOPER',
-      isEnable: true,
-      createdDate: new Date('2023-04-12'),
-      updatedDate: new Date('2024-01-12'),
-      lastLoginDate: new Date('2024-01-22'),
-      developerProfile: {
-        id: 'dev-profile-4',
-        userId: 'dev-4',
-        title: 'Junior Frontend Developer',
-        developerLevel: 'JUNIOR',
-        experienceYears: 2,
-        hourlyRate: 20,
-        rating: 4.2,
-        totalProjects: 8,
-        githubUrl: 'https://github.com/phamthidung',
-        linkedinUrl: 'https://linkedin.com/in/phamthidung',
-        skills: [
-          { id: '13', name: 'Vue.js', proficiency: 'INTERMEDIATE' },
-          { id: '14', name: 'JavaScript', proficiency: 'ADVANCED' },
-          { id: '15', name: 'CSS', proficiency: 'ADVANCED' },
-          { id: '16', name: 'HTML', proficiency: 'EXPERT' }
-        ]
-      }
-    },
-    {
-      id: 'dev-5',
-      email: 'hoang.van.e@email.com',
-      fullname: 'Hoàng Văn Em',
-      phone: '0901234571',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face',
-      avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face',
-      dateOfBirth: new Date('1988-07-25'),
-      province: { id: '5', name: 'Hải Phòng' },
-      role: 'DEVELOPER',
-      isEnable: false,
-      createdDate: new Date('2023-01-20'),
-      updatedDate: new Date('2024-01-10'),
-      lastLoginDate: new Date('2024-01-05'),
-      developerProfile: {
-        id: 'dev-profile-5',
-        userId: 'dev-5',
-        title: 'Senior DevOps Engineer',
-        developerLevel: 'SENIOR',
-        experienceYears: 12,
-        hourlyRate: 55,
-        rating: 4.7,
-        totalProjects: 40,
-        githubUrl: 'https://github.com/hoangvanem',
-        linkedinUrl: 'https://linkedin.com/in/hoangvanem',
-        skills: [
-          { id: '17', name: 'Kubernetes', proficiency: 'EXPERT' },
-          { id: '18', name: 'Terraform', proficiency: 'EXPERT' },
-          { id: '19', name: 'Jenkins', proficiency: 'ADVANCED' },
-          { id: '20', name: 'Linux', proficiency: 'EXPERT' }
-        ]
-      }
-    }
-  ];
-
-  // Enhanced mock data for customers
-  const mockCustomers: CustomerWithProfile[] = [
-    {
-      id: 'cust-1',
-      email: 'admin@techcorp.vn',
-      fullname: 'Nguyễn Minh Tuấn',
-      phone: '0901234572',
-      avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face',
-      avatarUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face',
-      dateOfBirth: new Date('1985-04-12'),
-      province: { id: '1', name: 'Hồ Chí Minh' },
-      role: 'CUSTOMER',
-      isEnable: true,
-      createdDate: new Date('2023-01-10'),
-      updatedDate: new Date('2024-01-20'),
-      lastLoginDate: new Date('2024-01-25'),
-      customerProfile: {
-        id: 'cust-profile-1',
-        userId: 'cust-1',
-        companyName: 'TechCorp Solutions',
-        companyWebsite: 'https://techcorp.vn',
-        industry: 'Technology',
-        companySize: '50-200 employees',
-        taxId: '0123456789',
-        rating: 4.6
-      }
-    },
-    {
-      id: 'cust-2',
-      email: 'ceo@startupvn.com',
-      fullname: 'Trần Thị Lan',
-      phone: '0901234573',
-      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face',
-      avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face',
-      dateOfBirth: new Date('1982-09-30'),
-      province: { id: '2', name: 'Hà Nội' },
-      role: 'CUSTOMER',
-      isEnable: true,
-      createdDate: new Date('2023-02-15'),
-      updatedDate: new Date('2024-01-18'),
-      lastLoginDate: new Date('2024-01-24'),
-      customerProfile: {
-        id: 'cust-profile-2',
-        userId: 'cust-2',
-        companyName: 'StartupVN',
-        companyWebsite: 'https://startupvn.com',
-        industry: 'Fintech',
-        companySize: '10-50 employees',
-        taxId: '0987654321',
-        rating: 4.8
-      }
-    },
-    {
-      id: 'cust-3',
-      email: 'manager@ecommerce.vn',
-      fullname: 'Lê Văn Minh',
-      phone: '0901234574',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-      dateOfBirth: new Date('1979-12-05'),
-      province: { id: '3', name: 'Đà Nẵng' },
-      role: 'CUSTOMER',
-      isEnable: true,
-      createdDate: new Date('2023-03-20'),
-      updatedDate: new Date('2024-01-15'),
-      lastLoginDate: new Date('2024-01-23'),
-      customerProfile: {
-        id: 'cust-profile-3',
-        userId: 'cust-3',
-        companyName: 'E-Commerce Plus',
-        companyWebsite: 'https://ecommerce.vn',
-        industry: 'E-commerce',
-        companySize: '200-500 employees',
-        taxId: '1122334455',
-        rating: 4.4
-      }
-    },
-    {
-      id: 'cust-4',
-      email: 'director@healthcare.com',
-      fullname: 'Phạm Thị Hoa',
-      phone: '0901234575',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-      avatarUrl: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-      dateOfBirth: new Date('1987-06-18'),
-      province: { id: '4', name: 'Cần Thơ' },
-      role: 'CUSTOMER',
-      isEnable: true,
-      createdDate: new Date('2023-04-08'),
-      updatedDate: new Date('2024-01-12'),
-      lastLoginDate: new Date('2024-01-22'),
-      customerProfile: {
-        id: 'cust-profile-4',
-        userId: 'cust-4',
-        companyName: 'Healthcare Solutions',
-        companyWebsite: 'https://healthcare.com',
-        industry: 'Healthcare',
-        companySize: '500+ employees',
-        taxId: '5566778899',
-        rating: 4.9
-      }
-    },
-    {
-      id: 'cust-5',
-      email: 'owner@restaurant.vn',
-      fullname: 'Hoàng Văn Nam',
-      phone: '0901234576',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-      avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-      dateOfBirth: new Date('1980-02-14'),
-      province: { id: '5', name: 'Hải Phòng' },
-      role: 'CUSTOMER',
-      isEnable: false,
-      createdDate: new Date('2023-01-25'),
-      updatedDate: new Date('2024-01-08'),
-      lastLoginDate: new Date('2024-01-10'),
-      customerProfile: {
-        id: 'cust-profile-5',
-        userId: 'cust-5',
-        companyName: 'Nam Restaurant Chain',
-        companyWebsite: 'https://restaurant.vn',
-        industry: 'Food & Beverage',
-        companySize: '50-200 employees',
-        taxId: '9988776655',
-        rating: 4.3
-      }
-    }
-  ];
-
-  // Use mock data if no real data
-  const displayDevelopers = developers.length > 0 ? developers : mockDevelopers;
-  const displayCustomers = customers.length > 0 ? customers : mockCustomers;
-
   const getDeveloperLevelColor = (level: string | undefined) => {
     switch (level) {
       case 'LEAD': return 'bg-purple-100 text-purple-800 border-purple-200';
@@ -425,8 +120,8 @@ export default function AdminUsersPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-blue-600 font-medium">Developers</p>
-                <p className="text-2xl font-bold text-blue-900 mt-1">{displayDevelopers.length}</p>
-                <p className="text-xs text-blue-600 mt-1">{displayDevelopers.filter(d => d.isEnable).length} active</p>
+                <p className="text-2xl font-bold text-blue-900 mt-1">{developers.length}</p>
+                <p className="text-xs text-blue-600 mt-1">{developers.filter(d => d.isEnable).length} active</p>
               </div>
               <div className="bg-blue-200 rounded-full p-3">
                 <Briefcase className="w-6 h-6 text-blue-700" />
@@ -437,8 +132,8 @@ export default function AdminUsersPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-green-600 font-medium">Customers</p>
-                <p className="text-2xl font-bold text-green-900 mt-1">{displayCustomers.length}</p>
-                <p className="text-xs text-green-600 mt-1">{displayCustomers.filter(c => c.isEnable).length} active</p>
+                <p className="text-2xl font-bold text-green-900 mt-1">{customers.length}</p>
+                <p className="text-xs text-green-600 mt-1">{customers.filter(c => c.isEnable).length} active</p>
               </div>
               <div className="bg-green-200 rounded-full p-3">
                 <Award className="w-6 h-6 text-green-700" />
@@ -493,11 +188,11 @@ export default function AdminUsersPage() {
         <TabsList className="grid w-full grid-cols-2 max-w-md bg-white border border-gray-200 rounded-lg p-1">
           <TabsTrigger value="developers" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
             <Briefcase className="w-4 h-4 mr-2" />
-            Developers ({displayDevelopers.length})
+            Developers ({developers.length})
           </TabsTrigger>
           <TabsTrigger value="customers" className="data-[state=active]:bg-green-50 data-[state=active]:text-green-700">
             <Award className="w-4 h-4 mr-2" />
-            Customers ({displayCustomers.length})
+            Customers ({customers.length})
           </TabsTrigger>
         </TabsList>
 
@@ -529,7 +224,7 @@ export default function AdminUsersPage() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ) : displayDevelopers.length === 0 ? (
+                  ) : developers.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-12 text-gray-500">
                         <div className="flex flex-col items-center space-y-2">
@@ -539,7 +234,7 @@ export default function AdminUsersPage() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    displayDevelopers.map((dev, index) => (
+                    developers.map((dev, index) => (
                       <TableRow key={`dev-${dev.id}-${index}`} className="hover:bg-gray-50 transition-colors">
                         <TableCell>
                           <p className="font-semibold text-gray-900">{dev.fullname}</p>
@@ -644,7 +339,7 @@ export default function AdminUsersPage() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ) : displayCustomers.length === 0 ? (
+                  ) : customers.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={8} className="text-center py-12 text-gray-500">
                         <div className="flex flex-col items-center space-y-2">
@@ -654,7 +349,7 @@ export default function AdminUsersPage() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    displayCustomers.map((cust, index) => (
+                    customers.map((cust, index) => (
                       <TableRow key={`cust-${cust.id}-${index}`} className="hover:bg-gray-50 transition-colors">
                         <TableCell>
                           <p className="font-semibold text-gray-900">{cust.fullname}</p>
@@ -765,9 +460,11 @@ export default function AdminUsersPage() {
               {/* User Basic Info */}
               <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-100">
                 <div className="flex items-start space-x-4">
-                  <img 
+                  <Image 
                     src={selectedUser.avatarUrl || selectedUser.avatar || '/default-avatar.png'} 
                     alt={selectedUser.fullname}
+                    width={80}
+                    height={80}
                     className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg"
                   />
                   <div className="flex-1">
@@ -1048,20 +745,6 @@ export default function AdminUsersPage() {
                         <p className="text-xs text-gray-500 mb-1">Ngày mua</p>
                         <p className="text-sm font-medium text-gray-900">{formatDate(userPlanning.transactionDate)}</p>
                       </div>
-                      <div className="bg-white rounded-lg p-3 border border-gray-200">
-                        <p className="text-xs text-gray-500 mb-1">Thời hạn</p>
-                        <p className="text-sm font-medium text-gray-900">{userPlanning.planning?.daysLimit || 0} ngày</p>
-                      </div>
-                      <div className="bg-white rounded-lg p-3 border border-gray-200">
-                        <p className="text-xs text-gray-500 mb-1">Giới hạn/ngày</p>
-                        <p className="text-sm font-medium text-gray-900">{userPlanning.planning?.dailyLimit || 0} requests</p>
-                      </div>
-                      <div className="bg-white rounded-lg p-3 border border-gray-200">
-                        <p className="text-xs text-gray-500 mb-1">Loại AI</p>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">
-                          {userPlanning.planning?.aiModel?.modelType || 'N/A'}
-                        </span>
-                      </div>
                     </div>
                   </div>
                 ))}
@@ -1073,6 +756,3 @@ export default function AdminUsersPage() {
     </div>
   );
 }
-
-
-

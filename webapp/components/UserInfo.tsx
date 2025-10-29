@@ -1,5 +1,6 @@
 import React from 'react'
-import { useAuth, useUserRole } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/AuthContext'
+import { Role } from '@/types/user.type'
 
 /**
  * Component hiển thị thông tin user hiện tại và các demo functions
@@ -7,7 +8,11 @@ import { useAuth, useUserRole } from '../contexts/AuthContext'
  */
 const UserInfo: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuth()
-  const { isDeveloper, isEmployer, isAdmin, role } = useUserRole()
+  
+  const isDeveloper = user?.role === Role.DEVELOPER
+  const isEmployer = user?.role === Role.CUSTOMER
+  const isAdmin = user?.role === Role.ADMIN
+  const role = user?.role
 
   if (!isAuthenticated) {
     return (
@@ -61,9 +66,9 @@ const UserInfo: React.FC = () => {
           <p className="text-sm text-gray-600 mb-2">
             <span className="font-medium">Role:</span> 
             <span className={`ml-1 px-2 py-1 rounded text-xs font-medium ${
-              role === 'admin' ? 'bg-purple-100 text-purple-800' :
-              role === 'developer' ? 'bg-green-100 text-green-800' :
-              role === 'employer' ? 'bg-blue-100 text-blue-800' :
+              role === Role.ADMIN ? 'bg-purple-100 text-purple-800' :
+              role === Role.DEVELOPER ? 'bg-green-100 text-green-800' :
+              role === Role.CUSTOMER ? 'bg-blue-100 text-blue-800' :
               'bg-gray-100 text-gray-800'
             }`}>
               {role}
@@ -77,20 +82,15 @@ const UserInfo: React.FC = () => {
           </div>
         </div>
 
-        {/* Developer specific info */}
-        {isDeveloper && user?.profile && (
+        {/* Developer specific info - commented out as profile is not available in User type */}
+        {/* {isDeveloper && (
           <div className="bg-green-50 rounded p-3">
             <p className="text-sm font-medium text-green-800 mb-2">Developer Profile</p>
             <div className="text-xs text-green-700 space-y-1">
-              <p><span className="font-medium">Title:</span> {user.profile.title}</p>
-              <p><span className="font-medium">Location:</span> {user.profile.location}</p>
-              <p><span className="font-medium">Experience:</span> {user.profile.experience} năm</p>
-              <p><span className="font-medium">Hourly Rate:</span> {user.profile.hourlyRate?.toLocaleString()} VNĐ</p>
-              <p><span className="font-medium">Rating:</span> {user.profile.rating}/5</p>
-              <p><span className="font-medium">Skills:</span> {user.profile.skills?.slice(0, 3).join(', ')}...</p>
+              <p>Profile information needs to be fetched separately</p>
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Quick actions */}
         <div className="flex flex-wrap gap-2 pt-2">

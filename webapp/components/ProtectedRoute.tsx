@@ -1,10 +1,13 @@
-import React from 'react'
+'use client'
+
+import React, { useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import { Navigate } from 'react-router-dom'
+import { useRouter } from 'next/navigation'
+import { Role } from '@/types/user.type'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
-  requiredRole?: 'developer' | 'employer' | 'admin'
+  requiredRole?: Role
   fallbackPath?: string
 }
 
@@ -17,6 +20,25 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   fallbackPath = '/login' 
 }) => {
   const { user, isLoading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!isLoading) {
+      // Redirect nếu chưa đăng nhập
+      if (!user) {
+        console.log('ProtectedRoute: User not authenticated, redirecting to', fallbackPath)
+        router.push(fallbackPath)
+        return
+      }
+
+      // Redirect nếu role không khớp
+      if (requiredRole && user.role !== requiredRole) {
+        console.log(`ProtectedRoute: User role ${user.role} doesn't match required ${requiredRole}`)
+        router.push('/')
+        return
+      }
+    }
+  }, [user, isLoading, requiredRole, fallbackPath, router])
 
   // Hiển thị loading khi đang kiểm tra auth
   if (isLoading) {
@@ -30,16 +52,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     )
   }
 
-  // Redirect nếu chưa đăng nhập
-  if (!user) {
-    console.log('ProtectedRoute: User not authenticated, redirecting to', fallbackPath)
-    return <Navigate to={fallbackPath} replace />
-  }
-
-  // Redirect nếu role không khớp
-  if (requiredRole && user.role !== requiredRole) {
-    console.log(`ProtectedRoute: User role ${user.role} doesn't match required ${requiredRole}`)
-    return <Navigate to="/" replace />
+  // Không render gì nếu chưa đăng nhập hoặc không đủ quyền
+  if (!user || (requiredRole && user.role !== requiredRole)) {
+    return null
   }
 
   console.log('ProtectedRoute: Access granted for user', user.email, 'role', user.role)

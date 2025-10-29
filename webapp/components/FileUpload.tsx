@@ -3,7 +3,6 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FiUpload, FiX, FiFile, FiCheck } from 'react-icons/fi';
-import { ProjectFile } from '@/types/file.type';
 import { 
     FiImage, 
     FiFileText, 

@@ -64,6 +64,7 @@ const StatCard = ({
 }: { 
   title: string; 
   value: number | string; 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   icon: any; 
   color: string; 
   isLoading: boolean; 

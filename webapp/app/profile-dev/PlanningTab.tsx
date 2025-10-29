@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import type { UserPlanningWithDetails } from '@/types/planning.type';
+import type { UserPlanning } from '@/types/planning.type';
 import {
   HiCreditCard,
   HiCalendar,
@@ -12,7 +12,7 @@ import {
 } from 'react-icons/hi2';
 
 interface PlanningTabProps {
-  activeUserPlanning?: UserPlanningWithDetails | null;
+  activeUserPlanning?: UserPlanning | null;
   isLoading: boolean;
 }
 

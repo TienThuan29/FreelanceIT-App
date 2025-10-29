@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-// import NDAContractList from '@/components/nda-contract-list';
-import { ProtectedRoute } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 
 interface NDAContract {
@@ -193,6 +191,7 @@ export default function NDAContractsPage() {
               ].map(tab => (
                 <button
                   key={tab.key}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   onClick={() => setActiveTab(tab.key as any)}
                   className={`py-4 text-sm font-medium border-b-2 ${activeTab === tab.key
                       ? 'border-blue-500 text-blue-600'

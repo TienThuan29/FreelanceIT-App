@@ -22,9 +22,7 @@ export default function FilesTab({ projectId, onUpload }: FilesTabProps) {
         isUploading,
         uploadFile,
         getProjectFiles,
-        deleteFile,
-        formatFileSize,
-        getFileIcon
+        deleteFile
     } = useFileManagement()
 
     // Load files when component mounts

@@ -1,4 +1,5 @@
 import * as React from 'react'
+import Link from 'next/link'
 import SmartImage from './SmartImage'
 
 const Navbar: React.FC = () => {
@@ -14,7 +15,7 @@ const Navbar: React.FC = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <a href="/" className="flex items-center">
+            <Link href="/" className="flex items-center">
               <SmartImage
                 src={'/assets/fulllogo_lightArtboard_1.png'}
                 alt="FreeLanceIT Logo"
@@ -22,7 +23,7 @@ const Navbar: React.FC = () => {
                 type="logo"
                 fallbackName="FreeLanceIT"
               />
-            </a>
+            </Link>
           </div>
 
           {/* Desktop Menu */}

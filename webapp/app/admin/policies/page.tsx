@@ -4,24 +4,16 @@ import { motion } from 'framer-motion';
 import { 
   FileText, 
   Shield, 
-  Users, 
-  Calendar, 
   Edit, 
   Eye, 
   Plus,
   Search,
   Filter,
   CheckCircle,
-  XCircle,
-  AlertCircle,
-  Clock,
   Globe,
   Lock,
-  Unlock,
   Download
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table,
   TableBody,
@@ -39,6 +31,7 @@ import {
 } from '@/components/ui/dialog';
 
 export default function AdminPoliciesPage() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [selectedPolicy, setSelectedPolicy] = useState<any>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -201,7 +194,8 @@ export default function AdminPoliciesPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const StatCard = ({ title, value, icon: Icon, color, subtitle, delay = 0 }: any) => (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const StatCard = ({ title, value, icon: Icon, color, subtitle, delay = 0 }: { title: string; value: number | string; icon: any; color: string; subtitle: string; delay: number }) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -234,6 +228,7 @@ export default function AdminPoliciesPage() {
     </motion.div>
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleViewPolicy = (policy: any) => {
     setSelectedPolicy(policy);
     setIsViewModalOpen(true);
@@ -392,7 +387,7 @@ export default function AdminPoliciesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredPolicies.map((policy, index) => (
+              {filteredPolicies.map((policy) => (
                 <TableRow key={policy.id} className="hover:bg-gray-50 transition-colors">
                   <TableCell>
                     <div>

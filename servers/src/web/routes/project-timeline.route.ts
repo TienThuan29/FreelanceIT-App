@@ -13,6 +13,7 @@ router.get('/', authorize(['CUSTOMER', 'DEVELOPER']), projectTimelineApi.getAllT
 router.get('/:id', authorize(['CUSTOMER', 'DEVELOPER']), projectTimelineApi.getTimelineById);
 router.get('/project/:projectId', authorize(['CUSTOMER', 'DEVELOPER']), projectTimelineApi.getTimelinesByProjectId);
 router.put('/:id', authorize(['CUSTOMER', 'DEVELOPER']), projectTimelineApi.updateTimeline);
+router.patch('/:id/meeting-url', authorize(['CUSTOMER', 'DEVELOPER']), projectTimelineApi.updateMeetingUrl);
 router.delete('/:id', authorize(['CUSTOMER', 'DEVELOPER']), projectTimelineApi.deleteTimeline);
 
 export default router;

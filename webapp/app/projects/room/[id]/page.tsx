@@ -1,13 +1,11 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProjectManagement } from '@/hooks/useProjectManagement'
 import { useChat } from '@/contexts/ChatContext'
 import { ProjectTeamMember } from '@/hooks/useProjectManagement'
-import { formatCurrency } from '@/lib/curency'
-import { formatDate } from '@/lib/date'
 import { toast } from 'sonner'
 import { ProjectStatus } from '@/types/shared.type'
 import { PageUrl } from '@/configs/page.url'
@@ -27,6 +25,7 @@ export default function ProjectRoomPage() {
     const projectId = params.id as string
 
     const [activeTab, setActiveTab] = useState<'overview' | 'team' | 'chat' | 'files' | 'timeline'>('overview')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [project, setProject] = useState<any>(null)
     const [teamMembers, setTeamMembers] = useState<ProjectTeamMember[]>([])
     const [isLoading, setIsLoading] = useState(true)
@@ -60,6 +59,7 @@ export default function ProjectRoomPage() {
         isConnected
     } = useChat()
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [projectConversation, setProjectConversation] = useState<any>(null)
     const [messageInput, setMessageInput] = useState('')
     const [isCreatingChat, setIsCreatingChat] = useState(false)
@@ -386,6 +386,7 @@ export default function ProjectRoomPage() {
                             ].map((tab) => (
                                 <button
                                     key={tab.id}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                     onClick={() => setActiveTab(tab.id as any)}
                                     className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
                                         activeTab === tab.id

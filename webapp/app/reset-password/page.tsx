@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import axios from 'axios'
 import { Api } from '@/configs/api'
@@ -10,7 +10,7 @@ interface ResetPasswordFormData {
   confirmPassword: string
 }
 
-const ResetPassword: React.FC = () => {
+const ResetPasswordForm: React.FC = () => {
   const searchParams = useSearchParams()
   const router = useRouter()
   const token = searchParams.get('token')
@@ -88,6 +88,7 @@ const ResetPassword: React.FC = () => {
       } else {
         setError(response.data.message || 'Có lỗi xảy ra khi đặt lại mật khẩu')
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       if (err.response?.data?.message) {
         setError(err.response.data.message)
@@ -341,4 +342,14 @@ const ResetPassword: React.FC = () => {
   )
 }
 
-export default ResetPassword
+export default function ResetPassword() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    }>
+      <ResetPasswordForm />
+    </Suspense>
+  )
+}

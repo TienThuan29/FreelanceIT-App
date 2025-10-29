@@ -7,6 +7,7 @@ const secret = config.HASHING_SECRET_KEY;
 declare global {
     interface Window {
         crypto: {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             subtle: any;
         };
     }
@@ -57,6 +58,7 @@ function hasBrowserSubtle(): boolean {
 }
 function hasNodeWebCrypto(): boolean {
     // globalThis.crypto?.subtle (Node 16+)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return typeof globalThis !== 'undefined' && !!(globalThis as any).crypto && !!(globalThis as any).crypto.subtle && typeof process !== 'undefined';
 }
 
@@ -82,6 +84,7 @@ export async function hmacSha256(message: string): Promise<Hex> {
 
     // 2) Node path with WebCrypto (preferred)
     if (hasNodeWebCrypto()) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const subtle = (globalThis as any).crypto.subtle;
         const keyData = utf8ToUint8(key);
         const cryptoKey = await subtle.importKey(
@@ -114,5 +117,3 @@ export async function verifyHmacSha256(message: string, expectedHex: string): Pr
     // In Node >=15 you could use crypto.timingSafeEqual, but we keep a portable version
     return timingSafeEqual(a, b);
 }
-
-

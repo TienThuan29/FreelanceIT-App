@@ -41,6 +41,7 @@ export const Api = {
 
     Developer: {
         GET_PROFILE: '/api/v1/developers/profile/get',
+        GET_PROFILE_PUBLIC: '/api/v1/developers/public/profile', // Public endpoint for viewing developer profiles
         GET_LIST: '/api/v1/developers/list',
         UPDATE_PROFILE: '/api/v1/developers/profile/update',
         UPDATE_USER: '/api/v1/developers/user/update',
@@ -140,6 +141,7 @@ export const Api = {
         GET_BY_ID: '/api/v1/project-timeline',
         GET_BY_PROJECT: '/api/v1/project-timeline/project',
         UPDATE: '/api/v1/project-timeline',
+        UPDATE_MEETING_URL: '/api/v1/project-timeline',
         DELETE: '/api/v1/project-timeline',
     },
 

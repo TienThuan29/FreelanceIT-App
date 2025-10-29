@@ -2,7 +2,6 @@
 
 import React from 'react'
 import { FiUsers, FiPlus } from 'react-icons/fi'
-import { formatCurrency } from '@/lib/curency'
 import { ProjectTeamMember } from '@/hooks/useProjectManagement'
 
 interface TeamTabProps {

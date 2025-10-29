@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
+import Link from 'next/link'
 import { useAuth } from '../contexts/AuthContext'
 import { useChatNotifications } from '../hooks/useChatNotifications'
 import Avatar from './Avatar'
@@ -46,7 +47,7 @@ const NavbarAuthenticated: React.FC = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <a href="/" className="flex items-center">
+            <Link href="/" className="flex items-center">
               <SmartImage 
                 src={'/assets/fulllogo_lightArtboard_1.png'} 
                 alt="FreeLanceIT Logo" 
@@ -54,7 +55,7 @@ const NavbarAuthenticated: React.FC = () => {
                 type="logo"
                 fallbackName="FreeLanceIT"
               />
-            </a>
+            </Link>
           </div>
 
           {/* Desktop Menu */}
@@ -98,7 +99,7 @@ const NavbarAuthenticated: React.FC = () => {
                 <a href={PageUrl.Customer.CHATBOT_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Chatbot AI
                 </a>
-                <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                <a href={PageUrl.Customer.PRODUCTS_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Sản phẩm
                 </a>
                 <a href={PageUrl.Customer.POSTS_DEV_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">

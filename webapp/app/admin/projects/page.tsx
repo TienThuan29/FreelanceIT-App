@@ -5,22 +5,17 @@ import {
   FolderOpen, 
   Clock, 
   DollarSign, 
-  Users, 
   TrendingUp, 
   Eye, 
   Filter, 
   Search,
   Calendar,
   MapPin,
-  Star,
   AlertCircle,
   CheckCircle,
-  XCircle,
   RefreshCw
 } from 'lucide-react';
 import useProjectManagement from '@/hooks/useProjectManagement';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table,
   TableBody,
@@ -61,6 +56,7 @@ const StatCard = ({
 }: { 
   title: string; 
   value: number | string; 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   icon: any; 
   color: string; 
   isLoading: boolean; 

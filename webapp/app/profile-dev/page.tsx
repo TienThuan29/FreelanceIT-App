@@ -342,10 +342,12 @@ export default function ProfileDevPage() {
     }
   }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleInputChange = (field: keyof DeveloperProfile, value: any): void => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleUserInputChange = (field: string, value: any): void => {
     setUserFormData(prev => ({ ...prev, [field]: value }))
   }
@@ -567,6 +569,7 @@ export default function ProfileDevPage() {
               hasProfile={hasProfile}
               developerProfile={developerProfile || undefined}
               userProfile={userProfile || undefined}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
               products={myProducts as any}
               onCreateProduct={handleCreateProduct}
               onManageProducts={handleManageProducts}
@@ -593,6 +596,7 @@ export default function ProfileDevPage() {
           {activeTab === 'products' && (
             <ProductsTab
               hasProfile={hasProfile}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
               products={myProducts as any}
               limitInfo={limitInfo}
               isLoading={isProductLoading}
@@ -626,9 +630,11 @@ export default function ProfileDevPage() {
               userProfile={userProfile || undefined}
               developerProfile={developerProfile || undefined}
               userFormData={userFormData}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
               formData={formData as any}
               isUpdating={isUpdating}
               onUserInputChange={handleUserInputChange}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
               onInputChange={handleInputChange as any}
               onSaveUserProfile={handleSaveUserProfile}
               onSaveDeveloperProfile={handleSaveDeveloperProfile}

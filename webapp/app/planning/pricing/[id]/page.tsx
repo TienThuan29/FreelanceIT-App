@@ -5,8 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import {
   FaCheckCircle,
   FaArrowLeft,
-  FaShoppingCart,
-  FaClock,
   FaUsers,
   FaStar,
   FaCrown,
@@ -27,7 +25,7 @@ export default function PlanningPackageDetail() {
   const params = useParams();
   const router = useRouter();
   const { getPlanningByIdPublic, purchasePlanning, isLoading, error } = usePlanningManagement();
-  const { createMomoPayment, isLoading: momoLoading, error: momoError } = useMoMo();
+  const { createMomoPayment, error: momoError } = useMoMo();
   const [planningData, setPlanningData] = useState<Planning | null>(null);
   const [purchaseLoading, setPurchaseLoading] = useState(false);
 
@@ -47,23 +45,12 @@ export default function PlanningPackageDetail() {
     router.push("/planning/pricing");
   };  const handlePurchasePackage = async (paymentMethod: 'momo' | 'paypal') => {
     if (!planningData) {
-      console.log(planningData);
       console.error("User or planning data not available");
       return;
     }
 
-    console.log("user ", user);
-    console.log("Purchase planning:", planningData);
-    console.log("Payment method:", paymentMethod);
-
     try {
       setPurchaseLoading(true);
-      const purchaseRequest = {
-        planningId: planningData.id,
-        orderId: `ORDER-${Date.now()}`,
-        price: planningData.price,
-      };
-
 
       if (paymentMethod === 'momo') {
         // Handle MoMo payment
@@ -74,10 +61,7 @@ export default function PlanningPackageDetail() {
           orderInfo: `Thanh toán gói ${planningData.name}`,
         };
 
-        console.log("Momo payment request:", momoPaymentRequest);
         const momoResponse = await createMomoPayment(momoPaymentRequest);
-
-        console.log("Momo response:", momoResponse);
 
         if (momoResponse && momoResponse.payUrl) {
           // Redirect to MoMo payment page in the same window
@@ -111,15 +95,6 @@ export default function PlanningPackageDetail() {
     } finally {
       setPurchaseLoading(false);
     }
-  };
-
-
-  const formatStorage = (storage?: number): string => {
-    if (!storage) return "Không giới hạn";
-    if (storage >= 1024) {
-      return `${(storage / 1024).toFixed(1)} GB`;
-    }
-    return `${storage} MB`;
   };
 
   const getBadgeInfo = (planning: Planning) => {

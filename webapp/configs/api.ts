@@ -134,14 +134,6 @@ export const Api = {
         VERIFY_CALLBACK: '/api/v1/payment/momo/verify',
         REFUND: '/api/v1/payment/momo/refund',
     },
-    SeePay: {
-        CREATE_PAYMENT: '/api/v1/sepay/payment',
-        CALLBACK: '/api/v1/sepay/callback',
-        GET_TRANSACTION_DETAILS: '/api/v1/sepay/transactions', // append /:transactionId
-        GET_TRANSACTION_LIST: '/api/v1/sepay/transactions',
-        COUNT_TRANSACTIONS: '/api/v1/sepay/transactions/count',
-        VERIFY_BY_REFERENCE: '/api/v1/sepay/transactions/verify', // append /:referenceNumber
-    },
 
     ProjectTimeline: {
         CREATE: '/api/v1/project-timeline',

@@ -57,6 +57,17 @@ export const config = {
     MOMO_IPN_URL: process.env.MOMO_IPN_URL || '',
     MOMO_REDIRECT_URL: process.env.MOMO_REDIRECT_URL || '',
 
+    // SeePay Payment Configuration
+    SEPAY_ENV: process.env.SEPAY_ENV || 'sandbox',
+    SEPAY_MERCHANT_ID: process.env.SEPAY_MERCHANT_ID || 'SP-TEST-TTB24A89',
+    SEPAY_SECRET_KEY: process.env.SEPAY_SECRET_KEY || 'spsk_test_SWy3RKKqPSEAqS2j9rxH9HGa1cWfXMAX',
+    // SeePay API Token for Transaction API (get from Company Settings > API Access)
+    SEPAY_API_TOKEN: process.env.SEPAY_API_TOKEN || '',
+    SEPAY_API_BASE_URL: process.env.SEPAY_API_BASE_URL || 'https://my.sepay.vn/userapi',
+    SEPAY_SUCCESS_URL: process.env.SEPAY_SUCCESS_URL || 'http://localhost:3000/planning/pricing/success',
+    SEPAY_ERROR_URL: process.env.SEPAY_ERROR_URL || 'http://localhost:3000/planning/pricing',
+    SEPAY_CANCEL_URL: process.env.SEPAY_CANCEL_URL || 'http://localhost:3000/planning/pricing',
+
     // redis
     REDIS_HOST: process.env.REDIS_HOST || 'localhost',
     REDIS_PORT: parseInt(process.env.REDIS_PORT || '6379', 10),

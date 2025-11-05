@@ -340,14 +340,14 @@ export class ProductApi {
                 return;
             }
 
-            // Upload to S3
-            const imageUrl = await s3RepositoryInstance.uploadFile(
+            // Upload to S3 (returns S3 key)
+            const imageKey = await s3RepositoryInstance.uploadFile(
                 request.file.buffer,
                 `product-images/${currentUser.id}`,
                 request.file.mimetype
             );
 
-            ResponseUtil.success(response, { imageUrl }, 'Image uploaded successfully');
+            ResponseUtil.success(response, { imageUrl: imageKey }, 'Image uploaded successfully');
         } catch (error) {
             logger.error('Error uploading product image:', error);
             ResponseUtil.error(response, 'Failed to upload image', 500);
@@ -377,7 +377,7 @@ export class ProductApi {
                 return;
             }
 
-            // Upload all images to S3
+            // Upload all images to S3 (returns S3 keys)
             const uploadPromises = files.map(file =>
                 s3RepositoryInstance.uploadFile(
                     file.buffer,

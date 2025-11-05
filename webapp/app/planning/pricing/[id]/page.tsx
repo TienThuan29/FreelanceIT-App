@@ -15,6 +15,7 @@ import {
 } from "react-icons/fa";
 import { usePlanningManagement } from "@/hooks/usePlanningManagement";
 import { useMoMo, CreateMomoPaymentRequest } from "@/hooks/useMomo";
+import { useSeePay, CreateSeePayPaymentRequest } from "@/hooks/useSeePay";
 import { Planning } from "@/types/planning.type";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -26,6 +27,7 @@ export default function PlanningPackageDetail() {
   const router = useRouter();
   const { getPlanningByIdPublic, purchasePlanning, isLoading, error } = usePlanningManagement();
   const { createMomoPayment, error: momoError } = useMoMo();
+  const { createSeePayPayment, submitPaymentForm, error: seePayError } = useSeePay();
   const [planningData, setPlanningData] = useState<Planning | null>(null);
   const [purchaseLoading, setPurchaseLoading] = useState(false);
 
@@ -43,7 +45,7 @@ export default function PlanningPackageDetail() {
 
   const handleBackToPricing = () => {
     router.push("/planning/pricing");
-  };  const handlePurchasePackage = async (paymentMethod: 'momo' | 'paypal') => {
+  };  const handlePurchasePackage = async (paymentMethod: 'momo' | 'sepay' | 'paypal') => {
     if (!planningData) {
       console.error("User or planning data not available");
       return;
@@ -69,6 +71,24 @@ export default function PlanningPackageDetail() {
           window.location.href = momoResponse.payUrl;
         } else {
           throw new Error('Không nhận được link thanh toán từ MoMo');
+        }
+      } else if (paymentMethod === 'sepay') {
+        // Handle SeePay payment
+        const seePayPaymentRequest: CreateSeePayPaymentRequest = {
+          userId: user?.id || '',
+          planningId: planningData.id,
+          amount: planningData.price,
+          description: `Thanh toán gói ${planningData.name}`,
+        };
+
+        const seePayResponse = await createSeePayPayment(seePayPaymentRequest);
+
+        if (seePayResponse && seePayResponse.checkoutUrl && seePayResponse.formFields) {
+          // Submit SeePay payment form
+          toast.success('Đang chuyển đến trang thanh toán SeePay...');
+          submitPaymentForm(seePayResponse.checkoutUrl, seePayResponse.formFields);
+        } else {
+          throw new Error('Không nhận được thông tin thanh toán từ SeePay');
         }
       } else if (paymentMethod === 'paypal') {
         // Handle PayPal payment (existing flow)
@@ -301,9 +321,9 @@ export default function PlanningPackageDetail() {
                 ))}
               </div>
             </div>            {/* Error Display */}
-            {(error || momoError) && (
+            {(error || momoError || seePayError) && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-600 text-sm">{error || momoError}</p>
+                <p className="text-red-600 text-sm">{error || momoError || seePayError}</p>
               </div>
             )}{/* Purchase Buttons */}
             <div className="text-center">
@@ -333,14 +353,14 @@ export default function PlanningPackageDetail() {
                   )}
                 </button>
 
-                {/* PayPal Payment Button */}
+                {/* SeePay Payment Button */}
                 <button
-                  onClick={() => handlePurchasePackage('paypal')}
+                  onClick={() => handlePurchasePackage('sepay')}
                   disabled={purchaseLoading}
                   className={`cursor-pointer inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-lg transition-colors shadow-lg hover:shadow-xl ${
                     purchaseLoading
                       ? "bg-gray-400 text-white cursor-not-allowed"
-                      : "bg-blue-600 hover:bg-blue-700 text-white"
+                      : "bg-green-600 hover:bg-green-700 text-white"
                   }`}
                 >
                   {purchaseLoading ? (
@@ -351,9 +371,9 @@ export default function PlanningPackageDetail() {
                   ) : (
                     <>
                       <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 font-bold text-xs">P</span>
+                        <span className="text-green-600 font-bold text-xs">S</span>
                       </div>
-                      <span className="text-sm sm:text-base">Thanh toán PayOs</span>
+                      <span className="text-sm sm:text-base">Thanh toán SeePay</span>
                     </>
                   )}
                 </button>

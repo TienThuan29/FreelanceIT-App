@@ -1,0 +1,70 @@
+# App Configuration
+NODE_ENV=dev
+PORT=5000
+FRONTEND_URL=http://localhost:3000
+CORS_ORIGIN=http://localhost:3000
+SYSTEM_SECRET=JQAEURhxrDXfQAmtyNlmuQqSwABH0VRO
+
+# JWT Configuration
+JWT_SECRET=a515eacc2bb80a220252fa157bd8dfcaa53bc18c4ecb7666241db1139dafaedd
+JWT_ACCESS_TOKEN_EXPIRATION=1d
+JWT_REFRESH_TOKEN_EXPIRATION=7d
+BCRYPT_SALT_ROUNDS=12
+HASHING_SECRET_KEY=TOiIHFAHZVYlzWmUd3P0yBWw+s+CwZt4eOaYDoqlXDPruatA+B0ltnm8+C3KY+Fu
+
+# AWS Configuration
+AWS_REGION=ap-southeast-2
+AWS_ACCESS_KEY_ID=AKIA5EL7MZA6GQGLE2SF
+AWS_SECRET_ACCESS_KEY=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
+DYNAMODB_TABLE_PREFIX=exe201
+S3_BUCKET_NAME=exe201-storage
+
+# Email Configuration
+SMTP_PASSWORD=czmxdgjozxbybqie
+SMTP_USER=exe.chonccgroup@gmail.com
+
+# Google OAuth
+GOOGLE_CLIENT_ID=83668594105-9hanqppv9cek0nbspo8l5029f32n4k0o.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=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
+
+# DynamoDB Tables
+USER_TABLE=users
+DEVELOPER_PROFILE_TABLE=developer-profiles
+PROJECT_TABLE=projects
+PROJECT_TYPE_TABLE=project-types
+CHATBOT_SESSION_TABLE=chatbot-sessions
+CUSTOMER_PROFILE_TABLE=customer-profiles
+APPLICATION_TABLE=applications
+PROJECT_TEAM_TABLE=project-teams
+PROJECT_FILE_TABLE=project-files
+PLANNING_TABLE=planning
+USER_PLANNING_TABLE=user-plannings
+PROJECT_TIMELINE_TABLE=project-timelines
+TRANSACTION_HISTORY_TABLE=transaction-histories
+PRODUCT_TABLE=products
+
+# Pinecone Configuration
+PINECONE_API_KEY=pcsk_5rvKG9_CWfJJ5BXk5uJQU9QKUM6GWghg7eSpMj7ULyKJCAjDgV89K7GyRFj14J3nuD7vDU
+PINECONE_HOST_URL=https://freelanceit-vectordb-i4yws4d.svc.aped-4627-b74a.pinecone.io
+PINECONE_INDEX_NAME=freelanceit-vectordb
+
+# Gemini AI
+GEMINI_API_KEY=AIzaSyC1n8XH8_ZjVMSkc_ahslVukNMHb-uZVPk
+GEMINI_EMBEDDING_MODEL=text-embedding-004
+
+# N8N Webhook
+N8N_WEBHOOK_URL=http://52.64.179.92:5678/webhook/016e3126-b798-415e-b402-11013c7c04ad/chat
+
+# Casso Configuration
+CASSO_API_KEY=AK_CS.8f5b46e0b98811f098dc7bf09fa7a682.OCMktjIhdKwcAUd3dKySXjQh4wTu2cdqMvgTzjxW4kK3ebqxQzJNz6kcOeB2Cexs4RtTUxAf
+CASSO_BANK_ACCOUNT_ID=0395515592
+CASSO_WEBHOOK_SECRET=RGYWEV0ex6Vn22MnxM4O2RCSg1GJeSK8Jza8Ah1WQe8YCcfYU0Fw0n5CVaL4TrmW
+CASSO_WEBHOOK_URL=https://latrisha-undappled-aditya.ngrok-free.dev/api/v1/casso/webhook
+
+# PayOS Configuration(dùng ngrok kiểm tra đường dẫn)
+PAYOS_CLIENT_ID=b476fd41-1608-4ae3-b483-ce3499284a61
+PAYOS_API_KEY=d08f055c-9241-4cd6-ae28-1871578fd127
+PAYOS_CHECKSUM_KEY=29c68f7b6f5420a79d84fd52c724c384d1ff2461f66cc504b3de7eb911863582
+PAYOS_WEBHOOK_URL=https://latrisha-undappled-aditya.ngrok-free.dev/api/v1/payos/webhook
+PAYOS_RETURN_URL=http://localhost:3000/planning/pricing/success
+PAYOS_CANCEL_URL=http://localhost:3000/planning/pricing

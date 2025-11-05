@@ -2,6 +2,7 @@ import { Product, ProductStatus } from "@/models/product.model";
 import { ProductRepository } from "@/repositories/product.repo";
 import { UserPlanningRepository, PlanningRepository } from "@/repositories/planning.repo";
 import { UserRepository } from "@/repositories/user.repo";
+import { S3Repository } from "@/repositories/s3.repo";
 import { Role } from "@/models/user.model";
 import logger from "@/libs/logger";
 
@@ -10,6 +11,7 @@ export class ProductService {
     private readonly userPlanningRepository: UserPlanningRepository;
     private readonly planningRepository: PlanningRepository;
     private readonly userRepository: UserRepository;
+    private readonly s3Repository: S3Repository;
 
     // Maximum products for free users (no planning)
     private readonly FREE_USER_MAX_PRODUCTS = 1;
@@ -19,6 +21,7 @@ export class ProductService {
         this.userPlanningRepository = new UserPlanningRepository();
         this.planningRepository = new PlanningRepository();
         this.userRepository = new UserRepository();
+        this.s3Repository = new S3Repository();
     }
 
     /**
@@ -115,10 +118,47 @@ export class ProductService {
                 developerId: userId
             };
 
-            return await this.productRepository.create(productToCreate);
+            const createdProduct = await this.productRepository.create(productToCreate);
+            if (!createdProduct) {
+                return null;
+            }
+
+            // Generate signed URLs for the created product's images
+            return await this.generateSignedUrlsForProduct(createdProduct);
         } catch (error) {
             logger.error('Error creating product:', error);
             throw error;
+        }
+    }
+
+    /**
+     * Helper method to generate signed URLs for product images
+     */
+    private async generateSignedUrlsForProduct(product: Product): Promise<Product> {
+        if (!product.images || product.images.length === 0) {
+            return product;
+        }
+
+        try {
+            const signedImageUrls = await Promise.all(
+                product.images.map(async (imageKey) => {
+                    try {
+                        const signedUrl = await this.s3Repository.generateSignedUrl(imageKey);
+                        return signedUrl;
+                    } catch (error) {
+                        logger.error(`Error generating signed URL for image ${imageKey}:`, error);
+                        return imageKey; // Return original key if signed URL generation fails
+                    }
+                })
+            );
+
+            return {
+                ...product,
+                images: signedImageUrls
+            };
+        } catch (error) {
+            logger.error('Error generating signed URLs for product images:', error);
+            return product; // Return product with original keys if generation fails
         }
     }
 
@@ -127,7 +167,11 @@ export class ProductService {
      */
     public async getProductById(id: string): Promise<Product | null> {
         try {
-            return await this.productRepository.findById(id);
+            const product = await this.productRepository.findById(id);
+            if (!product) {
+                return null;
+            }
+            return await this.generateSignedUrlsForProduct(product);
         } catch (error) {
             logger.error('Error getting product by ID:', error);
             return null;
@@ -139,7 +183,14 @@ export class ProductService {
      */
     public async getProductsByDeveloperId(developerId: string): Promise<Product[]> {
         try {
-            return await this.productRepository.findByDeveloperId(developerId);
+            const products = await this.productRepository.findByDeveloperId(developerId);
+            
+            // Generate signed URLs for all products' images
+            const productsWithSignedUrls = await Promise.all(
+                products.map(product => this.generateSignedUrlsForProduct(product))
+            );
+            
+            return productsWithSignedUrls;
         } catch (error) {
             logger.error('Error getting products by developer ID:', error);
             return [];
@@ -151,7 +202,14 @@ export class ProductService {
      */
     public async getAllProducts(): Promise<Product[]> {
         try {
-            return await this.productRepository.findAll();
+            const products = await this.productRepository.findAll();
+            
+            // Generate signed URLs for all products' images
+            const productsWithSignedUrls = await Promise.all(
+                products.map(product => this.generateSignedUrlsForProduct(product))
+            );
+            
+            return productsWithSignedUrls;
         } catch (error) {
             logger.error('Error getting all products:', error);
             return [];
@@ -163,7 +221,14 @@ export class ProductService {
      */
     public async getActiveProducts(): Promise<Product[]> {
         try {
-            return await this.productRepository.findActiveProducts();
+            const products = await this.productRepository.findActiveProducts();
+            
+            // Generate signed URLs for all products' images
+            const productsWithSignedUrls = await Promise.all(
+                products.map(product => this.generateSignedUrlsForProduct(product))
+            );
+            
+            return productsWithSignedUrls;
         } catch (error) {
             logger.error('Error getting active products:', error);
             return [];
@@ -196,7 +261,13 @@ export class ProductService {
                 developerId: existingProduct.developerId // Ensure developer doesn't change
             };
 
-            return await this.productRepository.update(updatedProduct);
+            const savedProduct = await this.productRepository.update(updatedProduct);
+            if (!savedProduct) {
+                return null;
+            }
+
+            // Generate signed URLs for the updated product's images
+            return await this.generateSignedUrlsForProduct(savedProduct);
         } catch (error) {
             logger.error('Error updating product:', error);
             return null;

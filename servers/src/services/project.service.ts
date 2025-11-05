@@ -87,7 +87,24 @@ export class ProjectService {
                 'image/jpeg'
             );
         }
-        return await this.projectRepository.createProject(project, projectImageUrl);
+        const createdProject = await this.projectRepository.createProject(project, projectImageUrl);
+        
+        if (!createdProject) {
+            return null;
+        }
+        
+        // Generate signed URL for the created project's image
+        let updatedProject = { ...createdProject };
+        if (createdProject.imageUrl) {
+            try {
+                const signedUrl = await this.s3Service.generateSignedUrl(createdProject.imageUrl);
+                updatedProject.imageUrl = signedUrl;
+            } catch (error) {
+                logger.error(`Error generating signed URL for project ${createdProject.id}:`, error);
+            }
+        }
+        
+        return updatedProject;
     }
 
     public async getProjectById(id: string): Promise<Project | null> {
@@ -151,7 +168,24 @@ export class ProjectService {
             imageUrl: projectImageUrl
         };
 
-        return await this.projectRepository.updateProject(updatedProject);
+        const savedProject = await this.projectRepository.updateProject(updatedProject);
+        
+        if (!savedProject) {
+            return null;
+        }
+        
+        // Generate signed URL for the updated project's image
+        let result = { ...savedProject };
+        if (savedProject.imageUrl) {
+            try {
+                const signedUrl = await this.s3Service.generateSignedUrl(savedProject.imageUrl);
+                result.imageUrl = signedUrl;
+            } catch (error) {
+                logger.error(`Error generating signed URL for project ${savedProject.id}:`, error);
+            }
+        }
+        
+        return result;
     }
 
     public async deleteProject(id: string): Promise<boolean> {

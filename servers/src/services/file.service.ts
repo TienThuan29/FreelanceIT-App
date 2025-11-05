@@ -37,10 +37,18 @@ export class FileService {
 
             const createdFile = await fileRepositoryInstance.createFile(projectFile);
 
+            // Generate signed URL for the uploaded file to return to client
+            let signedUrl = createdFile.fileUrl;
+            try {
+                signedUrl = await s3RepositoryInstance.generateSignedUrl(createdFile.fileUrl);
+            } catch (error) {
+                logger.error(`Error generating signed URL for file ${createdFile.id}:`, error);
+            }
+
             return {
                 id: createdFile.id,
                 fileName: createdFile.fileName,
-                fileUrl: createdFile.fileUrl,
+                fileUrl: signedUrl,
                 fileSize: createdFile.fileSize,
                 mimeType: createdFile.mimeType,
                 uploadedDate: createdFile.uploadedDate,
@@ -56,13 +64,23 @@ export class FileService {
         try {
             const files = await fileRepositoryInstance.getFilesByProjectId(projectId);
             
-            // Populate user information for each file
+            // Populate user information and generate signed URLs for each file
             const filesWithUserInfo = await Promise.all(
                 files.map(async (file) => {
                     try {
                         const user = await userRepositoryInstance.findById(file.uploadedBy);
+                        
+                        // Generate signed URL for the file
+                        let signedUrl = file.fileUrl;
+                        try {
+                            signedUrl = await s3RepositoryInstance.generateSignedUrl(file.fileUrl);
+                        } catch (error) {
+                            logger.error(`Error generating signed URL for file ${file.id}:`, error);
+                        }
+                        
                         return {
                             ...file,
+                            fileUrl: signedUrl,
                             uploadedByUser: user ? {
                                 id: user.id,
                                 fullname: user.fullname,
@@ -118,7 +136,22 @@ export class FileService {
 
     public async getFileById(fileId: string): Promise<ProjectFile | null> {
         try {
-            return await fileRepositoryInstance.getFileById(fileId);
+            const file = await fileRepositoryInstance.getFileById(fileId);
+            if (!file) {
+                return null;
+            }
+            
+            // Generate signed URL for the file
+            try {
+                const signedUrl = await s3RepositoryInstance.generateSignedUrl(file.fileUrl);
+                return {
+                    ...file,
+                    fileUrl: signedUrl
+                };
+            } catch (error) {
+                logger.error(`Error generating signed URL for file ${fileId}:`, error);
+                return file; // Return file with original URL if signed URL generation fails
+            }
         } catch (error) {
             logger.error('Error getting file by ID:', error);
             throw error;

@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
   DollarSign, 
@@ -21,132 +21,214 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useTransaction } from '@/hooks/useTransaction';
+import { TransactionHistory, TransactionStatus } from '@/types/transaction.type';
 
 export default function AdminRevenuePage() {
   const [selectedPeriod, setSelectedPeriod] = useState('month');
-  const [isLoading] = useState(false);
+  const { getAllTransactions, isLoading, refreshTransactions } = useTransaction();
+  const [transactions, setTransactions] = useState<TransactionHistory[]>([]);
 
-  // Mock revenue data
-  const revenueStats = {
-    totalRevenue: 125000000, // ₫125M
-    monthlyGrowth: 15.2,
-    yearlyGrowth: 28.5,
-    averageOrderValue: 2500000, // ₫2.5M
-    totalOrders: 156,
-    activeCustomers: 89,
-    conversionRate: 12.5,
-    refundRate: 2.3
-  };
+  // Fetch transactions on mount
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      const data = await getAllTransactions();
+      setTransactions(data);
+    };
+    fetchTransactions();
+  }, [getAllTransactions]);
 
-  const monthlyRevenueData = [
-    { month: 'Tháng 1', revenue: 85000000, orders: 45, growth: 8.2 },
-    { month: 'Tháng 2', revenue: 92000000, orders: 52, growth: 12.5 },
-    { month: 'Tháng 3', revenue: 105000000, orders: 58, growth: 15.8 },
-    { month: 'Tháng 4', revenue: 118000000, orders: 63, growth: 18.3 },
-    { month: 'Tháng 5', revenue: 125000000, orders: 67, growth: 15.2 },
-  ];
+  // Filter successful transactions
+  const successfulTransactions = useMemo(() => {
+    return transactions.filter(t => t.status === TransactionStatus.SUCCESS);
+  }, [transactions]);
 
-  const revenueBySource = [
-    { source: 'Planning Packages', revenue: 75000000, percentage: 60, color: 'bg-blue-500' },
-    { source: 'Project Commissions', revenue: 35000000, percentage: 28, color: 'bg-green-500' },
-    { source: 'Premium Features', revenue: 15000000, percentage: 12, color: 'bg-purple-500' },
-  ];
+  // Calculate revenue stats from real data
+  const revenueStats = useMemo(() => {
+    const totalRevenue = successfulTransactions.reduce((sum, t) => sum + t.amount, 0);
+    const totalOrders = successfulTransactions.length;
+    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+    const uniqueCustomers = new Set(successfulTransactions.map(t => t.userId)).size;
+    
+    // Calculate monthly growth (current month vs previous month)
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
 
-  const topCustomers = [
-    {
-      id: '1',
-      name: 'TechCorp Solutions',
-      email: 'admin@techcorp.vn',
-      totalSpent: 15000000,
-      orders: 8,
-      lastOrder: '2024-01-20',
-      status: 'active'
-    },
-    {
-      id: '2',
-      name: 'StartupVN',
-      email: 'ceo@startupvn.com',
-      totalSpent: 12000000,
-      orders: 6,
-      lastOrder: '2024-01-18',
-      status: 'active'
-    },
-    {
-      id: '3',
-      name: 'E-Commerce Plus',
-      email: 'manager@ecommerce.vn',
-      totalSpent: 9500000,
-      orders: 5,
-      lastOrder: '2024-01-15',
-      status: 'active'
-    },
-    {
-      id: '4',
-      name: 'Healthcare Solutions',
-      email: 'director@healthcare.com',
-      totalSpent: 8500000,
-      orders: 4,
-      lastOrder: '2024-01-12',
-      status: 'active'
-    },
-    {
-      id: '5',
-      name: 'Nam Restaurant Chain',
-      email: 'owner@restaurant.vn',
-      totalSpent: 7200000,
-      orders: 3,
-      lastOrder: '2024-01-10',
-      status: 'inactive'
-    }
-  ];
+    const currentMonthRevenue = successfulTransactions
+      .filter(t => {
+        const date = new Date(t.createdDate);
+        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+      })
+      .reduce((sum, t) => sum + t.amount, 0);
 
-  const recentTransactions = [
-    {
-      id: 'TXN-001',
-      customer: 'TechCorp Solutions',
-      amount: 5000000,
-      type: 'Planning Package',
-      status: 'completed',
-      date: '2024-01-25',
-      method: 'Bank Transfer'
-    },
-    {
-      id: 'TXN-002',
-      customer: 'StartupVN',
-      amount: 2500000,
-      type: 'Project Commission',
-      status: 'completed',
-      date: '2024-01-24',
-      method: 'Credit Card'
-    },
-    {
-      id: 'TXN-003',
-      customer: 'E-Commerce Plus',
-      amount: 1500000,
-      type: 'Planning Package',
-      status: 'pending',
-      date: '2024-01-23',
-      method: 'Bank Transfer'
-    },
-    {
-      id: 'TXN-004',
-      customer: 'Healthcare Solutions',
-      amount: 3000000,
-      type: 'Premium Features',
-      status: 'completed',
-      date: '2024-01-22',
-      method: 'Credit Card'
-    },
-    {
-      id: 'TXN-005',
-      customer: 'Nam Restaurant Chain',
-      amount: 2000000,
-      type: 'Planning Package',
-      status: 'refunded',
-      date: '2024-01-21',
-      method: 'Bank Transfer'
-    }
-  ];
+    const lastMonthRevenue = successfulTransactions
+      .filter(t => {
+        const date = new Date(t.createdDate);
+        return date.getMonth() === lastMonth && date.getFullYear() === lastMonthYear;
+      })
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const monthlyGrowth = lastMonthRevenue > 0 
+      ? ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 
+      : 0;
+
+    // Calculate refund rate (failed + cancelled transactions)
+    const failedTransactions = transactions.filter(
+      t => t.status === TransactionStatus.FAILED || t.status === TransactionStatus.CANCELLED
+    ).length;
+    const refundRate = transactions.length > 0 
+      ? (failedTransactions / transactions.length) * 100 
+      : 0;
+
+    return {
+      totalRevenue,
+      monthlyGrowth: Number(monthlyGrowth.toFixed(1)),
+      averageOrderValue: Math.round(averageOrderValue),
+      totalOrders,
+      activeCustomers: uniqueCustomers,
+      conversionRate: 0, // Can be calculated later if needed
+      refundRate: Number(refundRate.toFixed(1))
+    };
+  }, [successfulTransactions, transactions]);
+
+  // Calculate monthly revenue data
+  const monthlyRevenueData = useMemo(() => {
+    const monthNames = [
+      'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
+      'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
+    ];
+
+    const monthlyData = new Map<string, { revenue: number; orders: number }>();
+
+    successfulTransactions.forEach(t => {
+      const date = new Date(t.createdDate);
+      const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+
+      if (!monthlyData.has(monthKey)) {
+        monthlyData.set(monthKey, { revenue: 0, orders: 0 });
+      }
+
+      const data = monthlyData.get(monthKey)!;
+      data.revenue += t.amount;
+      data.orders += 1;
+    });
+
+    // Convert to array and sort by date (newest first), take last 5 months
+    const sorted = Array.from(monthlyData.entries())
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .slice(0, 5)
+      .map(([key, data]) => {
+        const [year, month] = key.split('-');
+        const monthIndex = parseInt(month);
+        const prevMonthIndex = monthIndex === 0 ? 11 : monthIndex - 1;
+        const prevYear = monthIndex === 0 ? parseInt(year) - 1 : parseInt(year);
+        const prevMonthKey = `${prevYear}-${prevMonthIndex}`;
+
+        const prevData = monthlyData.get(prevMonthKey);
+        const prevRevenue = prevData?.revenue || 0;
+        const growth = prevRevenue > 0 
+          ? ((data.revenue - prevRevenue) / prevRevenue) * 100 
+          : 0;
+
+        return {
+          month: `${monthNames[monthIndex]} ${year}`,
+          revenue: data.revenue,
+          orders: data.orders,
+          growth: Number(growth.toFixed(1))
+        };
+      })
+      .reverse(); // Show oldest to newest
+
+    return sorted;
+  }, [successfulTransactions]);
+
+  // All revenue is from Planning Packages for now
+  const revenueBySource = useMemo(() => {
+    const planningRevenue = successfulTransactions.reduce((sum, t) => sum + t.amount, 0);
+    const total = planningRevenue;
+    
+    return total > 0 ? [
+      { 
+        source: 'Planning Packages', 
+        revenue: planningRevenue, 
+        percentage: 100, 
+        color: 'bg-blue-500' 
+      },
+    ] : [];
+  }, [successfulTransactions]);
+
+  // Calculate top customers
+  const topCustomers = useMemo(() => {
+    const customerMap = new Map<string, { 
+      userId: string; 
+      totalSpent: number; 
+      orders: number; 
+      lastOrder: Date;
+    }>();
+
+    successfulTransactions.forEach(t => {
+      if (!customerMap.has(t.userId)) {
+        customerMap.set(t.userId, {
+          userId: t.userId,
+          totalSpent: 0,
+          orders: 0,
+          lastOrder: new Date(t.createdDate)
+        });
+      }
+
+      const customer = customerMap.get(t.userId)!;
+      customer.totalSpent += t.amount;
+      customer.orders += 1;
+      const tDate = new Date(t.createdDate);
+      if (tDate > customer.lastOrder) {
+        customer.lastOrder = tDate;
+      }
+    });
+
+    // Sort by totalSpent and take top 5
+    return Array.from(customerMap.values())
+      .sort((a, b) => b.totalSpent - a.totalSpent)
+      .slice(0, 5)
+      .map((customer, index) => ({
+        id: (index + 1).toString(),
+        userId: customer.userId,
+        name: `User ${customer.userId.substring(0, 8)}...`,
+        email: `${customer.userId.substring(0, 8)}@user.com`,
+        totalSpent: customer.totalSpent,
+        orders: customer.orders,
+        lastOrder: customer.lastOrder.toISOString().split('T')[0],
+        status: 'active' as const
+      }));
+  }, [successfulTransactions]);
+
+  // Get recent transactions (last 10)
+  const recentTransactions = useMemo(() => {
+    return transactions
+      .sort((a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime())
+      .slice(0, 10)
+      .map(t => {
+        const statusMap = {
+          [TransactionStatus.SUCCESS]: 'completed',
+          [TransactionStatus.PENDING]: 'pending',
+          [TransactionStatus.FAILED]: 'failed',
+          [TransactionStatus.CANCELLED]: 'refunded'
+        };
+
+        return {
+          id: t.orderId,
+          userId: t.userId,
+          customer: `User ${t.userId.substring(0, 8)}...`,
+          amount: t.amount,
+          type: 'Planning Package',
+          status: statusMap[t.status],
+          date: new Date(t.createdDate).toISOString().split('T')[0],
+          method: 'Payment Gateway' // Default since we don't track payment method in transaction
+        };
+      });
+  }, [transactions]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -155,8 +237,15 @@ export default function AdminRevenuePage() {
     }).format(amount);
   };
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('vi-VN');
+  const formatDate = (date: string | Date) => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return dateObj.toLocaleDateString('vi-VN');
+  };
+
+  const handleRefresh = async () => {
+    await refreshTransactions();
+    const data = await getAllTransactions();
+    setTransactions(data);
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -237,6 +326,14 @@ export default function AdminRevenuePage() {
               <option value="quarter">Quý này</option>
               <option value="year">Năm này</option>
             </select>
+            <button 
+              onClick={handleRefresh}
+              disabled={isLoading}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+              <span>Làm mới</span>
+            </button>
             <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
               <Download className="w-4 h-4" />
               <span>Xuất báo cáo</span>
@@ -393,7 +490,7 @@ export default function AdminRevenuePage() {
                       <TableCell>
                         <div>
                           <p className="font-semibold text-gray-900">{customer.name}</p>
-                          <p className="text-sm text-gray-500">{customer.email}</p>
+                          <p className="text-sm text-gray-500">ID: {customer.userId}</p>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -457,7 +554,10 @@ export default function AdminRevenuePage() {
                         <p className="font-mono text-sm text-gray-900">{transaction.id}</p>
                       </TableCell>
                       <TableCell>
-                        <p className="font-medium text-gray-900">{transaction.customer}</p>
+                        <div>
+                          <p className="font-medium text-gray-900">{transaction.customer}</p>
+                          <p className="text-xs text-gray-500">ID: {transaction.userId}</p>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <p className="font-semibold text-gray-900">{formatCurrency(transaction.amount)}</p>

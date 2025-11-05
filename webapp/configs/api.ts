@@ -135,6 +135,14 @@ export const Api = {
         REFUND: '/api/v1/payment/momo/refund',
     },
 
+    PayOS: {
+        CREATE_PAYMENT: '/api/v1/payos/create-payment',
+        WEBHOOK: '/api/v1/payos/webhook',
+        PAYMENT_STATUS: '/api/v1/payos/payment-status',
+        CANCEL_PAYMENT: '/api/v1/payos/cancel-payment',
+        TEST: '/api/v1/payos/test',
+    },
+
     ProjectTimeline: {
         CREATE: '/api/v1/project-timeline',
         GET_ALL: '/api/v1/project-timeline',

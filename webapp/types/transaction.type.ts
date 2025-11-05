@@ -6,6 +6,11 @@ export type TransactionHistory = {
     amount: number;
     status: TransactionStatus;
     createdDate: Date;
+    // Casso fields
+    cassoTransactionId?: string;
+    cassoReferenceCode?: string;
+    cassoDescription?: string;
+    cassoUpdatedDate?: Date;
 }
 
 export enum TransactionStatus {

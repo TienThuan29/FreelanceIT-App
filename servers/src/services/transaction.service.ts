@@ -60,6 +60,36 @@ export class TransactionService {
         }
     }
 
+    public async updateTransactionFromCasso(
+        orderId: string,
+        status: TransactionStatus,
+        cassoData: {
+            cassoTransactionId: string;
+            cassoReferenceCode: string;
+            cassoDescription: string;
+            cassoUpdatedDate: Date;
+        }
+    ): Promise<TransactionHistory | null> {
+        try {
+            const transaction = await this.transactionRepository.findByOrderId(orderId);
+            if (!transaction) {
+                throw new Error('Transaction not found');
+            }
+
+            // Update transaction with Casso data
+            transaction.status = status;
+            transaction.cassoTransactionId = cassoData.cassoTransactionId;
+            transaction.cassoReferenceCode = cassoData.cassoReferenceCode;
+            transaction.cassoDescription = cassoData.cassoDescription;
+            transaction.cassoUpdatedDate = cassoData.cassoUpdatedDate;
+
+            return await this.transactionRepository.update(transaction);
+        } catch (error) {
+            logger.error('Error updating transaction from Casso:', error);
+            throw error;
+        }
+    }
+
     public async getAllTransactions(): Promise<TransactionHistory[]> {
         return await this.transactionRepository.findAll();
     }

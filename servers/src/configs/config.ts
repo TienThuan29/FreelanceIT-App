@@ -57,6 +57,17 @@ export const config = {
     MOMO_IPN_URL: process.env.MOMO_IPN_URL || '',
     MOMO_REDIRECT_URL: process.env.MOMO_REDIRECT_URL || '',
 
+    // Casso Payment Configuration
+    CASSO_SECRET_KEY: process.env.CASSO_SECRET_KEY || '',
+    CASSO_API_KEY: process.env.CASSO_API_KEY || '',
+
+    // PayOS Configuration
+    PAYOS_CLIENT_ID: process.env.PAYOS_CLIENT_ID || '',
+    PAYOS_API_KEY: process.env.PAYOS_API_KEY || '',
+    PAYOS_CHECKSUM_KEY: process.env.PAYOS_CHECKSUM_KEY || '',
+    PAYOS_RETURN_URL: process.env.PAYOS_RETURN_URL || 'http://localhost:3000/planning/pricing/success',
+    PAYOS_CANCEL_URL: process.env.PAYOS_CANCEL_URL || 'http://localhost:3000/planning/pricing',
+
     // redis
     REDIS_HOST: process.env.REDIS_HOST || 'localhost',
     REDIS_PORT: parseInt(process.env.REDIS_PORT || '6379', 10),
@@ -88,4 +99,16 @@ export const config = {
     // n8n chatbot
     N8N_WEBHOOK_URL: process.env.N8N_WEBHOOK_URL || 'http://localhost:5678/webhook/4091fa09-fb9a-4039-9411-7104d213f601/chat',
 
+    // Frontend
+    frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
+    
+    // PayOS
+    payos: {
+        clientId: process.env.PAYOS_CLIENT_ID!,
+        apiKey: process.env.PAYOS_API_KEY!,
+        checksumKey: process.env.PAYOS_CHECKSUM_KEY!,
+        webhookUrl: process.env.PAYOS_WEBHOOK_URL || '',
+        returnUrl: process.env.PAYOS_RETURN_URL || `${process.env.FRONTEND_URL}/planning/pricing/success`,
+        cancelUrl: process.env.PAYOS_CANCEL_URL || `${process.env.FRONTEND_URL}/planning/pricing`,
+    },
 } as const;

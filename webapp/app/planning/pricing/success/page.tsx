@@ -3,23 +3,47 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMoMo } from "@/hooks/useMomo";
+import { usePayOS } from "@/hooks/usePayOS";
 import { FaCheckCircle, FaSpinner } from "react-icons/fa";
 import { motion } from "framer-motion";
 
-function MoMoPaymentSuccessPageContent() {
+function PaymentSuccessPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { processCallback } = useMoMo();
+  const momoHook = useMoMo();
+  const { getPaymentStatus } = usePayOS();
   const [processing, setProcessing] = useState(true);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<'momo' | 'payos' | null>(null);
 
   useEffect(() => {
     let isProcessed = false; // Prevent double processing
 
-    const handleCallback = async () => {
-      if (isProcessed) return; // Already processed
-      
+    const handlePayOSCallback = async (orderCode: string) => {
+      console.log("Processing PayOS callback, orderCode:", orderCode);
+
+      try {
+        // Check payment status từ PayOS
+        const status = await getPaymentStatus(Number(orderCode));
+        
+        console.log("PayOS payment status:", status);
+
+        if (status && status.status === 'PAID') {
+          setSuccess(true);
+          setPaymentMethod('payos');
+        } else {
+          setError('Thanh toán chưa được xác nhận. Vui lòng kiểm tra lại.');
+        }
+      } catch (err) {
+        console.error("Error checking PayOS status:", err);
+        setError('Không thể kiểm tra trạng thái thanh toán');
+      } finally {
+        setProcessing(false);
+      }
+    };
+
+    const handleMoMoCallback = async () => {
       // Get all parameters from URL
       const partnerCode = searchParams.get('partnerCode');
       const orderId = searchParams.get('orderId');
@@ -35,7 +59,7 @@ function MoMoPaymentSuccessPageContent() {
       const extraData = searchParams.get('extraData');
       const signature = searchParams.get('signature');
 
-      console.log("Payment success - URL params:", {
+      console.log("Payment success - MoMo URL params:", {
         partnerCode,
         orderId,
         resultCode,
@@ -68,31 +92,56 @@ function MoMoPaymentSuccessPageContent() {
         signature
       };
 
-      console.log("Sending callback data to backend:", callbackData);
+      console.log("Sending MoMo callback data to backend:", callbackData);
 
       // Call backend to process the payment
-      const result = await processCallback(callbackData);
-
-      setProcessing(false);
-      setSuccess(result);
-
-      if (!result) {
+      try {
+        const result = await momoHook.processCallback(callbackData);
+        setSuccess(result);
+        setPaymentMethod('momo');
+        
+        if (!result) {
+          setError('Không thể xử lý thanh toán. Vui lòng liên hệ hỗ trợ.');
+        }
+      } catch (err) {
+        console.error("MoMo callback error:", err);
+        setSuccess(false);
         setError('Không thể xử lý thanh toán. Vui lòng liên hệ hỗ trợ.');
+      } finally {
+        setProcessing(false);
       }
     };
 
-    if (searchParams.get('orderId')) {
-      handleCallback();
-    } else {
-      setProcessing(false);
-      setError('Thông tin thanh toán không hợp lệ');
-    }
+    const processCallback = async () => {
+      if (isProcessed) return;
+      isProcessed = true;
+
+      // Detect payment method from URL parameters
+      const orderCode = searchParams.get('orderCode'); // PayOS
+      const momoOrderId = searchParams.get('orderId'); // MoMo
+      const partnerCode = searchParams.get('partnerCode'); // MoMo
+
+      if (orderCode) {
+        // PayOS callback
+        console.log("Detected PayOS payment");
+        await handlePayOSCallback(orderCode);
+      } else if (momoOrderId && partnerCode) {
+        // MoMo callback
+        console.log("Detected MoMo payment");
+        await handleMoMoCallback();
+      } else {
+        setProcessing(false);
+        setError('Thông tin thanh toán không hợp lệ');
+      }
+    };
+
+    processCallback();
     
     // Cleanup function
     return () => {
       isProcessed = true; // Prevent any pending calls
     };
-  }, [searchParams, processCallback]);
+  }, [searchParams, momoHook, getPaymentStatus]);
 
   const handleGoBack = () => {
     router.push('/planning/pricing');
@@ -192,7 +241,7 @@ function MoMoPaymentSuccessPageContent() {
   );
 }
 
-export default function MoMoPaymentSuccessPage() {
+export default function PaymentSuccessPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -202,7 +251,7 @@ export default function MoMoPaymentSuccessPage() {
         </div>
       </div>
     }>
-      <MoMoPaymentSuccessPageContent />
+      <PaymentSuccessPageContent />
     </Suspense>
   );
 }

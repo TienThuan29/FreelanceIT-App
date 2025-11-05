@@ -40,7 +40,8 @@ export const useTransaction = (): UseTransactionReturn => {
       // Convert date strings to Date objects
       const formattedTransactions = transactions.map(t => ({
         ...t,
-        createdDate: new Date(t.createdDate)
+        createdDate: new Date(t.createdDate),
+        cassoUpdatedDate: t.cassoUpdatedDate ? new Date(t.cassoUpdatedDate) : undefined
       }));
 
       setState(prev => ({
@@ -64,6 +65,9 @@ export const useTransaction = (): UseTransactionReturn => {
 
       if (transaction) {
         transaction.createdDate = new Date(transaction.createdDate);
+        if (transaction.cassoUpdatedDate) {
+          transaction.cassoUpdatedDate = new Date(transaction.cassoUpdatedDate);
+        }
       }
 
       setState(prev => ({
@@ -87,7 +91,8 @@ export const useTransaction = (): UseTransactionReturn => {
       // Convert date strings to Date objects
       const formattedTransactions = transactions.map(t => ({
         ...t,
-        createdDate: new Date(t.createdDate)
+        createdDate: new Date(t.createdDate),
+        cassoUpdatedDate: t.cassoUpdatedDate ? new Date(t.cassoUpdatedDate) : undefined
       }));
 
       setState(prev => ({

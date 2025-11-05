@@ -12,12 +12,15 @@ import {
   FaDatabase,
   FaProjectDiagram,
   FaHeadset,
+  FaQrcode,
 } from "react-icons/fa";
 import { usePlanningManagement } from "@/hooks/usePlanningManagement";
 import { useMoMo, CreateMomoPaymentRequest } from "@/hooks/useMomo";
+import { usePayOS, PayOSCreatePaymentRequest } from "@/hooks/usePayOS";
 import { Planning } from "@/types/planning.type";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { PayOSPaymentModal } from "@/components/PayOSPaymentModal";
 
 
 export default function PlanningPackageDetail() {
@@ -26,8 +29,10 @@ export default function PlanningPackageDetail() {
   const router = useRouter();
   const { getPlanningByIdPublic, purchasePlanning, isLoading, error } = usePlanningManagement();
   const { createMomoPayment, error: momoError } = useMoMo();
+  const { createPaymentLink, paymentData, error: payosError } = usePayOS();
   const [planningData, setPlanningData] = useState<Planning | null>(null);
   const [purchaseLoading, setPurchaseLoading] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   useEffect(() => {
     if (params.id) {
@@ -43,7 +48,7 @@ export default function PlanningPackageDetail() {
 
   const handleBackToPricing = () => {
     router.push("/planning/pricing");
-  };  const handlePurchasePackage = async (paymentMethod: 'momo' | 'paypal') => {
+  };  const handlePurchasePackage = async (paymentMethod: 'momo' | 'payos' | 'paypal') => {
     if (!planningData) {
       console.error("User or planning data not available");
       return;
@@ -69,6 +74,23 @@ export default function PlanningPackageDetail() {
           window.location.href = momoResponse.payUrl;
         } else {
           throw new Error('Không nhận được link thanh toán từ MoMo');
+        }
+      } else if (paymentMethod === 'payos') {
+        // Handle PayOS payment
+        const payosPaymentRequest: PayOSCreatePaymentRequest = {
+          userId: user?.id || '',
+          planningId: planningData.id,
+          amount: planningData.price,
+          description: `Thanh toan goi ${planningData.name}`,
+        };
+
+        const payosResponse = await createPaymentLink(payosPaymentRequest);
+
+        if (payosResponse) {
+          // Show payment modal with QR code
+          setShowPaymentModal(true);
+        } else {
+          throw new Error('Không nhận được thông tin thanh toán từ PayOS');
         }
       } else if (paymentMethod === 'paypal') {
         // Handle PayPal payment (existing flow)
@@ -301,13 +323,38 @@ export default function PlanningPackageDetail() {
                 ))}
               </div>
             </div>            {/* Error Display */}
-            {(error || momoError) && (
+            {(error || momoError || payosError) && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-600 text-sm">{error || momoError}</p>
+                <p className="text-red-600 text-sm">{error || momoError || payosError}</p>
               </div>
-            )}{/* Purchase Buttons */}
+            )}
+
+            {/* Purchase Buttons */}
             <div className="text-center">
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-4">
+                {/* PayOS Payment Button (QR Code) */}
+                <button
+                  onClick={() => handlePurchasePackage('payos')}
+                  disabled={purchaseLoading}
+                  className={`cursor-pointer inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-lg transition-colors shadow-lg hover:shadow-xl ${
+                    purchaseLoading
+                      ? "bg-gray-400 text-white cursor-not-allowed"
+                      : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                  }`}
+                >
+                  {purchaseLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white"></div>
+                      <span className="text-sm sm:text-base">Đang xử lý...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FaQrcode className="text-xl" />
+                      <span className="text-sm sm:text-base">Quét mã QR</span>
+                    </>
+                  )}
+                </button>
+
                 {/* Momo Payment Button */}
                 <button
                   onClick={() => handlePurchasePackage('momo')}
@@ -332,31 +379,6 @@ export default function PlanningPackageDetail() {
                     </>
                   )}
                 </button>
-
-                {/* PayPal Payment Button */}
-                <button
-                  onClick={() => handlePurchasePackage('paypal')}
-                  disabled={purchaseLoading}
-                  className={`cursor-pointer inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-lg transition-colors shadow-lg hover:shadow-xl ${
-                    purchaseLoading
-                      ? "bg-gray-400 text-white cursor-not-allowed"
-                      : "bg-blue-600 hover:bg-blue-700 text-white"
-                  }`}
-                >
-                  {purchaseLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white"></div>
-                      <span className="text-sm sm:text-base">Đang xử lý...</span>
-                    </>
-                  ) : (
-                    <>
-                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 font-bold text-xs">P</span>
-                      </div>
-                      <span className="text-sm sm:text-base">Thanh toán PayOs</span>
-                    </>
-                  )}
-                </button>
               </div>
 
               {/* <p className="text-xs sm:text-sm text-gray-500 mt-3">
@@ -364,6 +386,19 @@ export default function PlanningPackageDetail() {
               </p> */}
             </div>
           </div>
+
+          {/* PayOS Payment Modal */}
+          {paymentData && (
+            <PayOSPaymentModal
+              isOpen={showPaymentModal}
+              onClose={() => setShowPaymentModal(false)}
+              paymentData={paymentData}
+              onPaymentComplete={() => {
+                setShowPaymentModal(false);
+                router.push('/planning/pricing/success');
+              }}
+            />
+          )}
         </div>
   );
 }

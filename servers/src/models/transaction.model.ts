@@ -6,6 +6,11 @@ export type TransactionHistory = {
     amount: number;
     status: TransactionStatus;
     createdDate: Date;
+    // Casso fields
+    cassoTransactionId?: string; // ID giao dịch từ Casso (Mã GD từ hình)
+    cassoReferenceCode?: string; // Mã tham chiếu từ Casso
+    cassoDescription?: string; // Mô tả giao dịch từ Casso
+    cassoUpdatedDate?: Date; // Ngày cập nhật từ Casso webhook
 }
 
 export enum TransactionStatus {

@@ -249,7 +249,7 @@ export default function AdminRevenuePage() {
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const StatCard = ({ title, value, icon: Icon, color, subtitle, trend, delay = 0 }: any) => (
+  const StatCard = ({ title, value, icon: Icon, color, subtitle, trend, delay = 0, formatAsCurrency = true }: any) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -274,7 +274,9 @@ export default function AdminRevenuePage() {
                     <span className="text-gray-400">...</span>
                   </div>
                 ) : (
-                  typeof value === 'number' ? formatCurrency(value) : value
+                  typeof value === 'number' 
+                    ? (formatAsCurrency ? formatCurrency(value) : value.toLocaleString())
+                    : value
                 )}
               </motion.div>
             </div>
@@ -361,6 +363,7 @@ export default function AdminRevenuePage() {
           subtitle="Tổng số đơn"
           trend={{ value: 8.5, isPositive: true }}
           delay={0.2}
+          formatAsCurrency={false}
         />
         <StatCard
           title="Khách hàng"
@@ -370,6 +373,7 @@ export default function AdminRevenuePage() {
           subtitle="Đang hoạt động"
           trend={{ value: 12.3, isPositive: true }}
           delay={0.3}
+          formatAsCurrency={false}
         />
         <StatCard
           title="Giá trị TB/đơn"
@@ -470,7 +474,7 @@ export default function AdminRevenuePage() {
           >
             <div className="p-6 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">Khách hàng hàng đầu</h3>
-              <p className="text-sm text-gray-500 mt-1">Top 5 khách hàng có doanh thu cao nhất</p>
+              {/* <p className="text-sm text-gray-500 mt-1">Top 5 khách hàng có doanh thu cao nhất</p> */}
             </div>
             <div className="overflow-x-auto">
               <Table>

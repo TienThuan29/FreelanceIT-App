@@ -1,11 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FaCheckCircle, FaSpinner } from 'react-icons/fa';
 import { usePayOS } from '@/hooks/usePayOS';
 
-export default function PayOSSuccessPage() {
+function PayOSSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const orderCode = searchParams.get('orderCode');
@@ -178,5 +179,22 @@ export default function PayOSSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PayOSSuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+          <div className="text-center">
+            <FaSpinner className="animate-spin text-6xl text-blue-600 mx-auto mb-4" />
+            <p className="text-xl text-gray-700">Đang tải...</p>
+          </div>
+        </div>
+      }
+    >
+      <PayOSSuccessContent />
+    </Suspense>
   );
 }

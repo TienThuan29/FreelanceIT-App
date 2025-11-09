@@ -308,14 +308,14 @@ export default function AdminPlanningPage() {
       subtitle: 'Gói đã ngừng',
       trend: { value: -5, isPositive: false }
     },
-    {
-      title: 'Tổng giá trị',
-      value: formatPrice(planningStats.totalRevenue),
-      icon: DollarSign,
-      color: 'bg-gradient-to-r from-purple-500 to-purple-600',
-      subtitle: 'Tổng giá các gói',
-      trend: { value: 15, isPositive: true }
-    },
+    // {
+    //   title: 'Tổng giá trị',
+    //   value: formatPrice(planningStats.totalRevenue),
+    //   icon: DollarSign,
+    //   color: 'bg-gradient-to-r from-purple-500 to-purple-600',
+    //   subtitle: 'Tổng giá các gói',
+    //   trend: { value: 15, isPositive: true }
+    // },
   ];
 
   return (

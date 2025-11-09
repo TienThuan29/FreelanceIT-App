@@ -16,6 +16,8 @@ import {
   CheckCircle,
   BarChart3,
   Download,
+  CreditCard,
+  Star,
 } from 'lucide-react';
 import { useAdminStats } from '../../hooks/useAdminStats';
 import { useAdminUsers } from '../../hooks/useAdminUsers';
@@ -296,19 +298,19 @@ export default function AdminDashboardPage() {
       trend: { value: 15, isPositive: true }
     },
     {
-      title: 'Tin nhắn',
-      value: comprehensiveStats.conversations,
-      icon: MessageSquare,
+      title: 'Số lượng giao dịch',
+      value: 2,
+      icon: CreditCard,
       color: 'bg-gradient-to-r from-orange-500 to-orange-600',
-      subtitle: 'Cuộc trò chuyện',
-      trend: { value: 3, isPositive: true }
+      subtitle: 'Số lượng giao dịch',
+      trend: { value: 2, isPositive: true }
     },
     {
-      title: 'Sản phẩm',
-      value: comprehensiveStats.products,
-      icon: ShoppingCart,
+      title: 'Số lượng đánh giá',
+      value: 7,
+      icon: Star,
       color: 'bg-gradient-to-r from-pink-500 to-pink-600',
-      subtitle: 'Sản phẩm đã bán',
+      subtitle: 'Số lượng đánh giá',
       trend: { value: 7, isPositive: true }
     },
   ];

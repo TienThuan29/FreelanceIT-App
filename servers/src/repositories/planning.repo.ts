@@ -267,6 +267,38 @@ export class UserPlanningRepository extends DynamoRepository {
         }
     }
 
+    public async findActiveAndNonExpiredByUserId(userId: string): Promise<UserPlanning | null> {
+        try {
+            const now = new Date();
+            const command = new ScanCommand({
+                TableName: this.getTableName(),
+                FilterExpression: 'userId = :userId AND isEnable = :isEnable',
+                ExpressionAttributeValues: {
+                    ':userId': userId,
+                    ':isEnable': true
+                }
+            });
+
+            const result = await dynamoDB.send(command);
+            if (!result.Items || result.Items.length === 0) {
+                return null;
+            }
+
+            // Filter by expiration and get the most recent one
+            const activeAndNonExpired = result.Items
+                .map(item => this.convertUserPlanningFromDynamo(item))
+                .filter(item => item.expireDate && new Date(item.expireDate) > now)
+                .sort((a, b) =>
+                    new Date(b.transactionDate).getTime() - new Date(a.transactionDate).getTime()
+                );
+
+            return activeAndNonExpired.length > 0 ? activeAndNonExpired[0] : null;
+        } catch (error) {
+            console.error('Error finding active and non-expired user planning:', error);
+            return null;
+        }
+    }
+
     public async update(userPlanning: UserPlanning): Promise<UserPlanning | null> {
         const existingUserPlanning = await this.findById(userPlanning.id);
         if (!existingUserPlanning) {

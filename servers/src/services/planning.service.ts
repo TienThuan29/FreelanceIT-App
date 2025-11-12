@@ -101,6 +101,16 @@ export class PlanningService {
         } as UserPlanningWithDetails;
     }
 
+    public async getCurrentUserPlanning(userId: string): Promise<UserPlanningWithDetails | null> {
+        const currentUserPlanning = await this.userPlanningRepository.findActiveAndNonExpiredByUserId(userId);
+        if (!currentUserPlanning) return null;
+        const planning = await this.planningRepository.findById(currentUserPlanning.planningId);
+        return {
+            ...currentUserPlanning,
+            planning: planning || undefined  // Convert null to undefined
+        } as UserPlanningWithDetails;
+    }
+
     public async confirmPayment(orderId: string): Promise<UserPlanning | null> {
         try {
             const userPlanning = await this.userPlanningRepository.findByOrderId(orderId);

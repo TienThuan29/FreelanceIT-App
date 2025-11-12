@@ -9,6 +9,7 @@ interface UsePlanningManagementReturn {
   plannings: Planning[];
   userPlannings: UserPlanning[];
   activeUserPlanning: UserPlanning | null;
+  currentUserPlanning: UserPlanning | null;
   isLoading: boolean;
   error: string | null;
   getAllPlannings: () => Promise<Planning[]>;
@@ -17,6 +18,7 @@ interface UsePlanningManagementReturn {
   getPlanningByIdPublic: (id: string) => Promise<Planning | null>;
   getUserPlannings: (userId?: string) => Promise<UserPlanning[]>;
   getActiveUserPlanning: (userId?: string) => Promise<UserPlanning | null>;
+  getCurrentUserPlanning: (userId?: string) => Promise<UserPlanning | null>;
   purchasePlanning: (purchaseRequest: PlanningPurchaseRequest) => Promise<UserPlanning | null>;
   confirmPayment: (orderId: string) => Promise<UserPlanning | null>;
   refreshPlannings: () => Promise<void>;
@@ -33,6 +35,7 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
     plannings: [] as Planning[],
     userPlannings: [] as UserPlanning[],
     activeUserPlanning: null as UserPlanning | null,
+    currentUserPlanning: null as UserPlanning | null,
     isLoading: false,
     error: null as string | null,
   });
@@ -140,7 +143,7 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
     }
   }, [axiosInstance, handleError]);
 
-  const getActiveUserPlanning = useCallback(async (userId?: string): Promise<UserPlanning | null> => {
+  const getActiveUserPlanning = useCallback(async (_userId?: string): Promise<UserPlanning | null> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
@@ -156,6 +159,39 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
       return activeUserPlanning;
     } catch (error) {
       handleError(error, 'fetch active user planning');
+      return null;
+    }
+  }, [axiosInstance, handleError]);
+
+  const getCurrentUserPlanning = useCallback(async (_userId?: string): Promise<UserPlanning | null> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      
+      const response = await axiosInstance.get(Api.Planning.GET_CURRENT_USER_PLANNING);
+      const currentUserPlanning = response.data.dataResponse || null;
+      
+      setState(prev => ({
+        ...prev,
+        currentUserPlanning,
+        isLoading: false,
+      }));
+
+      return currentUserPlanning;
+    } catch (error: any) {
+      // Only show error toast for actual errors (not 404 for missing planning)
+      // Check if it's a 404 error which might be a normal case
+      if (error.response?.status === 404) {
+        // No planning found - this is normal, don't show error toast
+        setState(prev => ({
+          ...prev,
+          currentUserPlanning: null,
+          isLoading: false,
+        }));
+        return null;
+      }
+      // For other errors, show toast
+      handleError(error, 'fetch current user planning');
+      setState(prev => ({ ...prev, isLoading: false }));
       return null;
     }
   }, [axiosInstance, handleError]);
@@ -288,6 +324,7 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
     plannings: state.plannings,
     userPlannings: state.userPlannings,
     activeUserPlanning: state.activeUserPlanning,
+    currentUserPlanning: state.currentUserPlanning,
     isLoading: state.isLoading,
     error: state.error,
     getAllPlannings,
@@ -296,6 +333,7 @@ export const usePlanningManagement = (): UsePlanningManagementReturn => {
     getPlanningByIdPublic,
     getUserPlannings,
     getActiveUserPlanning,
+    getCurrentUserPlanning,
     purchasePlanning,
     confirmPayment,
     refreshPlannings,

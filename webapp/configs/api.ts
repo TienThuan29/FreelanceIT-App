@@ -120,6 +120,7 @@ export const Api = {
         // User endpoints
         GET_USER_PLANNINGS: '/api/v1/planning/user/plannings',
         GET_ACTIVE_USER_PLANNING: '/api/v1/planning/user/plannings/active',
+        GET_CURRENT_USER_PLANNING: '/api/v1/planning/user/plannings/current',
         PURCHASE_PLANNING: '/api/v1/planning/plannings/purchase',
         CONFIRM_PAYMENT: '/api/v1/planning/plannings', // append /:orderId/confirm-payment when used
 

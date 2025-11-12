@@ -21,6 +21,7 @@ export class PlanningApi {
         this.purchasePlanning = this.purchasePlanning.bind(this);
         this.getUserPlannings = this.getUserPlannings.bind(this);
         this.getActiveUserPlanning = this.getActiveUserPlanning.bind(this);
+        this.getCurrentUserPlanning = this.getCurrentUserPlanning.bind(this);
         this.confirmPayment = this.confirmPayment.bind(this);
         this.getAccessToken = this.getAccessToken.bind(this);
     }
@@ -214,6 +215,23 @@ export class PlanningApi {
             ResponseUtil.success(response, activePlanning, 'Lấy gói đang hoạt động thành công');
         } catch (error) {
             logger.error('Error getting active user planning:', error);
+            ResponseUtil.error(response, 'Lỗi server', 500);
+        }
+    }
+
+    public async getCurrentUserPlanning(request: Request, response: Response) {
+        try {
+            const currentUser = await this.authService.getUserByToken(this.getAccessToken(request));
+            if (!currentUser) {
+                ResponseUtil.error(response, 'Không tìm thấy người dùng', 404);
+                return;
+            }
+
+            const currentPlanning = await this.planningService.getCurrentUserPlanning(currentUser.id);
+            // Return success with null if no planning found (not an error case)
+            ResponseUtil.success(response, currentPlanning || null, 'Lấy gói hiện tại thành công');
+        } catch (error) {
+            logger.error('Error getting current user planning:', error);
             ResponseUtil.error(response, 'Lỗi server', 500);
         }
     }

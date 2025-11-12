@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '../contexts/AuthContext'
 import { useChatNotifications } from '../hooks/useChatNotifications'
@@ -8,14 +8,30 @@ import Avatar from './Avatar'
 import SmartImage from './SmartImage'
 import { useRoleValidator } from '@/hooks/useRoleValidator'
 import { PageUrl } from '@/configs/page.url'
+import { usePlanningManagement } from '@/hooks/usePlanningManagement'
 
 const NavbarAuthenticated: React.FC = () => {
 
   const { user, logout } = useAuth()
   const { isDeveloper, isCustomer, isAdmin } = useRoleValidator(user)
   const { totalUnread } = useChatNotifications()
+  const { getCurrentUserPlanning, currentUserPlanning } = usePlanningManagement()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+
+  // Fetch current user planning for customers
+  useEffect(() => {
+    if (isCustomer && user?.id) {
+      getCurrentUserPlanning()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCustomer, user?.id])
+
+  // Check if customer has chatbot access
+  const hasChatbotAccess = useMemo(() => {
+    if (!isCustomer || !currentUserPlanning) return false
+    return currentUserPlanning.planning?.detailCustomerPlanning?.useChatbot === true
+  }, [isCustomer, currentUserPlanning])
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -96,9 +112,11 @@ const NavbarAuthenticated: React.FC = () => {
                 <a href={PageUrl.Customer.CUSTOMER_PLANNING_PAGE} className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
                   Gói người dùng
                 </a>
-                <a href={PageUrl.Customer.CHATBOT_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
-                  Chatbot AI
-                </a>
+                {hasChatbotAccess && (
+                  <a href={PageUrl.Customer.CHATBOT_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                    Chatbot AI
+                  </a>
+                )}
                 <a href={PageUrl.Customer.PRODUCTS_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Sản phẩm
                 </a>
@@ -308,6 +326,14 @@ const NavbarAuthenticated: React.FC = () => {
                   >
                     Hồ sơ công ty
                   </a>
+                  {hasChatbotAccess && (
+                    <a
+                      href={PageUrl.Customer.CHATBOT_PAGE}
+                      className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-300 font-medium"
+                    >
+                      Chatbot AI
+                    </a>
+                  )}
                   <a
                     href="/post-project"
                     className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-300 font-medium"

@@ -20,6 +20,7 @@ router.get('/plannings/:id', planningApi.getPlanningById);
 router.post('/plannings/purchase', authenticate, planningApi.purchasePlanning);
 router.get('/user/plannings', authenticate, planningApi.getUserPlannings);
 router.get('/user/plannings/active', authenticate, planningApi.getActiveUserPlanning);
+router.get('/user/plannings/current', authenticate, planningApi.getCurrentUserPlanning);
 router.post('/plannings/:orderId/confirm-payment', planningApi.confirmPayment);
 
 export default router;

@@ -57,6 +57,7 @@ services:
       - PROJECT_TEAM_TABLE=project-teams
       - PROJECT_FILE_TABLE=project-files
       - PLANNING_TABLE=planning
+      - RATING_TABLE=ratings
       - USER_PLANNING_TABLE=user-plannings
       - PROJECT_TIMELINE_TABLE=project-timelines
       - TRANSACTION_HISTORY_TABLE=transaction-histories
@@ -77,7 +78,6 @@ services:
       - PAYOS_WEBHOOK_URL=http://localhost:5000/api/v1/payos/webhook
       - PAYOS_RETURN_URL=http://localhost:3000/planning/pricing/success
       - PAYOS_CANCEL_URL=http://localhost:3000/planning/pricing
-      - REDIS_HOST=redis
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}

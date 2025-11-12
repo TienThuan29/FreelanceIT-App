@@ -21,6 +21,22 @@ import adminRouter from './admin.route';
 
 const router = Router();
 
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     responses:
+ *       200:
+ *         description: OK
+ */
+router.get('/health', (_, response) => {
+  response.json({
+    success: true,
+    message: 'API is running',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 router.use('/auth', authRouter);
 router.use('/auth/google', googleAuthRouter);
 router.use('/projects', projectRouter);
@@ -41,21 +57,5 @@ router.use('/products', productRouter);
 router.use('/', fileRouter);
 router.use('/ratings', ratingRouter);
 router.use('/admin', adminRouter);
-/**
- * @swagger
- * /health:
- *   get:
- *     responses:
- *       200:
- *         description: OK
- */
-router.get('/health', (_, response) => {
-  response.json({
-    success: true,
-    message: 'API is running',
-    timestamp: new Date().toISOString(),
-  });
-});
-
 
 export default router;

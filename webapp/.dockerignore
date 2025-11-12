@@ -1,16 +1,31 @@
+# Dependencies
 node_modules
+
+# Logs
 npm-debug.log
+*.log
+
+# Build output
 .next
+
+# Version control
 .git
-.gitignore
+
+# Environment files
 .env
 .env.local
 .env.*.local
-*.log
+
+# IDE
 .DS_Store
 .vscode
 .idea
-*.md
+
+# Documentation (but keep package-lock.json)
+README.md
+CHANGELOG.md
+
+# Docker files
 Dockerfile
 .dockerignore
 

@@ -7,7 +7,6 @@ import {
   FolderOpen, 
   TrendingUp, 
   RefreshCw, 
-  DollarSign, 
   MessageSquare, 
   ShoppingCart, 
   Clock, 
@@ -16,11 +15,14 @@ import {
   CheckCircle,
   BarChart3,
   Download,
+  CreditCard,
+  Star,
 } from 'lucide-react';
 import { useAdminStats } from '../../hooks/useAdminStats';
 import { useAdminUsers } from '../../hooks/useAdminUsers';
 import useProjectManagement from '../../hooks/useProjectManagement';
 import { Badge } from '@/components/ui/badge';
+import { formatCurrency } from '@/utils';
 
 const StatCard = ({ 
   title, 
@@ -35,7 +37,7 @@ const StatCard = ({
   title: string; 
   value: number | string; 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  icon: any; 
+  icon?: any; 
   color: string; 
   isLoading: boolean; 
   delay?: number;
@@ -74,9 +76,11 @@ const StatCard = ({
             <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
           )}
         </div>
-        <div className={`p-3 rounded-lg ${color} group-hover:scale-110 transition-transform duration-300`}>
-          <Icon className="w-6 h-6 text-white" />
-        </div>
+        {Icon && (
+          <div className={`p-3 rounded-lg ${color} group-hover:scale-110 transition-transform duration-300`}>
+            <Icon className="w-6 h-6 text-white" />
+          </div>
+        )}
       </div>
       {trend && (
         <div className="mt-4 flex items-center text-sm">
@@ -250,16 +254,18 @@ export default function AdminDashboardPage() {
   ];
 
   const comprehensiveStats = {
-    users: stats.users || 1247,
-    developers: developers.length || 892,
-    customers: customers.length || 355,
-    projects: stats.projects || 156,
-    applications: 89, // Mock data
-    plannings: stats.plannings || 12,
-    revenue: 125000000, // Mock data - ₫125M
-    conversations: 234, // Mock data
-    products: 67, // Mock data
-    notifications: 45, // Mock data
+    users: stats?.totals.users ?? 0,
+    developers: stats?.totals.developers ?? developers.length ?? 0,
+    customers: stats?.totals.customers ?? customers.length ?? 0,
+    projects: stats?.totals.projects ?? 0,
+    applications: 0,
+    plannings: 0,
+    revenue: (stats?.revenueByMonth || []).reduce((s, m) => s + m.total, 0),
+    conversations: 0,
+    products: stats?.totals.products ?? 0,
+    notifications: 0,
+    successfulTransactions: stats?.transactionsByStatus?.['SUCCESS'] ?? 0,
+    ratings: stats?.totals.ratings ?? 0,
   };
 
   const statCards = [
@@ -289,26 +295,25 @@ export default function AdminDashboardPage() {
     },
     {
       title: 'Doanh thu tháng',
-      value: `₫${(comprehensiveStats.revenue / 1000000).toFixed(1)}M`,
-      icon: DollarSign,
+      value: formatCurrency(comprehensiveStats.revenue),
       color: 'bg-gradient-to-r from-emerald-500 to-emerald-600',
       subtitle: 'Tăng 15% so với tháng trước',
       trend: { value: 15, isPositive: true }
     },
     {
-      title: 'Tin nhắn',
-      value: comprehensiveStats.conversations,
-      icon: MessageSquare,
+      title: 'Số lượng giao dịch',
+      value: comprehensiveStats.successfulTransactions,
+      icon: CreditCard,
       color: 'bg-gradient-to-r from-orange-500 to-orange-600',
-      subtitle: 'Cuộc trò chuyện',
-      trend: { value: 3, isPositive: true }
+      subtitle: 'Giao dịch thành công',
+      trend: { value: 2, isPositive: true }
     },
     {
-      title: 'Sản phẩm',
-      value: comprehensiveStats.products,
-      icon: ShoppingCart,
+      title: 'Số lượng đánh giá',
+      value: comprehensiveStats.ratings,
+      icon: Star,
       color: 'bg-gradient-to-r from-pink-500 to-pink-600',
-      subtitle: 'Sản phẩm đã bán',
+      subtitle: 'Tổng số đánh giá',
       trend: { value: 7, isPositive: true }
     },
   ];

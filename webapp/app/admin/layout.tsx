@@ -1,12 +1,24 @@
 'use client';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart3, Users, Calendar, FolderOpen, Shield, DollarSign, FileText } from 'lucide-react';
+import { BarChart3, Users, Calendar, Shield, DollarSign, Star } from 'lucide-react';
 import { ProtectedRoute } from '@/contexts/AuthContext';
 import { PageUrl } from '@/configs/page.url';
+import { useAdminSidebarStats } from '@/hooks/useAdminSidebarStats';
 
 const Sidebar: React.FC = () => {
-  const menuItems = [
+  const { stats: sidebarStats, isLoading } = useAdminSidebarStats();
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const menuItems = useMemo(() => [
     { 
       href: PageUrl.ADMIN_DASHBOARD_PAGE, 
       label: 'Tổng quan', 
@@ -14,7 +26,7 @@ const Sidebar: React.FC = () => {
       description: 'Thống kê tổng quan',
       badge: 'Live',
       badgeColor: 'bg-green-100 text-green-800',
-      stats: '1,247 users'
+      stats: isLoading ? '...' : `${sidebarStats?.totalUsers || 0} users`
     },
     { 
       href: PageUrl.ADMIN_USERS_PAGE, 
@@ -23,45 +35,45 @@ const Sidebar: React.FC = () => {
       description: 'Quản lý users & profiles',
       badge: 'Active',
       badgeColor: 'bg-blue-100 text-blue-800',
-      stats: '892 devs • 355 customers'
+      stats: isLoading ? '...' : `${sidebarStats?.developers || 0} devs • ${sidebarStats?.customers || 0} customers`
     },
     { 
       href: PageUrl.ADMIN_PLANNING_PAGE, 
       label: 'Gói người dùng', 
       icon: Calendar, 
       description: 'Quản lý gói người dùng',
-      badge: '6 gói',
+      badge: isLoading ? '...' : `${sidebarStats?.totalPlannings || 0} gói`,
       badgeColor: 'bg-purple-100 text-purple-800',
       stats: 'Quản lý gói người dùng'
     },
-    { 
-      href: PageUrl.ADMIN_PROJECTS_PAGE, 
-      label: 'Dự án', 
-      icon: FolderOpen, 
-      description: 'Quản lý dự án',
-      badge: '156 dự án',
-      badgeColor: 'bg-orange-100 text-orange-800',
-      stats: 'Quản lý dự án'
-    },
+    // { 
+    //   href: PageUrl.ADMIN_PROJECTS_PAGE, 
+    //   label: 'Dự án', 
+    //   icon: FolderOpen, 
+    //   description: 'Quản lý dự án',
+    //   badge: isLoading ? '...' : `${sidebarStats?.totalProjects || 0} dự án`,
+    //   badgeColor: 'bg-orange-100 text-orange-800',
+    //   stats: 'Quản lý dự án'
+    // },
     { 
       href: '/admin/revenue', 
       label: 'Doanh thu', 
       icon: DollarSign, 
       description: 'Quản lý doanh thu',
-      badge: 'Doanh thu tháng',
+      badge: isLoading ? '...' : formatCurrency(sidebarStats?.monthlyRevenue || 0),
       badgeColor: 'bg-emerald-100 text-emerald-800',
-      stats: 'Quản lý doanh thu'
+      stats: 'Doanh thu tháng này'
     },
     { 
-      href: '/admin/policies', 
-      label: 'Chính sách', 
-      icon: FileText, 
-      description: 'Quản lý chính sách',
-      badge: '12 chính sách',
-      badgeColor: 'bg-indigo-100 text-indigo-800',
-      stats: 'Quản lý chính sách'
+      href: PageUrl.ADMIN_RATINGS_PAGE, 
+      label: 'Đánh giá người dùng', 
+      icon: Star, 
+      description: 'Quản lý đánh giá',
+      badge: isLoading ? '...' : `${sidebarStats?.totalRatings || 0} đánh giá`,
+      badgeColor: 'bg-yellow-100 text-yellow-800',
+      stats: 'Tổng đánh giá'
     },
-  ];
+  ], [sidebarStats, isLoading]);
 
   return (
     <aside className="w-64 border-r border-gray-200 bg-white h-screen sticky top-0 shadow-lg">

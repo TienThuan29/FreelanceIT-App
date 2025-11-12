@@ -142,142 +142,10 @@ export default function AdminProjectsPage() {
   };
 
   // Enhanced mock data for projects
-  const mockProjects = [
-    {
-      id: '1',
-      title: 'Website E-commerce cho Shop Thời Trang',
-      description: 'Xây dựng website bán hàng thời trang với tính năng thanh toán online, quản lý kho hàng và hệ thống đánh giá sản phẩm.',
-      projectType: { name: 'Web Development' },
-      budget: 15000000,
-      minBudget: 12000000,
-      maxBudget: 18000000,
-      estimateDuration: 45,
-      startDate: new Date('2024-01-15'),
-      endDate: new Date('2024-03-01'),
-      status: 'IN_PROGRESS',
-      location: 'Hồ Chí Minh',
-      createdDate: new Date('2024-01-10'),
-      views: 156
-    },
-    {
-      id: '2',
-      title: 'Mobile App Quản lý Nhà Hàng',
-      description: 'Ứng dụng di động để quản lý đơn hàng, menu, nhân viên và báo cáo doanh thu cho nhà hàng.',
-      projectType: { name: 'Mobile Development' },
-      budget: 25000000,
-      minBudget: 20000000,
-      maxBudget: 30000000,
-      estimateDuration: 60,
-      startDate: new Date('2024-02-01'),
-      endDate: new Date('2024-04-01'),
-      status: 'OPEN_APPLYING',
-      location: 'Hà Nội',
-      createdDate: new Date('2024-01-25'),
-      views: 89
-    },
-    {
-      id: '3',
-      title: 'Hệ thống CRM cho Công ty Bất Động Sản',
-      description: 'Phần mềm quản lý khách hàng, dự án và báo cáo cho công ty bất động sản.',
-      projectType: { name: 'Web Development' },
-      budget: 35000000,
-      minBudget: 30000000,
-      maxBudget: 40000000,
-      estimateDuration: 90,
-      startDate: new Date('2023-11-01'),
-      endDate: new Date('2024-02-01'),
-      status: 'COMPLETED',
-      location: 'Đà Nẵng',
-      createdDate: new Date('2023-10-15'),
-      views: 234
-    },
-    {
-      id: '4',
-      title: 'Website Tin Tức Thể Thao',
-      description: 'Website tin tức thể thao với hệ thống live score, video highlights và bình luận.',
-      projectType: { name: 'Web Development' },
-      budget: 18000000,
-      minBudget: 15000000,
-      maxBudget: 22000000,
-      estimateDuration: 50,
-      startDate: new Date('2024-01-20'),
-      endDate: new Date('2024-03-10'),
-      status: 'IN_PROGRESS',
-      location: 'Cần Thơ',
-      createdDate: new Date('2024-01-15'),
-      views: 67
-    },
-    {
-      id: '5',
-      title: 'App Đặt Xe Taxi',
-      description: 'Ứng dụng đặt xe taxi với tính năng theo dõi vị trí real-time và thanh toán điện tử.',
-      projectType: { name: 'Mobile Development' },
-      budget: 40000000,
-      minBudget: 35000000,
-      maxBudget: 45000000,
-      estimateDuration: 75,
-      startDate: new Date('2024-02-15'),
-      endDate: new Date('2024-05-01'),
-      status: 'CLOSED_APPLYING',
-      location: 'Hồ Chí Minh',
-      createdDate: new Date('2024-02-01'),
-      views: 145
-    },
-    {
-      id: '6',
-      title: 'Website Du Lịch',
-      description: 'Website đặt tour du lịch với hệ thống booking, thanh toán và quản lý tour.',
-      projectType: { name: 'Web Development' },
-      budget: 22000000,
-      minBudget: 18000000,
-      maxBudget: 26000000,
-      estimateDuration: 55,
-      startDate: new Date('2023-12-01'),
-      endDate: new Date('2024-01-30'),
-      status: 'COMPLETED',
-      location: 'Nha Trang',
-      createdDate: new Date('2023-11-20'),
-      views: 198
-    },
-    {
-      id: '7',
-      title: 'Hệ thống Quản lý Kho',
-      description: 'Phần mềm quản lý kho hàng với tính năng nhập xuất, kiểm kê và báo cáo tồn kho.',
-      projectType: { name: 'Desktop Application' },
-      budget: 28000000,
-      minBudget: 25000000,
-      maxBudget: 32000000,
-      estimateDuration: 70,
-      startDate: new Date('2024-03-01'),
-      endDate: new Date('2024-05-10'),
-      status: 'DRAFT',
-      location: 'Hải Phòng',
-      createdDate: new Date('2024-02-20'),
-      views: 45
-    },
-    {
-      id: '8',
-      title: 'App Học Tiếng Anh',
-      description: 'Ứng dụng học tiếng Anh với AI, bài tập tương tác và theo dõi tiến độ học tập.',
-      projectType: { name: 'Mobile Development' },
-      budget: 32000000,
-      minBudget: 28000000,
-      maxBudget: 36000000,
-      estimateDuration: 80,
-      startDate: new Date('2024-02-10'),
-      endDate: new Date('2024-04-30'),
-      status: 'IN_PROGRESS',
-      location: 'Hà Nội',
-      createdDate: new Date('2024-01-30'),
-      views: 123
-    }
-  ];
-
-  // Use mock data if no real projects
-  const displayProjects = projects.length > 0 ? projects : mockProjects;
+  // Removed mock data - always use real data from server
 
   // Filter projects based on search and status
-  const filteredProjects = displayProjects.filter(project => {
+  const filteredProjects = projects.filter(project => {
     const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          project.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
@@ -286,12 +154,12 @@ export default function AdminProjectsPage() {
 
   // Calculate project statistics
   const projectStats = {
-    total: displayProjects.length,
-    active: displayProjects.filter(p => p.status === 'IN_PROGRESS').length,
-    completed: displayProjects.filter(p => p.status === 'COMPLETED').length,
-    draft: displayProjects.filter(p => p.status === 'DRAFT').length,
-    totalBudget: displayProjects.reduce((sum, p) => sum + (p.budget || 0), 0),
-    avgBudget: displayProjects.length > 0 ? displayProjects.reduce((sum, p) => sum + (p.budget || 0), 0) / displayProjects.length : 0,
+    total: projects.length,
+    active: projects.filter(p => p.status === 'IN_PROGRESS').length,
+    completed: projects.filter(p => p.status === 'COMPLETED').length,
+    draft: projects.filter(p => p.status === 'DRAFT').length,
+    totalBudget: projects.reduce((sum, p) => sum + (p.budget || 0), 0),
+    avgBudget: projects.length > 0 ? projects.reduce((sum, p) => sum + (p.budget || 0), 0) / projects.length : 0,
   };
 
   const statCards = [

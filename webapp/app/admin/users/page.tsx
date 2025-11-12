@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useAdminUsers, DeveloperWithProfile, CustomerWithProfile } from '@/hooks/useAdminUsers';
+import { useAdminStats } from '@/hooks/useAdminStats';
 import { UserPlanning } from '@/types/planning.type';
 import {
   Table,
@@ -31,6 +32,8 @@ export default function AdminUsersPage() {
     refreshAll,
   } = useAdminUsers();
 
+  const { stats: adminStats, isLoading: statsLoading, refresh: refreshStats } = useAdminStats();
+
   const [selectedUser, setSelectedUser] = useState<DeveloperWithProfile | CustomerWithProfile | null>(null);
   const [userPlannings, setUserPlannings] = useState<UserPlanning[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -39,7 +42,8 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     refreshAll();
-  }, [refreshAll]);
+    refreshStats();
+  }, [refreshAll, refreshStats]);
 
   const handleViewPlannings = async (user: DeveloperWithProfile | CustomerWithProfile) => {
     setSelectedUser(user);
@@ -144,7 +148,9 @@ export default function AdminUsersPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-purple-600 font-medium">Avg Rating</p>
-                <p className="text-2xl font-bold text-purple-900 mt-1">4.6</p>
+                <p className="text-2xl font-bold text-purple-900 mt-1">
+                  {statsLoading ? '...' : (adminStats?.ratings?.average?.toFixed(1) || '0.0')}
+                </p>
                 <p className="text-xs text-purple-600 mt-1">across all users</p>
               </div>
               <div className="bg-purple-200 rounded-full p-3">
@@ -156,8 +162,12 @@ export default function AdminUsersPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-orange-600 font-medium">Total Projects</p>
-                <p className="text-2xl font-bold text-orange-900 mt-1">123</p>
-                <p className="text-xs text-orange-600 mt-1">completed</p>
+                <p className="text-2xl font-bold text-orange-900 mt-1">
+                  {statsLoading ? '...' : (adminStats?.totals?.projects || 0)}
+                </p>
+                <p className="text-xs text-orange-600 mt-1">
+                  {statsLoading ? '...' : (adminStats?.projectsByStatus?.COMPLETED || 0)} completed
+                </p>
               </div>
               <div className="bg-orange-200 rounded-full p-3">
                 <FolderOpen className="w-6 h-6 text-orange-700" />

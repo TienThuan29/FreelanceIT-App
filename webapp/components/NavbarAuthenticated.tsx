@@ -61,9 +61,9 @@ const NavbarAuthenticated: React.FC = () => {
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
             {/* Navigation Links */}
-            {/* <a href="/chatbot" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
-              Chatbot AI
-            </a> */}
+            <a href={PageUrl.RATINGS_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+              Đánh giá
+            </a>
             {/* Role-specific links */}
             {isDeveloper && (
               <>
@@ -105,9 +105,9 @@ const NavbarAuthenticated: React.FC = () => {
                 <a href={PageUrl.Customer.POSTS_DEV_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Tuyển dụng lập trình viên
                 </a>
-                <a href={PageUrl.Customer.PROFILE_CUSTOMER_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                {/* <a href={PageUrl.Customer.PROFILE_CUSTOMER_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Hồ sơ
-                </a>
+                </a> */}
                 <a href={PageUrl.TRANSACTION_HISTORY_PAGE} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
                   Lịch sử giao dịch 
                 </a>

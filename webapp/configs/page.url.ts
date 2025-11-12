@@ -9,8 +9,9 @@ export const PageUrl = {
     ADMIN_USERS_PAGE: '/admin/users',
     ADMIN_PLANNING_PAGE: '/admin/planning',
     ADMIN_PROJECTS_PAGE: '/admin/projects',
+    ADMIN_RATINGS_PAGE: '/admin/ratings',
     TRANSACTION_HISTORY_PAGE: '/purchase-history',
-
+    RATINGS_PAGE: '/ratings',
 
     Customer: {
         CHATBOT_PAGE: '/chatbot/customer',

@@ -178,5 +178,19 @@ export const Api = {
         // Admin/Developer endpoints
         GET_ALL_PRODUCTS: '/api/v1/products',
         GET_PRODUCT_BY_ID: '/api/v1/products', // append /:id when used
+    },
+
+    Rating: {
+        GET_ALL: '/api/v1/ratings',
+        GET_BY_ID: '/api/v1/ratings', // append /:id when used
+        GET_MY: '/api/v1/ratings/user/my',
+        CREATE: '/api/v1/ratings',
+        UPDATE: '/api/v1/ratings', // append /:id when used
+        DELETE: '/api/v1/ratings', // append /:id when used
+    },
+
+    Admin: {
+        GET_STATS: '/api/v1/admin/stats',
+        GET_SIDEBAR_STATS: '/api/v1/admin/sidebar-stats',
     }
 }

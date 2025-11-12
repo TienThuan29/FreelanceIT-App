@@ -91,36 +91,36 @@ async function createPlanning(planningData: PlanningCreate): Promise<void> {
         const planning = await planningService.createPlanning(planningData);
         
         if (planning) {
-            console.log(`✅ Đã tạo: ${planning.name}`);
+            console.log(`Đã tạo: ${planning.name}`);
             console.log(`   ID: ${planning.id}`);
             console.log(`   Giá: ${planning.price.toLocaleString('vi-VN')} VND`);
             console.log(`   Dành cho: ${planning.forDeveloper ? 'Developer' : 'Khách hàng'}`);
         } else {
-            console.error(`❌ Tạo thất bại ${planningData.name}: Service trả về null`);
+            console.error(`Tạo thất bại ${planningData.name}: Service trả về null`);
         }
     } catch (error: any) {
-        console.error(`❌ Tạo thất bại ${planningData.name}:`, error.message || error);
+        console.error(`Tạo thất bại ${planningData.name}:`, error.message || error);
     }
 }
 
 async function seedPlannings(): Promise<void> {
-    console.log('🌱 Bắt đầu tạo dữ liệu Planning...\n');
+    console.log('Bắt đầu tạo dữ liệu Planning...\n');
     console.log('================================================\n');
 
-    console.log('📦 Đang tạo các gói cho Developer...\n');
+    console.log('Đang tạo các gói cho Developer...\n');
     for (const planning of developerPlannings) {
         await createPlanning(planning);
         console.log('');
     }
 
-    console.log('\n📦 Đang tạo các gói cho Customer...\n');
+    console.log('\nĐang tạo các gói cho Customer...\n');
     for (const planning of customerPlannings) {
         await createPlanning(planning);
         console.log('');
     }
 
     console.log('\n================================================');
-    console.log('✨ Hoàn thành tạo dữ liệu Planning!');
+    console.log('Hoàn thành tạo dữ liệu Planning!');
     console.log('Tổng số đã tạo: 6 gói (3 cho Developer, 3 cho Customer)');
     console.log('================================================\n');
 }
@@ -128,11 +128,11 @@ async function seedPlannings(): Promise<void> {
 // Chạy script tạo dữ liệu
 seedPlannings()
     .then(() => {
-        console.log('✅ Script tạo dữ liệu hoàn tất thành công');
+        console.log('Script tạo dữ liệu hoàn tất thành công');
         process.exit(0);
     })
     .catch((error) => {
-        console.error('❌ Script tạo dữ liệu thất bại:', error);
+        console.error('Script tạo dữ liệu thất bại:', error);
         process.exit(1);
     });
 

@@ -16,6 +16,8 @@ import projectTimelineRouter from './project-timeline.route';
 import transactionRouter from './transaction.route';
 import productRouter from './product.route';
 import fileRouter from './file.route';
+import ratingRouter from './rating.route';
+import adminRouter from './admin.route';
 
 const router = Router();
 
@@ -37,6 +39,8 @@ router.use('/project-timeline', projectTimelineRouter);
 router.use('/transactions', transactionRouter);
 router.use('/products', productRouter);
 router.use('/', fileRouter);
+router.use('/ratings', ratingRouter);
+router.use('/admin', adminRouter);
 /**
  * @swagger
  * /health:
